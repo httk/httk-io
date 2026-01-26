@@ -183,7 +183,7 @@ def parse_cif_int(token: str, *, strict: bool = True, allow_round: bool = False)
         raise ValueError(f"Non-integer numeric (set allow_round=True to round): {token!r}")
 
 
-def _parse_linear_expr(expr, use_fractions=False):
+def parse_linear_expr(expr, use_fractions=False):
     """
     expr: e.g. 'x-y', '-z+1/2', 'x', 'y', 'z-1', 'x-2y', '3x+1/2'
     Returns (row, const) where row is [ax, ay, az] (integers or Fractions),
@@ -239,29 +239,23 @@ def _parse_linear_expr(expr, use_fractions=False):
     return (coeffs['x'], coeffs['y'], coeffs['z']), const_out
 
 
-def parse_xyz_op(op, use_fractions=False, time_reversal_convention="mcif"):
+def parse_xyz_op(op, use_fractions=False):
     """
-    op: e.g. 'x-y,x,-z+1/2,-1'
-    Returns (R, t, time) where R is 3x3 (list of rows), t is length-3 float list, time is +1/-1.
+    op: e.g. 'x-y,x,-z+1/2'
+    Returns (R, t) where R is 3x3 (list of rows), t is length-3 float list
     """
     parts = [p.strip() for p in op.split(",")]
-    if len(parts) != 4:
+    if len(parts) != 3:
         raise ValueError(f"Unexpected op format: {op}")
-    px, py, pz, ts = parts
-    rx, tx = _parse_linear_expr(px, use_fractions=use_fractions)
-    ry, ty = _parse_linear_expr(py, use_fractions=use_fractions)
-    rz, tz = _parse_linear_expr(pz, use_fractions=use_fractions)
-    if time_reversal_convention == "mcif":
-        ts = int(ts)
-    elif time_reversal_convention == "spglib":
-        ts = int((1-int(ts))/2)
-    else:
-        raise Exception("Unrecognized time reversal convention.")
-    return (rx, ry, rz), (tx, ty, tz), ts
+    px, py, pz = parts
+    rx, tx = parse_linear_expr(px, use_fractions=use_fractions)
+    ry, ty = parse_linear_expr(py, use_fractions=use_fractions)
+    rz, tz = parse_linear_expr(pz, use_fractions=use_fractions)
+    return (rx, ry, rz), (tx, ty, tz)
 
 
-def xyz_symops_to_matrix(symops_xyz, use_fractions=False, time_reversal_convention="mcif"):
-    return [parse_xyz_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_xyz]
+def xyz_symops_to_matrix(symops_xyz, use_fractions=False):
+    return [parse_xyz_op(s, use_fractions) for s in symops_xyz]
 
 
 def _parse_atoms(block, resolution=True):
@@ -493,7 +487,7 @@ def cifblock_to_asu(cifblock, *, return_single=False):
     symops = xyz_symops_to_matrix(symops_xyz, use_fractions=True)
 
     # structural modulation
-    structural_q, mod_dim, has_struct_mod, struct_atoms = _parse_structural_modulation(cifblock)
+    structural_q, mod_dim, has_struct_mod, struct_atoms = parse_structural_modulation(cifblock)
 
     # Build the incommensurate structure descriptor, or None
     incomm = None
@@ -511,10 +505,10 @@ def cifblock_to_asu(cifblock, *, return_single=False):
     icsd = cifblock.get('database_code_ICSD')
     doi = cifblock.get('citation_doi')
 
-    return {'basis':basis, 'positions':positions, 'symbols':symbols, 'symops':symops, 'incomm':incomm, 'space_group':space_group, 'icsd':icsd, 'doi':doi, 'resolution':resolution, 'equivalent_atoms':equivalent_atoms, 'labels':labels}
+    return {'basis':basis, 'positions':positions, 'symbols':symbols, 'symops':symops, 'incomm':incomm, 'space_group_nbr':space_group_nbr, 'space_group_name_hm':space_group_name_hm, 'space_group_name_hall':space_group_name_hall, 'icsd':icsd, 'doi':doi, 'resolution':resolution, 'equivalent_atoms':equivalent_atoms, 'labels':labels}
 
 
-def asus_from_mcif_file(fs):
+def asus_from_cif_file(fs):
     cifblocks, header = read_cif(fs, allow_cif2=False)
 
     outputs = []
@@ -523,7 +517,7 @@ def asus_from_mcif_file(fs):
     return outputs
 
 
-def single_asu_from_mcif_file(fs):
+def single_asu_from_cif_file(fs):
     cifblocks, header = read_cif(fs, allow_cif2=False)
 
     # Get the first cifblock with atomic sites

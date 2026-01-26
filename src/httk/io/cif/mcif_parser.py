@@ -19,7 +19,139 @@ import itertools, re, math
 from pprint import pprint
 
 from .cif_reader import read_cif
-from .cif_parser import parse_asu_cell, parse_cif_float, parse_structural_modulation, xyz_symops_to_matrix
+from .cif_parser import parse_asu_cell, parse_cif_float, parse_structural_modulation, parse_linear_expr
+
+def extract_parent_q_basis(cifblock):
+    """
+    Returns:
+      basis: list[(kx,ky,kz), ...]  or None if not present.
+    """
+    k_vectors = cifblock.get('parent_propagation_vector.kxkykz')
+    if not k_vectors:
+        return None
+    basis = []
+    for row in k_vectors:
+        # each row like ('0', '0', '1/3') or [0,0,0.333...]
+        basis.append(tuple(cif_to_float(v) for v in row))
+    return basis
+
+def extract_fourier_coeffs(cifblock, max_q_guess=12):
+    """
+    Returns:
+      coeff_rows: list[tuple[int|Fraction|float, ...]]  (each a (c1, c2, ..., cm))
+      m:          number of q-vectors detected (>=0)
+
+    Strategy: find all q{i}_coeff columns present, zip them row-wise, fill missing with 0.
+    Duplicates are deduplicated (since many atom rows may repeat the same coeff tuple).
+    """
+    # discover which q*_coeff columns exist
+    present_cols = []
+    for i in range(1, max_q_guess+1):
+        key = f'atom_site_Fourier_wave_vector.q{i}_coeff'
+        col = cifblock.get(key)
+        if col is not None:
+            present_cols.append((i, key, col))
+
+    if not present_cols:
+        return [], 0
+
+    # All present columns must have same length (number of rows). We’ll be permissive: pad shorter ones with zeros.
+    max_len = max(len(col) for (_, _, col) in present_cols)
+    m = max(i for (i, _, _) in present_cols)
+
+    # Build a dense matrix of size (max_len x m), filling missing cols with zeros
+    # 1-based indexing externally; 0-based in list
+    columns = [None] * m
+    for i, key, col in present_cols:
+        # normalize to numeric (ints preferred) but accept rational/float
+        def norm(x):
+            # msCIF usually stores integer coeffs; permit '1', '-1', '0', '2/3', '0.5'
+            s = str(x).strip()
+            if "/" in s:
+                return Fraction(s)
+            try:
+                v = int(s)
+                return v
+            except Exception:
+                try:
+                    return float(s)
+                except Exception:
+                    return s
+        col_norm = [norm(v) for v in col]
+        if len(col_norm) < max_len:
+            col_norm = col_norm + [0] * (max_len - len(col_norm))
+        columns[i-1] = col_norm
+
+    # Any missing columns among 1..m become zeros
+    for idx in range(m):
+        if columns[idx] is None:
+            columns[idx] = [0] * max_len
+
+    # transpose to rows
+    rows = list(zip(*columns))
+
+    # deduplicate coefficient tuples
+    coeff_rows = []
+    seen = set()
+    for r in rows:
+        tup = tuple(r)
+        # For dedup, coerce Fractions to a canonical string (since Fraction is hashable, this is optional)
+        if tup not in seen:
+            seen.add(tup)
+            coeff_rows.append(tup)
+
+    return coeff_rows, m
+
+def extract_fourier(cifblock):
+    """
+    Returns:
+      fourier: (basis, coeffs)   or None if insufficient data.
+
+    basis       -> from parent_propagation_vector.kxkykz
+    coeffs      -> unique coefficient tuples from atom_site_Fourier_wave_vector.q*_coeff
+    """
+    basis = extract_parent_q_basis(cifblock)
+    coeff_rows, m = extract_fourier_coeffs(cifblock)
+
+    if not basis or not coeff_rows:
+        # Not enough to build a fourier descriptor
+        return None
+
+    if len(basis) < m:
+        # If fewer basis vectors than coeff columns, pad missing q’s with (0,0,0)
+        # (harmless for commensurability; or you can raise if you prefer strictness)
+        basis = list(basis) + [(0.0, 0.0, 0.0)] * (m - len(basis))
+    elif len(basis) > m:
+        # Truncate extra basis vectors (common if multiple parent k’s present but only q1..qm used)
+        basis = list(basis[:m])
+
+    return (basis, coeff_rows)
+
+
+def _parse_xyzt_op(op, use_fractions=False, time_reversal_convention="mcif"):
+    """
+    op: e.g. 'x-y,x,-z+1/2,-1'
+    Returns (R, t, time) where R is 3x3 (list of rows), t is length-3 float list, time is +1/-1.
+    """
+    parts = [p.strip() for p in op.split(",")]
+    if len(parts) != 4:
+        raise ValueError(f"Unexpected op format: {op}")
+    px, py, pz, ts = parts
+    rx, tx = parse_linear_expr(px, use_fractions=use_fractions)
+    ry, ty = parse_linear_expr(py, use_fractions=use_fractions)
+    rz, tz = parse_linear_expr(pz, use_fractions=use_fractions)
+    if time_reversal_convention == "mcif":
+        ts = int(ts)
+    elif time_reversal_convention == "spglib":
+        ts = int((1-int(ts))/2)
+    else:
+        raise Exception("Unrecognized time reversal convention.")
+    return (rx, ry, rz), (tx, ty, tz), ts
+
+
+def xyzt_symops_to_matrix(symops_xyz, use_fractions=False, time_reversal_convention="mcif"):
+    return [_parse_xyzt_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_xyz]
+
 
 def _compose_ops_with_centerings(ops, centerings):
     """
@@ -413,14 +545,11 @@ def is_rational_component(x, max_den=12, tol=1e-6):
 
 def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
 
-    meta = {}
     basis, positions, res, magmoms, spin_basis, magres, symbols, labels, equivalent_atoms = _parse_mag_asu_cell(cifblock)
     structural_q, magnetic_q, mod_dim, has_struct_mod, has_mag_mod, struct_mod_atoms, mag_mod_atoms = _parse_modulation(cifblock)
 
     if error_on_nonmag and magmoms is None:
         raise Exception("Could not extract magnetic moments from mcif file")
-
-    meta["magnetic_q"] = magnetic_q
 
     # Determine if magnetic q is incommensurate
     mq_is_incomm = False
@@ -448,7 +577,7 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
         base_symops_alg = cifblock.get('space_group_symop_magn_ssg_operation.algebraic')
         if base_symops_alg is None:
             raise Exception("No symmetry operations in mcif")
-        base_symops = cif_alg_symops_to_matrix(
+        base_symops = alg_symops_to_matrix(
             base_symops_alg, use_fractions=True, time_reversal_convention="spglib"
         )
     else:
