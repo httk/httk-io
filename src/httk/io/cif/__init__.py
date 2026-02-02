@@ -16,5 +16,5 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from .cif_reader import read_cif
-from .cif_parser import single_asu_from_mcif_file, asus_from_mcif_file
+from .cif_parser import single_asu_from_cif_file, asus_from_cif_file
 from .mcif_parser import single_mag_asu_from_mcif_file, mag_asus_from_mcif_file
