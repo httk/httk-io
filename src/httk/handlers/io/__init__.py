@@ -1,4 +1,4 @@
-from httk.core import register_loader
+from httk.core.load import register_loader
 
 register_loader(
     name="cif",
