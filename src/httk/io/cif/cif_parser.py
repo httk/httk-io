@@ -483,7 +483,7 @@ def cifblock_to_asu(cifblock, *, return_single=False):
         symops_xyz = cifblock.get('space_group_symop_operation_xyz')
     if symops_xyz is None:
         # some CIFs use older spelling
-        symops_xyz = cifblock.get('_symmetry_equiv_pos_as_xyz')
+        symops_xyz = cifblock.get('symmetry_equiv_pos_as_xyz')
 
     if symops_xyz is None:
         raise Exception("No symmetry operations in CIF.")
