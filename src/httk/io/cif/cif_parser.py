@@ -19,6 +19,7 @@ import os, sys, re, math, itertools
 from decimal import Decimal
 from fractions import Fraction
 from collections import OrderedDict
+from .cif_reader import read_cif
 
 # Regexp close to https://www.iucr.org/__data/iucr/cifdic_html/2/cif_mm.dic/Dtypecodes.html
 # matches:  1.234(5), -12.3(12), 3(1)E2, 1.0e-3, +4.2, etc.
@@ -477,6 +478,9 @@ def cifblock_to_asu(cifblock, *, return_single=False):
 
     # standard space group symmetry
     symops_xyz = cifblock.get('space_group_symop.operation_xyz')
+    if symops_xyz is None:
+        # Some readers normalize loop tags without dots, so accept that too.
+        symops_xyz = cifblock.get('space_group_symop_operation_xyz')
     if symops_xyz is None:
         # some CIFs use older spelling
         symops_xyz = cifblock.get('_symmetry_equiv_pos_as_xyz')
