@@ -15,19 +15,31 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, re, math, itertools
+import itertools
+import math
+import re
 from decimal import Decimal
 from fractions import Fraction
-from collections import OrderedDict
+from typing import Any, Literal, TypedDict, overload
+
 from .cif_reader import read_cif
+
+
+class CifMeta(TypedDict):
+    """Metadata returned by :func:`parse_cif_float` when ``meta=True``."""
+
+    esd: float | None
+    resolution: float
+
 
 # Regexp close to https://www.iucr.org/__data/iucr/cifdic_html/2/cif_mm.dic/Dtypecodes.html
 # matches:  1.234(5), -12.3(12), 3(1)E2, 1.0e-3, +4.2, etc.
 _CIF_NUM_RE = re.compile(
-    r'^(?P<sign>-)?'                                   # optional leading minus
-    r'(?P<mant>(?:\d+\.?|\d*\.\d+))(\((?P<esd>\d+)\))?'   # mantissa + optional (uncertainty)
-    r'(?:[eE](?P<exp>[+-]?\d+))?$'                     # optional exponent
+    r'^(?P<sign>-)?'  # optional leading minus
+    r'(?P<mant>(?:\d+\.?|\d*\.\d+))(\((?P<esd>\d+)\))?'  # mantissa + optional (uncertainty)
+    r'(?:[eE](?P<exp>[+-]?\d+))?$'  # optional exponent
 )
+
 
 def _literal_resolution(txt: str) -> float:
     """
@@ -52,7 +64,7 @@ def _literal_resolution(txt: str) -> float:
     # Fractions -> exact
     if "/" in s:
         try:
-            Fraction(s)   # Only to validate it
+            Fraction(s)  # Only to validate it
             return 0.0
         except Exception:
             return 0.0
@@ -66,14 +78,25 @@ def _literal_resolution(txt: str) -> float:
         before, after = s.split(".", 1)
         # malformed: just ignore non-digits
         digits = "".join(ch for ch in after if ch.isdigit())
-        if not digits:   # '5.' or '.' or '.e3'
+        if not digits:  # '5.' or '.' or '.e3'
             return 1.0
         return 10.0 ** (-len(digits))
     else:
         # Integer literal
         return 1.0
 
-def parse_cif_float(token: str, *, meta=False, pragmatic=False):
+
+@overload
+def parse_cif_float(token: str, *, meta: Literal[False] = ..., pragmatic: bool = ...) -> float | None: ...
+
+
+@overload
+def parse_cif_float(token: str, *, meta: Literal[True], pragmatic: bool = ...) -> tuple[float | None, CifMeta]: ...
+
+
+def parse_cif_float(
+    token: str, *, meta: bool = False, pragmatic: bool = False
+) -> float | None | tuple[float | None, CifMeta]:
     """
     Parse a CIF numeric field.
 
@@ -100,7 +123,7 @@ def parse_cif_float(token: str, *, meta=False, pragmatic=False):
         if pragmatic:
             t = t.replace("\u2212", "-").replace("\u2013", "-").replace("\u2014", "-")
         else:
-            raise Exception("Cif contains non-ascii minus sign: "+str(t))
+            raise Exception("Cif contains non-ascii minus sign: " + str(t))
 
     m = _CIF_NUM_RE.match(t)
 
@@ -124,11 +147,11 @@ def parse_cif_float(token: str, *, meta=False, pragmatic=False):
     sign = -1 if m.group('sign') == '-' else 1
     mant_str = m.group('mant')
     mant = Decimal(mant_str)
-    exp  = int(m.group('exp') or '0')
-    val  = float(sign * mant * (Decimal(10) ** exp))
+    exp = int(m.group('exp') or '0')
+    val = float(sign * mant * (Decimal(10) ** exp))
 
     # resolution from mantissa literal
-    res = _literal_resolution(mant_str) * (10.0 ** exp)
+    res = _literal_resolution(mant_str) * (10.0**exp)
 
     esd_str = m.group('esd')
     if not meta:
@@ -166,13 +189,13 @@ def parse_cif_int(token: str, *, strict: bool = True, allow_round: bool = False)
     else:
         sign = -1 if m.group('sign') == '-' else 1
         mant = Decimal(m.group('mant'))
-        exp  = int(m.group('exp') or '0')
-        val  = sign * mant * (Decimal(10) ** exp)
+        exp = int(m.group('exp') or '0')
+        val = sign * mant * (Decimal(10) ** exp)
 
     # Decide how to coerce
     if strict:
         # exactly integral?
-        if val == val.to_integral_value():   # no fractional part
+        if val == val.to_integral_value():  # no fractional part
             return int(val)
         raise ValueError(f"Non-integer numeric cannot be coerced strictly: {token!r}")
     else:
@@ -196,12 +219,11 @@ def parse_linear_expr(expr, use_fractions=False):
     if s[0] not in "+-":
         s = "+" + s
 
-    coeffs = {'x': 0, 'y': 0, 'z': 0}
+    coeffs: dict[str, Fraction | float | int] = {'x': 0, 'y': 0, 'z': 0}
     const = Fraction(0) if use_fractions else 0.0
 
     # ([sign]) ( [optional number] [var]  |  number )
-    token_re = r'([+-])(?:(?:(?:(\d+(?:/\d+)?|\d*\.\d+)?)' \
-               r'(x|y|z))|((?:\d+/\d+)|(?:\d+(?:\.\d+)?)))'
+    token_re = r'([+-])(?:(?:(?:(\d+(?:/\d+)?|\d*\.\d+)?)' r'(x|y|z))|((?:\d+/\d+)|(?:\d+(?:\.\d+)?)))'
 
     pos = 0
     for m in re.finditer(token_re, s):
@@ -259,7 +281,7 @@ def xyz_symops_to_matrix(symops_xyz, use_fractions=False):
     return [parse_xyz_op(s, use_fractions) for s in symops_xyz]
 
 
-def _parse_atoms(block, resolution=True):
+def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     """
     Returns:
       if resolution == False:
@@ -273,10 +295,10 @@ def _parse_atoms(block, resolution=True):
       - None otherwise
     """
     syms = block.get('atom_site_type_symbol')
-    lbs  = block.get('atom_site_label')
-    xs   = block.get('atom_site_fract_x')
-    ys   = block.get('atom_site_fract_y')
-    zs   = block.get('atom_site_fract_z')
+    lbs = block.get('atom_site_label')
+    xs = block.get('atom_site_fract_x')
+    ys = block.get('atom_site_fract_y')
+    zs = block.get('atom_site_fract_z')
 
     n = len(xs)
     assert len(ys) == len(zs) == len(lbs) == len(syms) == n
@@ -292,7 +314,7 @@ def _parse_atoms(block, resolution=True):
         occs = None
 
     symbols = [s.strip() for s in syms]
-    labels  = [l.strip() for l in lbs]
+    labels = [lab.strip() for lab in lbs]
 
     # Fast path: no resolution / grid requested
     if not resolution:
@@ -316,40 +338,34 @@ def _parse_atoms(block, resolution=True):
         vz, mz = parse_cif_float(zi, meta=True)
 
         positions.append((vx, vy, vz))
-        coord_resolutions.extend([
-            mx.get('resolution', 0.0),
-            my.get('resolution', 0.0),
-            mz.get('resolution', 0.0),
-        ])
+        coord_resolutions.extend(
+            [
+                mx.get('resolution', 0.0),
+                my.get('resolution', 0.0),
+                mz.get('resolution', 0.0),
+            ]
+        )
 
     # 1) Data-implied resolution: take the COARSEST (largest) non-zero resolution.
     finite_res = [r for r in coord_resolutions if r is not None]
     if finite_res:
         data_resolution = max(finite_res)
     else:
-        data_resolution = 0.0   # no constraint from data formatting
+        data_resolution = 0.0  # no constraint from data formatting
 
     # 2) Separation resolution from coordinates (fractional, so use periodic deltas)
     if n > 1:
+
         def periodic_delta(a, b):
             d = abs(a - b)
-            return min(d, 1.0 - d)   # fractional periodicity
+            return min(d, 1.0 - d)  # fractional periodicity
 
-        eps = data_resolution/10 if data_resolution > 0.0 else 1e-12
+        eps = data_resolution / 10 if data_resolution > 0.0 else 1e-12
 
         # compute deltas for each axis
-        deltas_x = [
-            periodic_delta(positions[i][0], positions[j][0])
-            for i, j in itertools.combinations(range(n), 2)
-        ]
-        deltas_y = [
-            periodic_delta(positions[i][1], positions[j][1])
-            for i, j in itertools.combinations(range(n), 2)
-        ]
-        deltas_z = [
-            periodic_delta(positions[i][2], positions[j][2])
-            for i, j in itertools.combinations(range(n), 2)
-        ]
+        deltas_x = [periodic_delta(positions[i][0], positions[j][0]) for i, j in itertools.combinations(range(n), 2)]
+        deltas_y = [periodic_delta(positions[i][1], positions[j][1]) for i, j in itertools.combinations(range(n), 2)]
+        deltas_z = [periodic_delta(positions[i][2], positions[j][2]) for i, j in itertools.combinations(range(n), 2)]
 
         # filter out zero-ish separations using adaptive epsilon
         pos_x = [d for d in deltas_x if d > eps]
@@ -370,7 +386,6 @@ def _parse_atoms(block, resolution=True):
     else:
         separation_resolution = float('inf')
 
-
     # 3) Final res
     if separation_resolution == float('inf'):
         res = data_resolution
@@ -388,7 +403,7 @@ def _parse_uc(block):
     b = parse_cif_float(block.get('cell_length_b'))
     c = parse_cif_float(block.get('cell_length_c'))
     alpha = parse_cif_float(block.get('cell_angle_alpha'))
-    beta  = parse_cif_float(block.get('cell_angle_beta'))
+    beta = parse_cif_float(block.get('cell_angle_beta'))
     gamma = parse_cif_float(block.get('cell_angle_gamma'))
     return a, b, c, alpha, beta, gamma
 
@@ -416,19 +431,19 @@ def _basis_from_lengths_angles(a, b, c, alpha, beta, gamma):
 
 
 def parse_asu_cell(cifblock):
-    a,b,c,alpha,beta,gamma = _parse_uc(cifblock)
-    basis = _basis_from_lengths_angles(a,b,c,alpha,beta,gamma)
+    a, b, c, alpha, beta, gamma = _parse_uc(cifblock)
+    basis = _basis_from_lengths_angles(a, b, c, alpha, beta, gamma)
     symbols, labels, positions, occs, res = _parse_atoms(cifblock, resolution=True)
 
     # figure out equivalent atoms based on labels
     labels_map = {}
     equivalent_atoms = []
     next_id = 1
-    for l in labels:
-        if l not in labels_map:
-            labels_map[l] = next_id
+    for lab in labels:
+        if lab not in labels_map:
+            labels_map[lab] = next_id
             next_id += 1
-        equivalent_atoms.append(labels_map[l])
+        equivalent_atoms.append(labels_map[lab])
 
     return basis, positions, res, symbols, labels, equivalent_atoms
 
@@ -436,11 +451,11 @@ def parse_asu_cell(cifblock):
 def parse_structural_modulation(cifblock):
     """
     Extract structural superspace modulation information from a standard CIF.
-    Returns:
-        structural_q : list of q-vectors or None
-        mod_dim      : integer (0 if absent)
-        has_struct_mod : bool
-        struct_mod_atoms : list of labels
+
+    Returns a tuple ``(structural_q, mod_dim, has_struct_mod, struct_mod_atoms)`` where
+    ``structural_q`` is a list of q-vectors or ``None``, ``mod_dim`` is the modulation
+    dimension (0 if absent), ``has_struct_mod`` is a bool, and ``struct_mod_atoms`` is a
+    sorted list of atom-site labels.
     """
     # modulation dimension (0 if absent)
     mod_dim = int(cifblock.get('cell_modulation_dimension', 0))
@@ -451,8 +466,7 @@ def parse_structural_modulation(cifblock):
     qy = cifblock.get('_cell_wave_vector_y')
     qz = cifblock.get('_cell_wave_vector_z')
     if qx and qy and qz:
-        structural_q = [[float(qx[i]), float(qy[i]), float(qz[i])]
-                        for i in range(len(qx))]
+        structural_q = [[float(qx[i]), float(qy[i]), float(qz[i])] for i in range(len(qx))]
 
     # detect structural Fourier modulations
     has_struct_mod = False
@@ -509,7 +523,21 @@ def cifblock_to_asu(cifblock, *, return_single=False):
     icsd = cifblock.get('database_code_ICSD')
     doi = cifblock.get('citation_doi')
 
-    return {'basis':basis, 'positions':positions, 'symbols':symbols, 'symops':symops, 'incomm':incomm, 'space_group_nbr':space_group_nbr, 'space_group_name_hm':space_group_name_hm, 'space_group_name_hall':space_group_name_hall, 'icsd':icsd, 'doi':doi, 'resolution':resolution, 'equivalent_atoms':equivalent_atoms, 'labels':labels}
+    return {
+        'basis': basis,
+        'positions': positions,
+        'symbols': symbols,
+        'symops': symops,
+        'incomm': incomm,
+        'space_group_nbr': space_group_nbr,
+        'space_group_name_hm': space_group_name_hm,
+        'space_group_name_hall': space_group_name_hall,
+        'icsd': icsd,
+        'doi': doi,
+        'resolution': resolution,
+        'equivalent_atoms': equivalent_atoms,
+        'labels': labels,
+    }
 
 
 def asus_from_cif_file(fs):

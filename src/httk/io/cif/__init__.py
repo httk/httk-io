@@ -15,7 +15,16 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from .cif_parser import asus_from_cif_file, single_asu_from_cif_file
 from .cif_reader import read_cif
-from .cif_parser import single_asu_from_cif_file, asus_from_cif_file
-from .mcif_parser import single_mag_asu_from_mcif_file, mag_asus_from_mcif_file
 from .expand_asu import cif_to_struct
+from .mcif_parser import mag_asus_from_mcif_file, single_mag_asu_from_mcif_file
+
+__all__ = [
+    "asus_from_cif_file",
+    "cif_to_struct",
+    "mag_asus_from_mcif_file",
+    "read_cif",
+    "single_asu_from_cif_file",
+    "single_mag_asu_from_mcif_file",
+]

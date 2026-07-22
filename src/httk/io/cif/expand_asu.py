@@ -1,11 +1,45 @@
 import itertools
+from collections.abc import Callable
+from typing import Any
+
 import numpy as np
+
 from .cif_parser import single_asu_from_cif_file
 from .mcif_parser import single_mag_asu_from_mcif_file
+
+
+def _get_snapped_magdir(v, mag_grid_dens, spin_basis, *, tol=1e-8, int_mult_of_grid=False) -> tuple[Any, int]:
+    """Snap a magnetic moment vector to a direction class key and its sign."""
+    if spin_basis == "collinear":
+        if abs(v) < tol:
+            return 0, 0
+        return 1, 1 if v > 0 else -1
+
+    v = np.asarray(v, dtype=float)
+    n = np.linalg.norm(v)
+    if n < tol:
+        return (0, 0, 0), 0
+    magdir = v / n
+    k = np.trunc(magdir * mag_grid_dens).astype(int)
+
+    if not np.any(k):
+        return (0, 0, 0), 0
+
+    first_idx = np.flatnonzero(k)[0]
+    sig = 1 if k[first_idx] > 0 else -1
+    if sig < 0:
+        k = -k
+
+    if int_mult_of_grid:
+        return tuple(k.tolist()), sig
+
+    return k / mag_grid_dens, sig
+
 
 def _wrap01(v):
     v = np.asarray(v, float)
     return v - np.floor(v)
+
 
 def _snap_to_grid(v, grid_den, tol=1e-8):
     """
@@ -16,14 +50,17 @@ def _snap_to_grid(v, grid_den, tol=1e-8):
     idx %= grid_den
     return idx / grid_den
 
+
 def pos_key(v, grid_den, tol=1e-8):
     """Hashable key for a position after snapping."""
     v_snap = _snap_to_grid(np.asarray(v, float), grid_den, tol)
     return tuple(int(round(x * grid_den)) for x in v_snap)
 
+
 def _wrap_neighbor_key(k, delta, grid_dens):
     """Return neighbor key with periodic wrap-around."""
     return tuple((ki + di) % grid_dens for ki, di in zip(k, delta))
+
 
 def find_adjacent_key_wrap(k, pos_map, grid_dens):
     """
@@ -43,6 +80,7 @@ def find_adjacent_key_wrap(k, pos_map, grid_dens):
 
     return None
 
+
 def apply_op_frac(R, t, f):
     """
     Apply a (fractional) symmetry operation and wrap to [0,1).
@@ -53,13 +91,16 @@ def apply_op_frac(R, t, f):
     f = np.asarray(f, float)
     return _wrap01(R @ f + t)
 
+
 # ---------- Species helpers ----------
+
 
 def species_to_numbers(species):
     unique_species = sorted(set(species))
     species_to_number = {sp: i + 1 for i, sp in enumerate(unique_species)}
     numbers_to_species = {i + 1: sp for i, sp in enumerate(unique_species)}
     return [species_to_number[sp] for sp in species], numbers_to_species
+
 
 def asu_data_to_numbers_by_labels(asu_data):
     """
@@ -78,7 +119,9 @@ def asu_data_to_numbers_by_labels(asu_data):
         numbers.append(labels_map[lab])
     return numbers, numbers_to_species
 
+
 # ---------- Generalized expander ----------
+
 
 def expand_asu(
     positions_frac,
@@ -88,28 +131,27 @@ def expand_asu(
     grid_dens=16384,
     tol=1e-6,
     moments=None,
-    apply_op_moment_fn=None,
+    apply_op_moment_fn: Callable[..., Any] | None = None,
     spin_basis=None,
     basis=None,
     mag_grid_dens=16384,
-):
+) -> tuple[Any, ...]:
     """
     Generalized ASU expansion.
 
-    Nonmag usage:
-        positions_full, species_full = expand_asu_general(pos, species, ops)
+    For a non-magnetic expansion::
 
-    Mag usage:
-        positions_full, species_full, moments_full, mom_classes, symops_classes = expand_asu_general(
+        positions_full, species_full = expand_asu(pos, species, ops)
+
+    For a magnetic expansion::
+
+        positions_full, species_full, moments_full, mom_classes, symops_classes = expand_asu(
             pos, species, ops, moments=moments, apply_op_moment_fn=apply_op_moment,
-            spin_basis=spin_basis, basis=basis, mag_grid_dens=mag_grid_dens
-        )
+            spin_basis=spin_basis, basis=basis, mag_grid_dens=mag_grid_dens)
 
-    Notes
-    -----
-    - For nonmag, `ops` are (R, t).
-    - For mag,  `ops` are (R, t, time_flag).
-    - Dedup logic matches your original (snap keys + neighbor wrap).
+    For non-magnetic input ``ops`` are ``(R, t)``; for magnetic input they are
+    ``(R, t, time_flag)``. Duplicate positions are removed using snapped position keys
+    with neighbour wrap-around.
     """
 
     positions_frac = list(positions_frac)
@@ -127,20 +169,22 @@ def expand_asu(
             raise ValueError("moments provided but basis is None")
 
     # For nonmag
-    seen_by_pos = set()
+    seen_by_pos: set[Any] = set()
     pos_full = []
     species_full = []
 
     # For mag (kept compatible with your original outputs)
     mom_full = []
     mom_classes = []
-    mom_dirs = None
-    ops_map = None
+    mom_dirs: list[Any] = []
+    ops_map: list[dict[Any, Any]] = []
+    # map from snapped-position key -> (moment, moment_class)
+    seen_by_pos_mag: dict[Any, Any] = {}
 
     if moments is not None:
         # replicate your "moment direction classes" machinery
         if spin_basis in ["cartesian", "crystal"]:
-            zero_spin = (0, 0, 0)
+            zero_spin: tuple[int, int, int] | int = (0, 0, 0)
         elif spin_basis in ["collinear"]:
             zero_spin = 0
         else:
@@ -149,41 +193,13 @@ def expand_asu(
         mom_dirs = [zero_spin]
         ops_map = [{} for _ in range(len(ops))]
 
-        def get_snapped_magdir(v, mag_grid_dens, spin_basis, *, tol=1e-8, int_mult_of_grid=False):
-            # directly lifted from your snippet (kept logic)
-            if spin_basis == "collinear":
-                if abs(v) < tol:
-                    return 0, 0
-                return 1, 1 if v > 0 else -1
-
-            v = np.asarray(v, dtype=float)
-            n = np.linalg.norm(v)
-            if n < tol:
-                return (0, 0, 0), 0
-            magdir = v / n
-            k = np.trunc(magdir * mag_grid_dens).astype(int)
-
-            if not np.any(k):
-                return (0, 0, 0), 0
-
-            first_idx = np.flatnonzero(k)[0]
-            sig = 1 if k[first_idx] > 0 else -1
-            if sig < 0:
-                k = -k
-
-            if int_mult_of_grid:
-                return tuple(k.tolist()), sig
-
-            return k / mag_grid_dens, sig
-
-        # map from snapped-position key -> (moment, moment_class)
-        seen_by_pos_mag = {}
-
     for seed_idx, (seed_pos, specie) in enumerate(zip(positions_frac, species)):
         f = np.asarray(seed_pos, float)
+        m0: Any = None
+        m0class = 0
         if moments is not None:
             m0 = moments[seed_idx]
-            m0dir, m0dir_sign = get_snapped_magdir(m0, mag_grid_dens, spin_basis, int_mult_of_grid=True)
+            m0dir, m0dir_sign = _get_snapped_magdir(m0, mag_grid_dens, spin_basis, int_mult_of_grid=True)
             if m0dir not in mom_dirs:
                 mom_dirs.append(m0dir)
             m0class = mom_dirs.index(m0dir) * m0dir_sign
@@ -195,6 +211,7 @@ def expand_asu(
                 g = apply_op_frac(R, t, f)
             else:
                 # mag: op=(R,t,time_flag)
+                assert apply_op_moment_fn is not None
                 R, t, time_flag = op
                 g = apply_op_frac(R, t, f)
                 m = apply_op_moment_fn(R, time_flag, m0, basis, spin_basis)
@@ -202,7 +219,7 @@ def expand_asu(
                 k = pos_key(g, grid_dens, tol=1e-8)
                 kf = find_adjacent_key_wrap(k, seen_by_pos_mag, grid_dens)
 
-                mdir, mdir_sign = get_snapped_magdir(m, mag_grid_dens, spin_basis, int_mult_of_grid=True)
+                mdir, mdir_sign = _get_snapped_magdir(m, mag_grid_dens, spin_basis, int_mult_of_grid=True)
                 if mdir not in mom_dirs:
                     mom_dirs.append(mdir)
                 mclass = mom_dirs.index(mdir) * mdir_sign
@@ -213,8 +230,13 @@ def expand_asu(
                         if ops_map[ops_idx][m0class] != mclass:
                             raise Exception(
                                 "Inconsistent op spin mapping: "
-                                + str(m0class) + "->" + str(ops_map[ops_idx][m0class])
-                                + " vs. " + str(mclass) + " for: " + str(op)
+                                + str(m0class)
+                                + "->"
+                                + str(ops_map[ops_idx][m0class])
+                                + " vs. "
+                                + str(mclass)
+                                + " for: "
+                                + str(op)
                             )
                     else:
                         ops_map[ops_idx][m0class] = mclass
@@ -225,9 +247,17 @@ def expand_asu(
                         if spin_basis != "collinear":
                             raise Exception(
                                 "Internally inconsistent positions and symmetry ops: "
-                                + str(op) + " transforms " + str(f) + ":" + str(m0)
-                                + " into " + str(g) + ":" + str(m)
-                                + " but site is: " + str(m_prev)
+                                + str(op)
+                                + " transforms "
+                                + str(f)
+                                + ":"
+                                + str(m0)
+                                + " into "
+                                + str(g)
+                                + ":"
+                                + str(m)
+                                + " but site is: "
+                                + str(m_prev)
                             )
                         elif abs(m) - abs(m_prev) < 1e-6:
                             m = m_prev
@@ -235,9 +265,17 @@ def expand_asu(
                         else:
                             raise Exception(
                                 "Internally inconsistent positions and symmetry ops: "
-                                + str(op) + " transforms " + str(f) + ":" + str(m0)
-                                + " into " + str(g) + ":" + str(m)
-                                + " but site is: " + str(m_prev)
+                                + str(op)
+                                + " transforms "
+                                + str(f)
+                                + ":"
+                                + str(m0)
+                                + " into "
+                                + str(g)
+                                + ":"
+                                + str(m)
+                                + " but site is: "
+                                + str(m_prev)
                             )
                     continue
 
@@ -277,18 +315,20 @@ def expand_asu(
 
 # ---------- Nonmag CIF convenience ----------
 
+
 def _apply_op_moment_crystal(R, time_flag, m):
-     """
-     Magnetic moment is an axial vector: m' = time * det(R) * R * m
-     R is the same 3x3 integer matrix used on fractional coords (active rotation in the crystal basis).
-     """
-     R = np.asarray(R, int)
-     m = np.asarray(m, float)
-     detR = _det_int3(R)  # ±1
-     if time_flag != 0:
-         return float(time_flag) * detR * (R @ m)
-     else:
-         return detR * (R @ m)
+    """
+    Magnetic moment is an axial vector: m' = time * det(R) * R * m
+    R is the same 3x3 integer matrix used on fractional coords (active rotation in the crystal basis).
+    """
+    R = np.asarray(R, int)
+    m = np.asarray(m, float)
+    detR = int(round(np.linalg.det(R)))  # ±1
+    if time_flag != 0:
+        return float(time_flag) * detR * (R @ m)
+    else:
+        return detR * (R @ m)
+
 
 def _apply_op_moment_cartesian(R, time_reversal, m, lattice):
     """
@@ -311,17 +351,18 @@ def _apply_op_moment_cartesian(R, time_reversal, m, lattice):
     s = (detR * R_cart) @ m
 
     # Time reversal flips spin
-    #if time_reversal != 0:
+    # if time_reversal != 0:
     #    s = float(time_reversal)*s
     # Spglib convention
     if time_reversal == 1:
-        s = -1.0*s
+        s = -1.0 * s
     elif time_reversal != 0:
-        raise Exception("Inconsitency error: unexpected time reversal flag:"+str(time_reversal))
+        raise Exception("Inconsitency error: unexpected time reversal flag:" + str(time_reversal))
 
     # Optional: clean tiny numerical noise
     s[np.isclose(s, 0.0, atol=1e-12)] = 0.0
     return s
+
 
 def _apply_op_moment_collinear(R, time_reversal, m0):
     """
@@ -357,11 +398,12 @@ def _apply_op_moment_collinear(R, time_reversal, m0):
 
     R = np.asarray(R, int)
     detR = int(round(np.linalg.det(R)))
-    #if detR not in (+1, -1):
+    # if detR not in (+1, -1):
     #    raise ValueError(f"det(R) must be +/-1, got {detR}")
 
     flips = (time_reversal + (1 if detR == -1 else 0)) % 2
     return -m0 if flips else m0
+
 
 def apply_op_moment(R, time_flag, m, lattice, spin_basis):
     if spin_basis == "collinear":
@@ -370,7 +412,8 @@ def apply_op_moment(R, time_flag, m, lattice, spin_basis):
         return _apply_op_moment_cartesian(R, time_flag, m, lattice)
     if spin_basis == "crystal":
         return _apply_op_moment_crystal(R, time_flag, m)
-    raise Exception("Unrecognized spin_basis: "+str(spin_basis))
+    raise Exception("Unrecognized spin_basis: " + str(spin_basis))
+
 
 def mag_asu_data_to_numbers(mag_asu_data):
     """
@@ -393,22 +436,16 @@ def mag_asu_data_to_numbers(mag_asu_data):
 
 # -------------
 
+
 def cif_to_struct(fs, *, separate_noneq_atoms=False, tol=1e-6):
     """
-    Read a CIF file, expand the asymmetric unit, and return the result
+    Read a CIF file, expand the asymmetric unit, and return the result.
 
-    Parameters
-    ----------
-    fs : filename or file-like (as accepted by your read_cif layer)
-    separate_noneq_atoms : bool
-        If True, assign unique numbers by CIF labels (even if same element).
-        If False, assign by element symbol.
-    tol : float
-        Used in expansion consistency (position hashing uses fixed 1e-8 like your original).
-
-    Returns
-    -------
-    dict with data
+    ``fs`` is a filename or file-like object (anything accepted by the ``read_cif``
+    layer). When ``separate_noneq_atoms`` is true, unique numbers are assigned by CIF
+    label (even for the same element); otherwise numbers are assigned by element
+    symbol. ``tol`` controls the expansion consistency tolerance. Returns a dict with
+    the expanded structure data.
     """
 
     asu_data = single_asu_from_cif_file(fs)
@@ -431,7 +468,7 @@ def cif_to_struct(fs, *, separate_noneq_atoms=False, tol=1e-6):
         numbers, numbers_to_species = asu_data_to_numbers_by_labels(asu_data)
         # expand produced labels_full; convert those to numbers via label->id
         label_to_id = {lab: i for i, lab in enumerate(sorted(set(asu_data["labels"])), start=1)}
-        numbers_full = [label_to_id[l] for l in species_full]
+        numbers_full = [label_to_id[lab] for lab in species_full]
         species_meta = [numbers_to_species[i] for i in numbers_full]
     else:
         numbers_full, numbers_to_species = species_to_numbers(species_full)
@@ -453,25 +490,15 @@ def cif_to_struct(fs, *, separate_noneq_atoms=False, tol=1e-6):
 
 def expand_mag_asu(fs, *, separate_noneq_atoms=False, error_on_nonmag=True, tol=1e-6, mag_grid_dens=16384):
     """
-    Read an mCIF file, expand the asymmetric unit, and return the result
+    Read an mCIF file, expand the asymmetric unit, and return the result.
 
-    Parameters
-    ----------
-    fs : filename or file-like
-        As accepted by your read_cif() stack.
-    separate_noneq_atoms : bool
-        If True, assign unique numbers by CIF labels (even if same element symbol).
-        If False, assign by element symbol.
-    error_on_nonmag : bool
-        If True, raise if no magnetic moments can be extracted.
-    tol : float
-        Expansion consistency tolerance (matches your original usage).
-    mag_grid_dens : int
-        Density used when snapping magnetization directions/classes (passed through the generalized expander).
-
-    Returns
-    -------
-    dict with data
+    ``fs`` is a filename or file-like object (anything accepted by the ``read_cif``
+    stack). When ``separate_noneq_atoms`` is true, unique numbers are assigned by CIF
+    label (even for the same element symbol); otherwise numbers are assigned by
+    element symbol. When ``error_on_nonmag`` is true, an error is raised if no magnetic
+    moments can be extracted. ``tol`` is the expansion consistency tolerance and
+    ``mag_grid_dens`` is the density used when snapping magnetization directions and
+    classes. Returns a dict with the expanded magnetic structure data.
     """
     mag_asu_data = single_mag_asu_from_mcif_file(fs, error_on_nonmag=error_on_nonmag)
 

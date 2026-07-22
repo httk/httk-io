@@ -15,29 +15,31 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, re, math
-from decimal import Decimal
-from fractions import Fraction
+import re
 from collections import OrderedDict
+from collections.abc import Iterable, Iterator
+from typing import Self
 
-class rewindable_iterator(object):
 
-    def __init__(self, iterator):
-        self._iter = iter(iterator)
+class rewindable_iterator:
+
+    def __init__(self, iterator: Iterable[str]) -> None:
+        self._iter: Iterator[str] = iter(iterator)
         self._rewind = False
-        self._cache = None
+        self._cache: str | None = None
 
-    def __iter__(self):
+    def __iter__(self) -> Self:
         return self
 
-    def __next__(self):
+    def __next__(self) -> str:
         if self._rewind:
             self._rewind = False
         else:
             self._cache = next(self._iter)
+        assert self._cache is not None
         return self._cache
 
-    def rewind(self, rewindstr=None):
+    def rewind(self, rewindstr: str | None = None) -> None:
         if self._rewind:
             raise RuntimeError("Tried to backup more than one step.")
         elif self._cache is None:
@@ -74,7 +76,7 @@ def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
             f.rewind()
             break
 
-    while True and len(header)>0:
+    while True and len(header) > 0:
         for i in range(len(header)):
             try:
                 row = next(f)
@@ -143,10 +145,10 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
             # The cif quoting rules are ... weird. Quotes are "escaped" if they are not followed by whitespace.
             quote = striprow[0]
             starti = 1
-            for chari in range(1, len(striprow)-1):
-                if striprow[chari] == quote and str(striprow[chari+1]).isspace():
+            for chari in range(1, len(striprow) - 1):
+                if striprow[chari] == quote and str(striprow[chari + 1]).isspace():
                     endi = chari
-                    endq = chari+1
+                    endq = chari + 1
                     break
             else:
                 if striprow[-1] != quote:
@@ -154,7 +156,7 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
                     endi = len(striprow)
                     endq = len(striprow)
                 else:
-                    endi = len(striprow)-1
+                    endi = len(striprow) - 1
                     endq = len(striprow)
             data_value = striprow[starti:endi]
             if endq != len(striprow):
@@ -166,18 +168,20 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
         elif allow_cif2 and inlist and striprow.startswith("]"):
             # TODO: Is ] allowed without whitespace after? I need to check the spec
             splitstr = striprow.split("]", 1)
-            if len(splitstr)>1 and len(splitstr[1])>0:
+            if len(splitstr) > 1 and len(splitstr[1]) > 0:
                 f.rewind(splitstr[1])
                 noteol = True
             data_value = None
             break
         elif allow_cif2 and striprow.startswith("["):
-            if len(striprow)>1:
+            if len(striprow) > 1:
                 f.rewind(striprow[1:])
                 noteol = True
             data_value = []
             while True:
-                innerval, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, use_types, inloop=False, inlist=True)
+                innerval, noteol = _read_cif_data_value(
+                    f, noteol, pragmatic, allow_cif2, use_types, inloop=False, inlist=True
+                )
                 if innerval is None:
                     break
                 data_value += [innerval]
@@ -188,9 +192,9 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
             data_value = splitstr[0].strip()
             rightside = ""
             if len(splitstr) > 1:
-                f.rewind(splitstr[1]+"]"+splitstr2[1])
+                f.rewind(splitstr[1] + "]" + splitstr2[1])
             else:
-                f.rewind("]"+splitstr2[1])
+                f.rewind("]" + splitstr2[1])
             noteol = True
             break
         else:
@@ -215,11 +219,15 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
             else:
                 noteol = False
             break
-    if use_types:
+    if use_types and isinstance(data_value, str):
+        # Imported lazily to avoid an import cycle (cif_parser imports read_cif).
+        from .cif_parser import parse_cif_float, parse_cif_int
+        from .cif_writer import _cif_is_float, _cif_is_int
+
         if _cif_is_int(data_value):
-            data_value = cif_to_int(data_value)
+            data_value = parse_cif_int(data_value)
         elif _cif_is_float(data_value):
-            data_value = cif_to_float(data_value)
+            data_value = parse_cif_float(data_value)
 
     return data_value, noteol
 
@@ -238,7 +246,7 @@ def _read_cif_data_block(f, pragmatic=True, allow_cif2=False, use_types=False):
         elif lowrow.startswith("loop_"):
             _read_cif_rewind_if_needed(f, row, 1)
             loopdata = _read_cif_loop(f, pragmatic, allow_cif2, use_types)
-            data_items['loop_'+str(loops)] = list(loopdata.keys())
+            data_items['loop_' + str(loops)] = list(loopdata.keys())
             loops += 1
             data_items.update(loopdata)
         elif striprow.startswith(";"):
@@ -308,4 +316,3 @@ def read_cif(fs, pragmatic=True, allow_cif2=False, use_types=False):
     finally:
         fs.close()
     return datalist, header
-

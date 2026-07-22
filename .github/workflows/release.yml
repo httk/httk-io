@@ -1,0 +1,130 @@
+name: Publish package
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and verify distributions
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Require the release tag to match the package version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python - <<'PY'
+          import os
+          import tomllib
+          from pathlib import Path
+
+          version = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          expected_tag = f"v{version}"
+          if os.environ["RELEASE_TAG"] != expected_tag:
+              raise SystemExit(
+                  f"release tag {os.environ['RELEASE_TAG']!r} does not match {expected_tag!r}"
+              )
+          PY
+
+      - name: Install development and release dependencies
+        run: python -m pip install -e ".[dev,docs,release]"
+
+      - name: Run release checks
+        run: make release-check
+
+      - name: Verify wheel metadata and namespace packaging
+        run: |
+          python - <<'PY'
+          import glob
+          import zipfile
+
+          wheel = glob.glob("dist/*.whl")[0]
+          zf = zipfile.ZipFile(wheel)
+          names = zf.namelist()
+
+          # httk-io shares the PEP 420 "httk" namespace and imports httk.core at
+          # import time, so a --no-deps "import httk.io" is not a valid isolation
+          # test. Instead assert both namespace roots ship in the wheel and that
+          # the runtime dependencies are declared in the metadata.
+          required = [
+              "httk/io/__init__.py",
+              "httk/handlers/io/__init__.py",
+          ]
+          missing = [p for p in required if p not in names]
+          if missing:
+              raise SystemExit(f"wheel is missing expected packages: {missing}")
+
+          if "httk/__init__.py" in names or "httk/handlers/__init__.py" in names:
+              raise SystemExit("wheel ships a namespace __init__.py; PEP 420 layout broken")
+
+          metadata = zf.read(next(n for n in names if n.endswith("METADATA"))).decode()
+          for dep in ("httk-core", "numpy"):
+              if not any(
+                  line.startswith("Requires-Dist:") and dep in line and "extra ==" not in line
+                  for line in metadata.splitlines()
+              ):
+                  raise SystemExit(f"wheel metadata does not require {dep!r} at runtime")
+
+          print("wheel packaging and metadata OK:", wheel)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+          if-no-files-found: error
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/httk-io
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distributions to TestPyPI
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: Publish to PyPI
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/httk-io
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
