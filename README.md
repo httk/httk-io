@@ -1,6 +1,6 @@
 # httk-io
 
-`httk-io` is the file input/output module for httk v2. It provides:
+*httk-io* is the file input/output module for *httk₂*. It provides:
 
 - the `httk.io` package within the PEP 420 native `httk` namespace, currently a
   CIF/mCIF parser, reader and writer stack; and
