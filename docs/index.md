@@ -1,6 +1,9 @@
 # *httk-io*
 
-*httk-io* is a *httk v2* module providing file input/output under the namespace
+This site documents specifically the *httk-io* module. For the full
+documentation of *httk₂* as a whole, see [docs.httk.org](https://docs.httk.org).
+
+*httk-io* is a *httk₂* module providing file input/output under the namespace
 `httk.io`, plus the handler package `httk.handlers.io` that registers its loaders
 with *httk-core*. It currently ships a CIF/mCIF parser, reader and writer stack.
 
