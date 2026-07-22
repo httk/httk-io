@@ -15,13 +15,15 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 def compose_ops_with_centerings(ops, centerings):
     """
-    ops:         list of (R, t, time_flag) from _space_group_symop_magn_operation
-    centerings:  list of (c, time_c) where c is 3-vector fractional translation,
-                 time_c is 0 or 1 (0 = no time reversal)
+    Compose symmetry operations with centering translations.
 
-    Returns a new list of (R, t', time') where t' = t + c and time' = (time_flag + time_c)%2.
+    ``ops`` is a list of ``(R, t, time_flag)`` operations and ``centerings`` is a list
+    of ``(c, time_c)`` where ``c`` is a 3-vector fractional translation and ``time_c``
+    is 0 or 1 (0 means no time reversal). Returns a new list of ``(R, t', time')`` where
+    ``t' = t + c`` and ``time' = (time_flag + time_c) % 2``.
     """
     composed = []
     for R, t, time_flag in ops:
@@ -29,6 +31,6 @@ def compose_ops_with_centerings(ops, centerings):
             if Rc != ((1, 0, 0), (0, 1, 0), (0, 0, 1)):
                 raise Exception("Centering symop that includes rotation is invalid")
             t_new = (t[0] + c[0], t[1] + c[1], t[2] + c[2])
-            time_new = (time_flag + time_c)%2 # time_flag * time_c for -1/+1 convention
+            time_new = (time_flag + time_c) % 2  # time_flag * time_c for -1/+1 convention
             composed.append((R, t_new, time_new))
     return composed
