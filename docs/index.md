@@ -5,12 +5,14 @@ documentation of *httk₂* as a whole, see [docs.httk.org](https://docs.httk.org
 
 *httk-io* is a *httk₂* module providing file input/output under the namespace
 `httk.io`, plus the handler package `httk.handlers.io` that registers its loaders
-with *httk-core*. It currently ships a CIF/mCIF parser, reader and writer stack.
+with *httk-core*. It currently ships a CIF/mCIF parser, reader and writer stack
+and a string-preserving VASP POSCAR/CONTCAR reader.
 
 ```{admonition} Quick links
 :class: tip
 
 - **API reference**: {doc}`reference/index`
+- **Reading POSCAR/CONTCAR files**: {doc}`poscar`
 ````
 
 ## Install
@@ -40,5 +42,6 @@ print(block["cell_length_a"])
 :maxdepth: 2
 :caption: Documentation
 
+poscar
 reference/index
 ```
