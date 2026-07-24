@@ -15,10 +15,14 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import re
 from collections import OrderedDict
 from collections.abc import Iterable, Iterator
+from pathlib import Path
 from typing import Self
+
+from httk.core import TextstreamFileView
 
 
 class rewindable_iterator:
@@ -290,10 +294,16 @@ def read_cif(fs, pragmatic=True, allow_cif2=False, use_types=False):
     Means the string '\\nsome text'. For this specific case pragmatic=True removes the leading newline.
 
     set use_types to True to convert things that look like floats and integers to those respective types
+
+    A filename (``str`` or :class:`os.PathLike`) is opened through
+    :class:`httk.core.TextstreamFileView`, so a compressed file (``.cif.bz2``,
+    ``.cif.gz``, ...) is decompressed transparently. An already-open text stream
+    or a plain iterable of lines is consumed as-is and left open for the caller.
     """
-    if isinstance(fs, str):
-        fs = open(fs, "r", encoding="utf-8", errors="surrogateescape")
-        f = rewindable_iterator(fs)
+    opened: TextstreamFileView | None = None
+    if isinstance(fs, (str, os.PathLike)):
+        opened = TextstreamFileView(Path(fs))
+        f = rewindable_iterator(opened)
     else:
         f = rewindable_iterator(fs)
     try:
@@ -314,5 +324,6 @@ def read_cif(fs, pragmatic=True, allow_cif2=False, use_types=False):
                 data_block = _read_cif_data_block(f, pragmatic, allow_cif2, use_types)
                 datalist += [(data_block_name, data_block)]
     finally:
-        fs.close()
+        if opened is not None:
+            opened.close()
     return datalist, header
