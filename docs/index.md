@@ -13,6 +13,7 @@ and a string-preserving VASP POSCAR/CONTCAR reader.
 
 - **API reference**: {doc}`reference/index`
 - **Reading POSCAR/CONTCAR files**: {doc}`poscar`
+- **Runnable examples**: {doc}`examples/index`
 ````
 
 ## Install
@@ -43,5 +44,6 @@ print(block["cell_length_a"])
 :caption: Documentation
 
 poscar
+examples/index
 reference/index
 ```
