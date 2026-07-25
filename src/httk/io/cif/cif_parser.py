@@ -281,15 +281,35 @@ def xyz_symops_to_matrix(symops_xyz, use_fractions=False):
     return [parse_xyz_op(s, use_fractions) for s in symops_xyz]
 
 
+def cif_exact_token(token: str) -> str | None:
+    """The numeric part of a CIF value, as text, with any uncertainty estimate removed.
+
+    ``"0.3333(5)"`` becomes ``"0.3333"``; ``"?"`` and ``"."`` become ``None``. The point of
+    keeping the text rather than a float is fidelity: a consumer that wants an exact value
+    can read ``0.3333`` as the rational 3333/10000, which is what the file says, whereas
+    ``float("0.3333")`` is a binary approximation whose exact rational value is
+    6004199023210345/18014398509481984 and says something the file did not.
+    """
+    text = token.strip().strip("'\"")
+    if text in ("?", ".", ""):
+        return None
+    if "(" in text:
+        text = text[: text.index("(")]
+    return text.strip() or None
+
+
 def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     """
     Returns:
       if resolution == False:
-         (symbols, labels, positions, occupancies)
+         (symbols, labels, positions, exact_positions, occupancies)
       if resolution == True:
-         (symbols, labels, positions, occupancies, res)
+         (symbols, labels, positions, exact_positions, occupancies, res)
 
     positions: list of (x, y, z) floats
+    exact_positions: list of (x, y, z) numeric strings, uncertainties stripped, so a
+      consumer can embed the coordinate the file actually wrote rather than its binary
+      float approximation
     occupancies:
       - list of floats (same length as symbols) if '_atom_site_occupancy' exists
       - None otherwise
@@ -316,6 +336,10 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     symbols = [s.strip() for s in syms]
     labels = [lab.strip() for lab in lbs]
 
+    exact_positions = [
+        (cif_exact_token(xi), cif_exact_token(yi), cif_exact_token(zi)) for xi, yi, zi in zip(xs, ys, zs)
+    ]
+
     # Fast path: no resolution / grid requested
     if not resolution:
         positions = [
@@ -326,7 +350,7 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
             )
             for xi, yi, zi in zip(xs, ys, zs)
         ]
-        return symbols, labels, positions, occs
+        return symbols, labels, positions, exact_positions, occs
 
     # Full path with resolution
     positions = []
@@ -395,17 +419,28 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
         res = min(data_resolution, separation_resolution)
 
     # grid should sit in [0, 1], but fractional coords guarantee that anyway.
-    return symbols, labels, positions, occs, res
+    return symbols, labels, positions, exact_positions, occs, res
 
 
 def _parse_uc(block):
-    a = parse_cif_float(block.get('cell_length_a'))
-    b = parse_cif_float(block.get('cell_length_b'))
-    c = parse_cif_float(block.get('cell_length_c'))
-    alpha = parse_cif_float(block.get('cell_angle_alpha'))
-    beta = parse_cif_float(block.get('cell_angle_beta'))
-    gamma = parse_cif_float(block.get('cell_angle_gamma'))
-    return a, b, c, alpha, beta, gamma
+    """The six cell parameters, or a message naming the tags the block is missing.
+
+    Reporting the missing tags matters because an incomplete cell is the most common
+    reason a data block turns out not to be a structure, and "parse_cif_float parsing
+    None" tells a reader nothing about which tag to go and look for.
+    """
+    tags = (
+        'cell_length_a',
+        'cell_length_b',
+        'cell_length_c',
+        'cell_angle_alpha',
+        'cell_angle_beta',
+        'cell_angle_gamma',
+    )
+    missing = [tag for tag in tags if block.get(tag) is None]
+    if missing:
+        raise ValueError(f"CIF block has no unit cell: missing {', '.join('_' + tag for tag in missing)}")
+    return tuple(parse_cif_float(block.get(tag)) for tag in tags)
 
 
 def _basis_from_lengths_angles(a, b, c, alpha, beta, gamma):
@@ -433,7 +468,7 @@ def _basis_from_lengths_angles(a, b, c, alpha, beta, gamma):
 def parse_asu_cell(cifblock):
     a, b, c, alpha, beta, gamma = _parse_uc(cifblock)
     basis = _basis_from_lengths_angles(a, b, c, alpha, beta, gamma)
-    symbols, labels, positions, occs, res = _parse_atoms(cifblock, resolution=True)
+    symbols, labels, positions, exact_positions, occs, res = _parse_atoms(cifblock, resolution=True)
 
     # figure out equivalent atoms based on labels
     labels_map = {}
@@ -445,7 +480,7 @@ def parse_asu_cell(cifblock):
             next_id += 1
         equivalent_atoms.append(labels_map[lab])
 
-    return basis, positions, res, symbols, labels, equivalent_atoms
+    return basis, positions, exact_positions, occs, res, symbols, labels, equivalent_atoms
 
 
 def parse_structural_modulation(cifblock):
@@ -485,10 +520,34 @@ def parse_structural_modulation(cifblock):
     return structural_q, mod_dim, has_struct_mod, sorted(struct_mod_atoms)
 
 
+def _first_tag(cifblock, *names):
+    """The value of the first tag present, or ``None``.
+
+    Tags are matched against the reader's normalized spelling (lower case, no leading
+    underscore) and, defensively, against the name as written, so a differently normalizing
+    reader would still resolve them.
+    """
+    for name in names:
+        for candidate in (name, name.lower(), '_' + name):
+            value = cifblock.get(candidate)
+            if value is not None:
+                return value
+    return None
+
+
 def cifblock_to_asu(cifblock, *, return_single=False):
 
     # basic atom-site parsing
-    basis, positions, resolution, symbols, labels, equivalent_atoms = parse_asu_cell(cifblock)
+    (
+        basis,
+        positions,
+        exact_positions,
+        occupancies,
+        resolution,
+        symbols,
+        labels,
+        equivalent_atoms,
+    ) = parse_asu_cell(cifblock)
 
     # standard space group symmetry
     symops_xyz = cifblock.get('space_group_symop.operation_xyz')
@@ -517,15 +576,23 @@ def cifblock_to_asu(cifblock, *, return_single=False):
             'structural_modulated_atoms': struct_atoms,
         }
 
-    space_group_name_hm = cifblock.get('_space_group_name_H-M_alt') or cifblock.get('_symmetry_space_group_name_H-M')
-    space_group_name_hall = cifblock.get('_space_group_name_Hall') or cifblock.get('_symmetry_space_group_name_Hall')
-    space_group_nbr = cifblock.get('_space_group_IT_number') or cifblock.get('symmetry_space_group_IT_number')
-    icsd = cifblock.get('database_code_ICSD')
-    doi = cifblock.get('citation_doi')
+    # The reader normalizes tags to lower case with the leading underscore stripped, so
+    # these lookups must be spelled that way; written with the underscore and the original
+    # capitalization they silently matched nothing and every CIF came back with no space
+    # group at all.
+    space_group_name_hm = _first_tag(cifblock, 'space_group_name_h-m_alt', 'symmetry_space_group_name_h-m')
+    space_group_name_hall = _first_tag(cifblock, 'space_group_name_hall', 'symmetry_space_group_name_hall')
+    space_group_nbr = _first_tag(cifblock, 'space_group_it_number', 'symmetry_space_group_it_number')
+    icsd = _first_tag(cifblock, 'database_code_icsd')
+    doi = _first_tag(cifblock, 'citation_doi')
 
     return {
+        'format': 'cif',
         'basis': basis,
+        'cell_parameters': _parse_uc(cifblock),
         'positions': positions,
+        'positions_exact': exact_positions,
+        'occupancies': occupancies,
         'symbols': symbols,
         'symops': symops,
         'incomm': incomm,
@@ -538,6 +605,43 @@ def cifblock_to_asu(cifblock, *, return_single=False):
         'equivalent_atoms': equivalent_atoms,
         'labels': labels,
     }
+
+
+def read_cif_asus(fs):
+    """Read a CIF and return its asymmetric units as a neutral, tagged payload.
+
+    This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with
+    ``format`` set to ``"cif"``, ``blocks`` holding one asymmetric-unit mapping per data
+    block that describes a structure, and ``header`` the file's leading comment. The tag
+    is what lets a consumer dispatch on the file type without knowing which reader
+    produced the payload, the same way the POSCAR reader already works.
+
+    Loading never fails on account of a block that is not a structure. CIF is a
+    general-purpose format and a file may hold bibliographic entries, powder patterns, or
+    an incomplete draft alongside — or instead of — anything crystallographic. Blocks
+    without atom sites are simply not structures and are passed over; blocks that have
+    atom sites but cannot be interpreted are collected in ``unparsed``, each with the
+    reason, so that nothing is dropped silently and the failure surfaces when a structure
+    is actually asked for.
+
+    The mapping stays neutral — plain lists, strings, and exact ``Fraction`` symmetry
+    operations, with no domain objects — so *httk-io* need not know about
+    *httk-atomistic*. Turning it into a structure is
+    ``httk.atomistic.asu_structure_from_cif``.
+    """
+    cifblocks, header = read_cif(fs, allow_cif2=False)
+
+    blocks = []
+    unparsed = []
+    for name, cifblock in cifblocks:
+        if 'atom_site_label' not in cifblock:
+            continue
+        try:
+            blocks.append(cifblock_to_asu(cifblock))
+        except Exception as error:
+            unparsed.append({'block': name, 'reason': f'{type(error).__name__}: {error}'})
+
+    return {'format': 'cif', 'blocks': blocks, 'unparsed': unparsed, 'header': header}
 
 
 def asus_from_cif_file(fs):

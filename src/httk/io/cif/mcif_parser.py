@@ -511,7 +511,16 @@ def crystal_to_cartesian(moments_cryst, basis):
 
 
 def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
-    basis, positions, res, symbols, labels, equivalent_atoms = parse_asu_cell(cifblock)
+    (
+        basis,
+        positions,
+        exact_positions,
+        occupancies,
+        res,
+        symbols,
+        labels,
+        equivalent_atoms,
+    ) = parse_asu_cell(cifblock)
     moments_result = _parse_moments(cifblock, equalize=moment_equalization, resolution=True)
     assert moments_result is not None  # resolution=True always yields a 4-tuple
     cif_moments, momlabels, spin_basis, magres = moments_result
@@ -523,7 +532,19 @@ def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
     moments_map = {label: (mom[0], mom[1], mom[2]) for label, mom in zip(momlabels, cif_moments)}
     magmoms = [moments_map[i] if i in moments_map else (0.0, 0.0, 0.0) for i in labels]
 
-    return basis, positions, res, magmoms, spin_basis, magres, symbols, labels, equivalent_atoms
+    return (
+        basis,
+        positions,
+        exact_positions,
+        occupancies,
+        res,
+        magmoms,
+        spin_basis,
+        magres,
+        symbols,
+        labels,
+        equivalent_atoms,
+    )
 
 
 def _get_magnetic_fourier_info(cifblock):
@@ -573,9 +594,19 @@ def is_rational_component(x, max_den=12, tol=1e-6):
 
 def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
 
-    basis, positions, res, magmoms, spin_basis, magres, symbols, labels, equivalent_atoms = _parse_mag_asu_cell(
-        cifblock
-    )
+    (
+        basis,
+        positions,
+        exact_positions,
+        occupancies,
+        res,
+        magmoms,
+        spin_basis,
+        magres,
+        symbols,
+        labels,
+        equivalent_atoms,
+    ) = _parse_mag_asu_cell(cifblock)
     structural_q, magnetic_q, mod_dim, has_struct_mod, has_mag_mod, struct_mod_atoms, mag_mod_atoms = _parse_modulation(
         cifblock
     )
@@ -640,6 +671,8 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
     result = {
         'basis': basis,
         'positions': positions,
+        'positions_exact': exact_positions,
+        'occupancies': occupancies,
         'symbols': symbols,
         'symops': symops,
         'incomm': incomm,

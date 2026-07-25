@@ -13,7 +13,6 @@ requires-python = ">=3.12"
 authors = [{ name = "Rickard Armiento", email = "rickard-gpg@armiento.net" }]
 dependencies = [
   "httk-core>=2.0.0,<3",
-  "numpy>=1.21",
 ]
 keywords = [
   "Materials Discovery",
