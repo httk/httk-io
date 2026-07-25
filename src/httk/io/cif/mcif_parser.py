@@ -15,11 +15,12 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import itertools
 import math
 import re
 from fractions import Fraction
 from typing import Any
+
+from httk.core import combined_precision
 
 from .cif_parser import (
     parse_asu_cell,
@@ -255,7 +256,7 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
         mags = []
 
     moments = []
-    component_resolutions = []
+    component_claims: list[object] = []
 
     for i in range(n):
         if resolution:
@@ -263,7 +264,7 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
             my, my_meta = parse_cif_float(ys[i], meta=True)
             mz, mz_meta = parse_cif_float(zs[i], meta=True)
 
-            component_resolutions.extend([mx_meta['resolution'], my_meta['resolution'], mz_meta['resolution']])
+            component_claims.extend([mx_meta['precision'], my_meta['precision'], mz_meta['precision']])
         else:
             mx = parse_cif_float(xs[i], meta=False)
             my = parse_cif_float(ys[i], meta=False)
@@ -275,7 +276,7 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
 
             if i < len(mags) and mags[i] not in (None, '?', '.', ''):
                 m_val, m_meta = parse_cif_float(mags[i], meta=True)
-                m_esd = m_meta.get('esd', None)
+                m_esd = m_meta['esd']
             else:
                 m_esd = None
 
@@ -298,40 +299,15 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
     if not resolution:
         return moments, labels, spin_basis
 
-    # 1. Data resolution = largest implied resolution from written precision
-    if component_resolutions:
-        data_resolution = max(component_resolutions)
-    else:
-        data_resolution = 0.0
-
-    # 2. Separation resolution (non-periodic for moments)
-    if n > 1:
-        diffs = []
-        for a, b in itertools.combinations(range(n), 2):
-            mx1, my1, mz1 = moments[a]
-            mx2, my2, mz2 = moments[b]
-
-            if mx1 is None or my1 is None or mz1 is None or mx2 is None or my2 is None or mz2 is None:
-                continue
-
-            for d in (abs(mx1 - mx2), abs(my1 - my2), abs(mz1 - mz2)):
-                # Avoid floating noise; only treat real differences as separations
-                if d > data_resolution:
-                    diffs.append(d)
-
-        if diffs:
-            separation_resolution = min(diffs) / 2.0
-        else:
-            separation_resolution = float('inf')
-    else:
-        separation_resolution = float('inf')
-
-    if separation_resolution == float('inf'):
-        mag_res = data_resolution
-    elif data_resolution == 0.0:
-        mag_res = separation_resolution
-    else:
-        mag_res = min(data_resolution, separation_resolution)
+    # The coarsest precision any component claims. Unlike the coordinate case there is no
+    # esd handling here, because the esd on a moment is already used above to decide
+    # whether symmetry-equal components should be averaged.
+    #
+    # Known limitation, unchanged: this is computed from the components as written, before
+    # crystal_to_cartesian converts them below, so for a file using crystalaxis moments the
+    # value is in crystal-axis units rather than the Cartesian units the moments come back
+    # in. Nothing consumes it yet; fix it when something does.
+    mag_res = combined_precision(component_claims)
 
     return moments, labels, spin_basis, mag_res
 
@@ -516,7 +492,8 @@ def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
         positions,
         exact_positions,
         occupancies,
-        res,
+        coordinate_precision,
+        basis_precision,
         symbols,
         labels,
         equivalent_atoms,
@@ -537,7 +514,8 @@ def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
         positions,
         exact_positions,
         occupancies,
-        res,
+        coordinate_precision,
+        basis_precision,
         magmoms,
         spin_basis,
         magres,
@@ -599,7 +577,8 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
         positions,
         exact_positions,
         occupancies,
-        res,
+        coordinate_precision,
+        basis_precision,
         magmoms,
         spin_basis,
         magres,
@@ -685,8 +664,9 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
         'bns_nbr': bns_nbr,
         'bns_name': bns_name,
         'equivalent_atoms': equivalent_atoms,
-        'resolution': res,
-        'magmom_resolution': magres,
+        'coordinate_precision': coordinate_precision,
+        'basis_precision': basis_precision,
+        'magmom_precision': magres,
         'labels': labels,
     }
 

@@ -29,7 +29,7 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import Any
 
-from httk.core import TextstreamFileView
+from httk.core import TextstreamFileView, combined_precision
 
 
 def _next_line(lines: Iterator[str], lineno: int, what: str) -> str:
@@ -64,6 +64,15 @@ def read_poscar(source: Any) -> dict[str, Any]:
     ``selective_dynamics`` (an ``N``x3 list of booleans when the file declares
     selective dynamics, else ``None``). Malformed input raises a clear
     :class:`ValueError` naming the offending line.
+
+    Three further keys report how precisely the file wrote its numbers, each the coarsest
+    claim among the tokens it covers, or ``None`` when none of them claim anything:
+    ``cell_precision``, ``scale_precision``, and ``coordinate_precision``. They are the
+    precisions of the tokens **as written**, deliberately not converted: the cell vectors
+    are still to be multiplied by the scaling factor, and the coordinates may be Cartesian
+    or fractional depending on ``cartesian``. Doing that conversion needs the assembled
+    cell, so it belongs to whoever builds the structure —
+    :func:`httk.atomistic.structure_from_poscar` — not to the reader.
     """
     opened: TextstreamFileView | None = None
     if isinstance(source, (str, os.PathLike)):
@@ -153,6 +162,9 @@ def _read_poscar(lines: Iterator[str]) -> dict[str, Any]:
 
     return {
         "format": "vasp-poscar",
+        "cell_precision": combined_precision(token for row in cell for token in row),
+        "scale_precision": combined_precision([scale]),
+        "coordinate_precision": combined_precision(token for row in coords for token in row),
         "comment": comment,
         "scale": scale,
         "volume": volume,

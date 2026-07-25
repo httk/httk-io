@@ -40,16 +40,16 @@ conventions CIF actually uses:
 
 - `"5.6402(3)"` — a value with a standard uncertainty (esd) on its last digits.
   The plain call returns just the central value `5.6402`; passing `meta=True`
-  returns `(value, {"esd": ..., "resolution": ...})`, where `esd` is the
-  uncertainty in the value's own units (`0.0003` here) and `resolution` is the
+  returns `(value, {"esd": ..., "precision": ...})`, where `esd` is the
+  uncertainty in the value's own units (`3/10000` here) and `precision` is the
   precision implied by how the number was *written* (`0.0001` for four
   decimals). The two are independent: a value with no esd still has a stated
-  resolution.
+  precision.
 - `"?"` — "unknown", a legal CIF value. It parses to `None` rather than raising,
   so a missing measurement stays representable. Its sibling `"."` ("not
   applicable") is an error instead: there is no number to return.
 - `"1/3"` — a fraction, common in symmetry operations. Parsed exactly and
-  reported with resolution `0.0`, i.e. not a rounded decimal.
+  reported with precision `None`, i.e. a stated value rather than a rounded decimal.
 
 `parse_cif_int` follows the same conventions and returns the integral central
 value: `"295(2)"` is `295`, `"3E2"` is `300`. It is strict by default, so a
@@ -162,7 +162,7 @@ def show_numeric_fields(block: dict[str, Any]) -> None:
     print(f"cell_length_a    {a_token!r}")
     print(f"    value      = {a_value}")
     print(f"    esd        = {a_meta['esd']}     (the '(3)' applies to the last digit: 0.0003 Angstrom)")
-    print(f"    resolution = {a_meta['resolution']}     (implied by writing four decimals)")
+    print(f"    precision  = {a_meta['precision']}     (implied by writing four decimals)")
     print(f"    plain call, no meta: parse_cif_float({a_token!r}) -> {parse_cif_float(a_token)}")
 
     t_token = block["cell_measurement_temperature"]
@@ -173,7 +173,7 @@ def show_numeric_fields(block: dict[str, Any]) -> None:
     angle_value, angle_meta = parse_cif_float(angle_token, meta=True)
     print(
         f"angle_alpha      {angle_token!r} -> {angle_value}, esd {angle_meta['esd']}, "
-        f"resolution {angle_meta['resolution']} (no esd, but a stated precision)"
+        f"precision {angle_meta['precision']} (no esd, but a stated precision)"
     )
 
     unknown_token = block["diffrn_ambient_pressure"]
@@ -186,7 +186,7 @@ def show_numeric_fields(block: dict[str, Any]) -> None:
 
     third = parse_cif_float("1/3")
     _, third_meta = parse_cif_float("1/3", meta=True)
-    print(f"fraction         '1/3' -> {third} (resolution {third_meta['resolution']}: exact, not a rounded decimal)")
+    print(f"fraction         '1/3' -> {third} (precision {third_meta['precision']}: exact, not a rounded decimal)")
 
     print("\n-- parse_cif_int: the integral central value --")
     tables_number = block["symmetry_int_tables_number"]
