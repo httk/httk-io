@@ -2,7 +2,7 @@ from httk.core.register import register_loader
 
 register_loader(
     name="cif",
-    loader="httk.io.cif:read_cif",
+    loader="httk.io.cif:read_cif_asus",
     extensions=(".cif",),
 )
 

@@ -67,8 +67,12 @@ the point of the round-trip section below: read → write → read yields an
 identical mapping.
 
 The final section shows the same file arriving through `httk.core.load`, which
-dispatches `.cif` (and `.cif.bz2`) to this reader because importing `httk.core`
-discovers the `httk.handlers.io` handler package.
+dispatches `.cif` (and `.cif.bz2`) to *httk-io* because importing `httk.core`
+discovers the `httk.handlers.io` handler package. Note that `load` returns the
+*interpreted* payload — a `format` tag plus one asymmetric unit per structural
+data block — rather than the token tree shown above, so that a CIF can be handed
+straight to `httk.atomistic.load_structure`. Blocks that are not structures are
+reported rather than raising, since a CIF may hold anything.
 
 Run this file to see every step printed.
 """
@@ -219,18 +223,27 @@ def show_roundtrip(directory: Path, data_blocks: list[Any], header: str) -> None
 
 
 def show_load_dispatch(directory: Path) -> None:
-    """The same reader, reached through httk.core.load — including compressed."""
+    """The interpreting reader, reached through httk.core.load — including compressed."""
     print("== httk.core.load: the registered '.cif' loader ==")
     print("registered extensions:", httk.core.register.known_extensions())
     print("Importing httk.core discovers httk.handlers.io, which registers these.")
 
     compressed = directory / "nacl.cif.bz2"
     compressed.write_bytes(bz2.compress(NACL_CIF.encode("utf-8")))
-    data_blocks, header = httk.core.load(str(compressed))
+    payload = httk.core.load(str(compressed))
 
-    print(f"load({compressed.name!r}) -> {len(data_blocks)} block(s); .bz2 decompressed transparently")
-    print("   header first line:", header.splitlines()[0])
-    print("   cell_length_a:    ", data_blocks[0][1]["cell_length_a"])
+    print(f"load({compressed.name!r}) -> format={payload['format']!r}; .bz2 decompressed transparently")
+    print("   header first line:  ", payload["header"].splitlines()[0])
+    print("   structural blocks:  ", len(payload["blocks"]))
+    for item in payload["unparsed"]:
+        print(f"   not a structure:     block {item['block']!r} ({item['reason']})")
+    print("This block does not carry everything a structure needs, so no asymmetric unit")
+    print("could be built from it. Loading still succeeds and says why, because a CIF is")
+    print("not obliged to describe a crystal at all.")
+
+    # The tags themselves stay reachable through the low-level tokenizer.
+    data_blocks, _header = read_cif(str(compressed))
+    print("   read_cif tags:       cell_length_a =", data_blocks[0][1]["cell_length_a"])
 
 
 def main() -> None:

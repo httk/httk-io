@@ -27,12 +27,34 @@ def _write_cif(tmp_path: Path) -> Path:
     return cif_path
 
 
-def test_load_returns_datalist_and_header(tmp_path):
-    data_blocks, header = httk.core.load(str(_write_cif(tmp_path)))
+def test_load_returns_a_tagged_cif_payload(tmp_path):
+    payload = httk.core.load(str(_write_cif(tmp_path)))
+
+    assert payload["format"] == "cif"
+    assert payload["header"].startswith("#a small header")
+
+
+def test_load_tolerates_a_block_that_is_not_a_structure(tmp_path):
+    """CIF is a general-purpose format, so loading must not insist on crystallography.
+
+    This block names atom sites but gives no cell and no symmetry operations, so it is not
+    a structure. Loading still succeeds and records why it could not be interpreted,
+    rather than failing the whole file.
+    """
+    payload = httk.core.load(str(_write_cif(tmp_path)))
+
+    assert payload["blocks"] == []
+    assert [item["block"] for item in payload["unparsed"]] == ["nacl"]
+    assert payload["unparsed"][0]["reason"]
+
+
+def test_the_low_level_tokenizer_is_still_available(tmp_path):
+    from httk.io.cif import read_cif
+
+    data_blocks, header = read_cif(str(_write_cif(tmp_path)))
 
     assert header.startswith("#a small header")
     assert len(data_blocks) == 1
-
     name, block = data_blocks[0]
     assert name == "nacl"
     assert block["cell_length_a"] == "5.64"

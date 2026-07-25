@@ -120,7 +120,14 @@ _cell_length_a 5.64
 def test_load_cif_bz2_transparent(tmp_path: Path) -> None:
     cif_bz2 = tmp_path / "sample.cif.bz2"
     cif_bz2.write_bytes(bz2.compress(CIF_TEXT.encode("utf-8")))
-    datalist, header = httk.core.load(str(cif_bz2))
-    assert header.startswith("#header")
+    payload = httk.core.load(str(cif_bz2))
+    assert payload["format"] == "cif"
+    assert payload["header"].startswith("#header")
+
+    # The point of this test is transparent decompression, so check it at the tokenizer
+    # too, where the tags are visible verbatim.
+    from httk.io.cif import read_cif
+
+    datalist, header = read_cif(str(cif_bz2))
     name, block = datalist[0]
     assert block["cell_length_a"] == "5.64"

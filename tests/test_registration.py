@@ -9,10 +9,16 @@ def test_cif_extension_registered():
     assert ".cif" in httk.core.register.known_extensions()
 
 
-def test_cif_loader_points_at_read_cif():
+def test_cif_loader_points_at_the_asu_reader():
+    """``load`` yields interpreted asymmetric units, not the raw token tree.
+
+    The low-level ``read_cif`` tokenizer is still exported for callers who want the tags
+    verbatim; it is just not what the registry dispatches to, so that a ``.cif`` behaves
+    like a ``POSCAR`` and can be handed straight to the structure builders.
+    """
     spec = httk.core.register.loaders.require(".cif")
     assert spec.name == "cif"
-    assert spec.handler == "httk.io.cif:read_cif"
+    assert spec.handler == "httk.io.cif:read_cif_asus"
 
 
 def test_cif_loader_resolves_to_callable():
@@ -20,6 +26,6 @@ def test_cif_loader_resolves_to_callable():
 
     spec = httk.core.register.loaders.require(".cif")
     fn = resolve_callable(spec.handler)
-    from httk.io.cif.cif_reader import read_cif
+    from httk.io.cif.cif_parser import read_cif_asus
 
-    assert fn is read_cif
+    assert fn is read_cif_asus
