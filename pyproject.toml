@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "httk-io"
-version = "0.1.0"
+version = "0.2.0"
 description = "httk₂ file input/output (CIF and mCIF readers/writers)"
 readme = "README.md"
 license = "AGPL-3.0-or-later"
@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 requires-python = ">=3.12"
 authors = [{ name = "Rickard Armiento", email = "rickard-gpg@armiento.net" }]
 dependencies = [
-  "httk-core>=2.0.0,<3",
+  "httk-core>=2.0.2,<3",
 ]
 keywords = [
   "Materials Discovery",
