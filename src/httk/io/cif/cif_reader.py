@@ -26,7 +26,6 @@ from httk.core import TextstreamFileView
 
 
 class rewindable_iterator:
-
     def __init__(self, iterator: Iterable[str]) -> None:
         self._iter: Iterator[str] = iter(iterator)
         self._rewind = False
