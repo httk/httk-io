@@ -1,0 +1,17 @@
+[site]
+slug = "httk-io"
+repository-url = "https://github.com/httk/httk-io"
+main-branch = "main"
+import-roots = ["httk/io", "httk/handlers"]
+
+[[internal-dependency]]
+distribution = "httk-core"
+slug = "httk-core"
+repository-url = "https://github.com/httk/httk-core"
+main-branch = "main"
+
+[[internal-dependency]]
+distribution = "httk-atomistic"
+slug = "httk-atomistic"
+repository-url = "https://github.com/httk/httk-atomistic"
+main-branch = "main"

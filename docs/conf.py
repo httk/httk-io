@@ -29,6 +29,7 @@ extensions = [
     "myst_nb",                   # .ipynb support
 
     "autoapi.extension",
+    "httk.core.docs.sphinx_ext",
 ]
 
 templates_path = ["_templates"]

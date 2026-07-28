@@ -65,7 +65,8 @@ docs = [
   "myst-nb",
   "sphinx-autodoc-typehints",
   "sphinx-copybutton",
-  "sphinx-autoapi"
+  "sphinx-autoapi",
+  "httk-atomistic"
 ]
 release = [
   "build>=1.2",
