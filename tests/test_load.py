@@ -28,7 +28,7 @@ def _write_cif(tmp_path: Path) -> Path:
 
 
 def test_load_returns_a_tagged_cif_payload(tmp_path):
-    payload = httk.core.load(str(_write_cif(tmp_path)))
+    payload = httk.core.load(str(_write_cif(tmp_path)), raw=True)
 
     assert payload["format"] == "cif"
     assert payload["header"].startswith("#a small header")
@@ -41,7 +41,7 @@ def test_load_tolerates_a_block_that_is_not_a_structure(tmp_path):
     a structure. Loading still succeeds and records why it could not be interpreted,
     rather than failing the whole file.
     """
-    payload = httk.core.load(str(_write_cif(tmp_path)))
+    payload = httk.core.load(str(_write_cif(tmp_path)), raw=True)
 
     assert payload["blocks"] == []
     assert [item["block"] for item in payload["unparsed"]] == ["nacl"]

@@ -72,7 +72,7 @@ contcar_text = "He\n1.0\n1 0 0\n0 1 0\n0 0 1\nHe\n1\nDirect\n0 0 0\n"
 with tempfile.TemporaryDirectory() as tmp:
     path = Path(tmp) / "CONTCAR.bz2"
     path.write_bytes(bz2.compress(contcar_text.encode("utf-8")))
-    data = httk.core.load(str(path))
+    data = httk.core.load(str(path), raw=True)
 
 assert data["format"] == "vasp-poscar"
 assert data["symbols"] == ["He"]

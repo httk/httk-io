@@ -230,7 +230,7 @@ def show_load_dispatch(directory: Path) -> None:
 
     compressed = directory / "nacl.cif.bz2"
     compressed.write_bytes(bz2.compress(NACL_CIF.encode("utf-8")))
-    payload = httk.core.load(str(compressed))
+    payload = httk.core.load(str(compressed), raw=True)
 
     print(f"load({compressed.name!r}) -> format={payload['format']!r}; .bz2 decompressed transparently")
     print("   header first line:  ", payload["header"].splitlines()[0])
