@@ -89,6 +89,10 @@ _docs_base_url = os.environ.get("HTTK_DOCS_BASE_URL", "https://docs.httk.org")
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", "_inventories/python.inv"),
     "httk-core": (f"{_docs_base_url}/httk-core/", "_inventories/httk-core.inv"),
+    "httk-atomistic": (
+        f"{_docs_base_url}/httk-atomistic/",
+        "_inventories/httk-atomistic.inv",
+    ),
 }
 
 autoapi_options = [
