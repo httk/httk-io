@@ -29,13 +29,14 @@ python -m pip install -e .
 
 Importing `httk.core` discovers `httk.handlers.io` and registers the `.cif`
 loader, so `httk.core.load` can dispatch a CIF file to *httk-io*. The loader
-returns the raw parsed CIF data as a `(data_blocks, header)` tuple:
+returns a neutral parsed CIF payload when called with `raw=True`:
 
 ```python
 import httk.core  # discovery registers the ".cif" loader
 
-data_blocks, header = httk.core.load("structure.cif")
-name, block = data_blocks[0]
+payload = httk.core.load("structure.cif", raw=True)
+block = payload["blocks"][0]
+print(payload["header"])
 print(block["cell_length_a"])
 ```
 

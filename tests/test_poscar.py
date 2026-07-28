@@ -3,9 +3,9 @@
 import bz2
 from pathlib import Path
 
+import httk.core
 import pytest
 
-import httk.core
 from httk.io.vasp import read_poscar
 
 VASP5_SELECTIVE = """SmFeO3 slab
@@ -98,7 +98,7 @@ def test_poscar_registration() -> None:
 def test_load_contcar_by_basename(tmp_path: Path) -> None:
     contcar = tmp_path / "CONTCAR"
     contcar.write_text(VASP5_SELECTIVE, encoding="utf-8")
-    data = httk.core.load(str(contcar))
+    data = httk.core.load(str(contcar), raw=True)
     assert data["format"] == "vasp-poscar"
     assert data["counts"] == [1, 2]
 
@@ -106,7 +106,7 @@ def test_load_contcar_by_basename(tmp_path: Path) -> None:
 def test_load_contcar_bz2_transparent(tmp_path: Path) -> None:
     contcar_bz2 = tmp_path / "CONTCAR.bz2"
     contcar_bz2.write_bytes(bz2.compress(VASP5_SELECTIVE.encode("utf-8")))
-    data = httk.core.load(str(contcar_bz2))
+    data = httk.core.load(str(contcar_bz2), raw=True)
     assert data["format"] == "vasp-poscar"
     assert data["symbols"] == ["Si", "O"]
 
@@ -120,7 +120,7 @@ _cell_length_a 5.64
 def test_load_cif_bz2_transparent(tmp_path: Path) -> None:
     cif_bz2 = tmp_path / "sample.cif.bz2"
     cif_bz2.write_bytes(bz2.compress(CIF_TEXT.encode("utf-8")))
-    payload = httk.core.load(str(cif_bz2))
+    payload = httk.core.load(str(cif_bz2), raw=True)
     assert payload["format"] == "cif"
     assert payload["header"].startswith("#header")
 

@@ -211,13 +211,13 @@ def show_load_dispatch(directory: Path) -> None:
 
     plain = directory / "CONTCAR"
     plain.write_text(VASP5_SELECTIVE, encoding="utf-8")
-    from_plain = httk.core.load(str(plain))
+    from_plain = httk.core.load(str(plain), raw=True)
     print(f"\n   load({plain.name!r}) -> matched by basename, no extension involved")
     print("      comment:", from_plain["comment"])
 
     compressed = directory / "CONTCAR.bz2"
     compressed.write_bytes(bz2.compress(VASP5_SELECTIVE.encode("utf-8")))
-    from_compressed = httk.core.load(str(compressed))
+    from_compressed = httk.core.load(str(compressed), raw=True)
     print(f"   load({compressed.name!r}) -> '.bz2' stripped, then matched by basename")
     print("      symbols:", from_compressed["symbols"], " counts:", from_compressed["counts"])
     print("      decompressed transparently; identical mapping:", from_compressed == from_plain)
