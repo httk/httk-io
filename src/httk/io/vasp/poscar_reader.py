@@ -97,7 +97,7 @@ def _read_poscar(lines: Iterator[str]) -> dict[str, Any]:
         raise ValueError(f"Malformed POSCAR line 2: scale/volume {scale_line!r} is not a number.") from None
     if scale_value < 0:
         # A negative universal scaling factor means |value| is the target VOLUME.
-        volume: str | None = scale_line[1:] if scale_line.startswith("-") else scale_line
+        volume: str | None = scale_line.removeprefix("-")
         scale: str | None = None
     else:
         scale = scale_line

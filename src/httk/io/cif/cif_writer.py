@@ -18,12 +18,12 @@
 import re
 import sys
 from collections.abc import Iterable
+from contextlib import ExitStack
 
 _cif_ordinary_char = r'!%&()*+,-./0123456789:<=>?@ABCDEFGHIHJKLMNOPQRSTUVWXYZ\^`abcdefghijklmnopqrstuvwxyz{|}~'
 _cif_non_blank_char = _cif_ordinary_char + '"' + "#$" + "'" + "_" + ";[]"
 _cif_text_lead_char = _cif_ordinary_char + '"' + "#$" + "'" + "_ \t[]"
 _cif_any_print_char = _cif_ordinary_char + '"' + "#$" + "'" + "_ \t;[]"
-_cif_helper_table = str.maketrans('', '')
 _cif_non_blank_char_table = str.maketrans(_cif_non_blank_char, _cif_non_blank_char)
 _cif_unicode_translation_table: dict[int, int | None] = {}
 for i in range(sys.maxunicode + 1):
@@ -63,10 +63,7 @@ def _cif_is_int(data_value):
 
 
 def _cif_validate_non_blank_char(s, context=None):
-    if sys.version_info[0] == 3:
-        out = s.translate(_cif_unicode_translation_table)
-    else:
-        out = s.translate(_cif_helper_table, _cif_non_blank_char_table)
+    out = s.translate(_cif_unicode_translation_table)
     if out != s:
         if context is not None:
             sys.stderr.write("***Warning: write_cif: non-permitted characters in " + context + " removed.")
@@ -139,13 +136,7 @@ def _cif_write_data_value(f, orig_data_value, noteol, max_line_length, use_types
         return True
     elif not use_types:
         # Skip quotes if it looks like a number or is a simple string used in a loop
-        if _cif_is_float(data_value):
-            f.write(data_value)
-            return True
-        elif _cif_is_int(data_value):
-            f.write(data_value)
-            return True
-        elif inloop and _cif_is_simplestring(data_value):
+        if _cif_is_float(data_value) or _cif_is_int(data_value) or inloop and _cif_is_simplestring(data_value):
             f.write(data_value)
             return True
         else:
@@ -245,40 +236,35 @@ def write_cif(ioa, data, header=None, max_line_length=80, use_types=False):
 
     """
 
-    if isinstance(ioa, str):
-        f = open(ioa, "w", encoding="utf-8")
-        close_when_done = True
-    else:
-        f = ioa
-        close_when_done = False
-
-    if header is not None:
-        lines = header.splitlines()
-        for line in lines:
-            if len(line) > max_line_length:
-                header = "#\n" + header
-                break
-        for line in lines:
-            if len(line) > max_line_length:
-                sublines = [line[i : i + 79] for i in range(0, len(line), 79)]
-                for subline in sublines:
-                    f.write(subline + "\\" + "\n")
-            else:
-                f.write(line + "\n")
-
-    data_block_count = -1
-    for data_block in data:
-        data_block_count += 1
-        data_block_name_unfiltered = data_block[0]
-        if data_block_name_unfiltered is None:
-            data_block_name = "data_" + str(data_block_count)
+    with ExitStack() as stack:
+        if isinstance(ioa, str):
+            f = stack.enter_context(open(ioa, "w", encoding="utf-8"))
         else:
-            data_block_name = _cif_validate_name(data_block_name_unfiltered, "data block name")
-            if data_block_name == "":
+            f = ioa
+        if header is not None:
+            lines = header.splitlines()
+            for line in lines:
+                if len(line) > max_line_length:
+                    header = "#\n" + header
+                    break
+            for line in lines:
+                if len(line) > max_line_length:
+                    sublines = [line[i : i + 79] for i in range(0, len(line), 79)]
+                    for subline in sublines:
+                        f.write(subline + "\\" + "\n")
+                else:
+                    f.write(line + "\n")
+
+        data_block_count = -1
+        for data_block in data:
+            data_block_count += 1
+            data_block_name_unfiltered = data_block[0]
+            if data_block_name_unfiltered is None:
                 data_block_name = "data_" + str(data_block_count)
+            else:
+                data_block_name = _cif_validate_name(data_block_name_unfiltered, "data block name")
+                if data_block_name == "":
+                    data_block_name = "data_" + str(data_block_count)
 
-        f.write("data_" + data_block_name + "\n")
-        _cif_write_data_block(f, data_block[1], max_line_length, use_types)
-
-    if close_when_done:
-        f.close()
+            f.write("data_" + data_block_name + "\n")
+            _cif_write_data_block(f, data_block[1], max_line_length, use_types)

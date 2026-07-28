@@ -275,7 +275,7 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
             form = forms[i].replace(' ', '').lower() if forms[i] else None
 
             if i < len(mags) and mags[i] not in (None, '?', '.', ''):
-                m_val, m_meta = parse_cif_float(mags[i], meta=True)
+                _m_val, m_meta = parse_cif_float(mags[i], meta=True)
                 m_esd = m_meta['esd']
             else:
                 m_esd = None
@@ -507,7 +507,7 @@ def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
         spin_basis = "cartesian"
 
     moments_map = {label: (mom[0], mom[1], mom[2]) for label, mom in zip(momlabels, cif_moments)}
-    magmoms = [moments_map[i] if i in moments_map else (0.0, 0.0, 0.0) for i in labels]
+    magmoms = [moments_map.get(i, (0.0, 0.0, 0.0)) for i in labels]
 
     return (
         basis,
@@ -674,7 +674,7 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
 
 
 def mag_asus_from_mcif_file(fs, *, error_on_nonmag=False):
-    cifblocks, header = read_cif(fs, allow_cif2=True)
+    cifblocks, _header = read_cif(fs, allow_cif2=True)
 
     outputs = []
     for name, cifblock in cifblocks:
@@ -683,7 +683,7 @@ def mag_asus_from_mcif_file(fs, *, error_on_nonmag=False):
 
 
 def single_mag_asu_from_mcif_file(fs, *, error_on_nonmag=False):
-    cifblocks, header = read_cif(fs, allow_cif2=True)
+    cifblocks, _header = read_cif(fs, allow_cif2=True)
 
     # Get the first cifblock with atomic sites
     for name, cifblock in cifblocks:

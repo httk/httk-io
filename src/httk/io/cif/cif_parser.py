@@ -219,7 +219,7 @@ def parse_linear_expr(expr, use_fractions=False):
         else:
             # standalone numeric translation
             if use_fractions:
-                val = Fraction(num) if '/' in num else Fraction(num)
+                val = Fraction(num)
             else:
                 val = float(Fraction(num)) if '/' in num else float(num)
             const += sgn * val
@@ -632,7 +632,7 @@ def read_cif_asus(fs):
 
 
 def asus_from_cif_file(fs):
-    cifblocks, header = read_cif(fs, allow_cif2=False)
+    cifblocks, _header = read_cif(fs, allow_cif2=False)
 
     outputs = []
     for name, cifblock in cifblocks:
@@ -641,7 +641,7 @@ def asus_from_cif_file(fs):
 
 
 def single_asu_from_cif_file(fs):
-    cifblocks, header = read_cif(fs, allow_cif2=False)
+    cifblocks, _header = read_cif(fs, allow_cif2=False)
 
     # Get the first cifblock with atomic sites
     for name, cifblock in cifblocks:

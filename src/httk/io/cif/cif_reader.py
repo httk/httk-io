@@ -90,7 +90,7 @@ def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
                 break
             striprow = row.strip()
             lowrow = striprow.lower()
-            if not row or row.startswith("_") or lowrow.startswith("data_") or lowrow.startswith("loop_"):
+            if not row or row.startswith("_") or lowrow.startswith(("data_", "loop_")):
                 f.rewind()
                 break
             f.rewind()
@@ -145,7 +145,7 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
             else:
                 noteol = False
             break
-        elif striprow.startswith("'") or striprow.startswith('"'):
+        elif striprow.startswith(("'", '"')):
             # The cif quoting rules are ... weird. Quotes are "escaped" if they are not followed by whitespace.
             quote = striprow[0]
             starti = 1
