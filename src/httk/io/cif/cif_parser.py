@@ -600,8 +600,8 @@ def read_cif_asus(fs):
     This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with
     ``format`` set to ``"cif"``, ``blocks`` holding one asymmetric-unit mapping per data
     block that describes a structure, and ``header`` the file's leading comment. The tag
-    is what lets a consumer dispatch on the file type without knowing which reader
-    produced the payload, the same way the POSCAR reader already works.
+    lets a consumer dispatch on the file type without knowing which reader
+    produced the payload.
 
     Loading never fails on account of a block that is not a structure. CIF is a
     general-purpose format and a file may hold bibliographic entries, powder patterns, or
