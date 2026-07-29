@@ -47,7 +47,7 @@ namespaces = true
 
 [tool.setuptools.package-data]
 "httk.io" = ["py.typed"]
-"httk.handlers.io" = ["py.typed"]
+"httk.registry.io" = ["py.typed"]
 
 [project.optional-dependencies]
 dev = [

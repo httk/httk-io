@@ -4,7 +4,7 @@
 
 - the `httk.io` package within the PEP 420 native `httk` namespace, currently a
   CIF/mCIF parser, reader and writer stack; and
-- the `httk.handlers.io` package, which registers the `.cif` loader with
+- the `httk.registry.io` package, which registers the `.cif` loader with
   `httk-core`'s plugin registry so files can be read via `httk.core.load`.
 
 Most users should install the [`httk2`](https://github.com/httk/httk2)
@@ -22,7 +22,7 @@ pip install httk-io
 
 ## Usage
 
-Importing `httk.core` discovers `httk.handlers.io` and registers the `.cif`
+Importing `httk.core` discovers `httk.registry.io` and registers the `.cif`
 loader. `httk.core.load` then dispatches on the file extension and returns a
 neutral parsed CIF payload when called with `raw=True`:
 

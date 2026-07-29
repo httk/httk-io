@@ -88,13 +88,13 @@ jobs:
           # the runtime dependencies are declared in the metadata.
           required = [
               "httk/io/__init__.py",
-              "httk/handlers/io/__init__.py",
+              "httk/registry/io/__init__.py",
           ]
           missing = [p for p in required if p not in names]
           if missing:
               raise SystemExit(f"wheel is missing expected packages: {missing}")
 
-          if "httk/__init__.py" in names or "httk/handlers/__init__.py" in names:
+          if "httk/__init__.py" in names or "httk/registry/__init__.py" in names:
               raise SystemExit("wheel ships a namespace __init__.py; PEP 420 layout broken")
 
           metadata = zf.read(next(n for n in names if n.endswith("METADATA"))).decode()

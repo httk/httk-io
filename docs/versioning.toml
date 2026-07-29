@@ -2,7 +2,7 @@
 slug = "httk-io"
 repository-url = "https://github.com/httk/httk-io"
 main-branch = "main"
-import-roots = ["httk/io", "httk/handlers"]
+import-roots = ["httk/io", "httk/registry"]
 
 [[internal-dependency]]
 distribution = "httk-core"

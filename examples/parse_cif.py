@@ -68,7 +68,7 @@ identical mapping.
 
 The final section shows the same file arriving through `httk.core.load`, which
 dispatches `.cif` (and `.cif.bz2`) to *httk-io* because importing `httk.core`
-discovers the `httk.handlers.io` handler package. Note that `load` returns the
+discovers the `httk.registry.io` registry package. Note that `load` returns the
 *interpreted* payload — a `format` tag plus one asymmetric unit per structural
 data block — rather than the token tree shown above, so that a CIF can be handed
 straight to `httk.atomistic.load_structure`. Blocks that are not structures are
@@ -226,7 +226,7 @@ def show_load_dispatch(directory: Path) -> None:
     """The interpreting reader, reached through httk.core.load — including compressed."""
     print("== httk.core.load: the registered '.cif' loader ==")
     print("registered extensions:", httk.core.register.known_extensions())
-    print("Importing httk.core discovers httk.handlers.io, which registers these.")
+    print("Importing httk.core discovers httk.registry.io, which registers these.")
 
     compressed = directory / "nacl.cif.bz2"
     compressed.write_bytes(bz2.compress(NACL_CIF.encode("utf-8")))

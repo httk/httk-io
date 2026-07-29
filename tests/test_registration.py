@@ -4,7 +4,7 @@ import httk.core
 
 
 def test_cif_extension_registered():
-    # Discovery runs on `import httk.core` and imports httk.handlers.io,
+    # Discovery runs on `import httk.core` and imports httk.registry.io,
     # which registers the ".cif" loader.
     assert ".cif" in httk.core.register.known_extensions()
 

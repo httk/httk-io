@@ -53,7 +53,7 @@ truncated file points at where it stopped making sense rather than failing
 somewhere far away.
 
 The last section shows the reader reached through `httk.core.load` instead of
-directly. Importing `httk.core` discovers the `httk.handlers.io` handler
+directly. Importing `httk.core` discovers the `httk.registry.io` registry
 package, which registers this loader under the extensions `.poscar` / `.vasp`
 *and* under the exact basenames `POSCAR` / `CONTCAR` — because the canonical
 VASP files have no extension at all. `load` therefore dispatches a plain
