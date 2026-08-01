@@ -46,7 +46,7 @@ class CifMeta(TypedDict):
 # Regexp close to https://www.iucr.org/__data/iucr/cifdic_html/2/cif_mm.dic/Dtypecodes.html
 # matches:  1.234(5), -12.3(12), 3(1)E2, 1.0e-3, +4.2, etc.
 _CIF_NUM_RE = re.compile(
-    r'^(?P<sign>-)?'  # optional leading minus
+    r'^(?P<sign>[+-])?'  # optional leading sign
     r'(?P<mant>(?:\d+\.?|\d*\.\d+))(\((?P<esd>\d+)\))?'  # mantissa + optional (uncertainty)
     r'(?:[eE](?P<exp>[+-]?\d+))?$'  # optional exponent
 )
@@ -256,17 +256,20 @@ def xyz_symops_to_matrix(symops_xyz, use_fractions=False):
 def cif_exact_token(token: str) -> str | None:
     """The numeric part of a CIF value, as text, with any uncertainty estimate removed.
 
-    ``"0.3333(5)"`` becomes ``"0.3333"``; ``"?"`` and ``"."`` become ``None``. The point of
-    keeping the text rather than a float is fidelity: a consumer that wants an exact value
-    can read ``0.3333`` as the rational 3333/10000, which is what the file says, whereas
-    ``float("0.3333")`` is a binary approximation whose exact rational value is
-    6004199023210345/18014398509481984 and says something the file did not.
+    ``"0.3333(5)"`` becomes ``"0.3333"`` and ``"3(1)e-1"`` becomes ``"3e-1"``;
+    ``"?"`` and ``"."`` become ``None``. The point of keeping the text rather than a
+    float is fidelity: a consumer that wants an exact value can read ``0.3333`` as the
+    rational 3333/10000, which is what the file says, whereas ``float("0.3333")`` is a
+    binary approximation whose exact rational value is 6004199023210345/18014398509481984
+    and says something the file did not.
     """
     text = token.strip().strip("'\"")
     if text in ("?", ".", ""):
         return None
-    if "(" in text:
-        text = text[: text.index("(")]
+    # The exponent belongs to the central value and follows the parenthesized ESD in CIF
+    # syntax, so remove only the ESD instead of truncating everything after its opening
+    # parenthesis.
+    text = re.sub(r'\(\d+\)(?=(?:[eE][+-]?\d+)?$)', '', text)
     return text.strip() or None
 
 
@@ -274,9 +277,11 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     """
     Returns:
       if resolution == False:
-         (symbols, labels, positions, exact_positions, occupancies)
+         (symbols, labels, positions, exact_positions, occupancies, occupancies_exact,
+          occupancy_precisions)
       if resolution == True:
-         (symbols, labels, positions, exact_positions, occupancies, coordinate_precision)
+         (symbols, labels, positions, exact_positions, occupancies, occupancies_exact,
+          occupancy_precisions, coordinate_precision)
 
     positions: list of (x, y, z) floats
     exact_positions: list of (x, y, z) numeric strings, uncertainties stripped, so a
@@ -286,6 +291,14 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
       units, or None if none of them claim one
     occupancies:
       - list of floats (same length as symbols) if '_atom_site_occupancy' exists
+      - None otherwise
+    occupancies_exact:
+      - exact central-value strings (same length as symbols), with ESDs stripped, if
+        '_atom_site_occupancy' exists
+      - None otherwise
+    occupancy_precisions:
+      - per-value coarsest digit-implied precision or ESD, as exact Fractions (same
+        length as symbols), if '_atom_site_occupancy' exists
       - None otherwise
     """
     syms = block.get('atom_site_type_symbol')
@@ -301,11 +314,17 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     occ_col = block.get('atom_site_occupancy')
     if occ_col is not None:
         occs = []
+        occs_exact = []
+        occupancy_precisions = []
         for t in occ_col:
-            v = parse_cif_float(t, meta=False)
+            v, meta = parse_cif_float(t, meta=True)
             occs.append(v)
+            occs_exact.append(cif_exact_token(t))
+            occupancy_precisions.append(combined_precision((meta['precision'], meta['esd'])))
     else:
         occs = None
+        occs_exact = None
+        occupancy_precisions = None
 
     symbols = [s.strip() for s in syms]
     labels = [lab.strip() for lab in lbs]
@@ -324,7 +343,7 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
             )
             for xi, yi, zi in zip(xs, ys, zs)
         ]
-        return symbols, labels, positions, exact_positions, occs
+        return symbols, labels, positions, exact_positions, occs, occs_exact, occupancy_precisions
 
     # Full path: also report how precisely the coordinates were written.
     positions = []
@@ -346,7 +365,7 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
 
     coordinate_precision = combined_precision(claims)
 
-    return symbols, labels, positions, exact_positions, occs, coordinate_precision
+    return symbols, labels, positions, exact_positions, occs, occs_exact, occupancy_precisions, coordinate_precision
 
 
 def _parse_uc(block):
@@ -422,7 +441,16 @@ def parse_asu_cell(cifblock):
     parameters, basis_precision = _parse_uc_with_precision(cifblock)
     a, b, c, alpha, beta, gamma = parameters
     basis = _basis_from_lengths_angles(a, b, c, alpha, beta, gamma)
-    symbols, labels, positions, exact_positions, occs, coordinate_precision = _parse_atoms(cifblock, resolution=True)
+    (
+        symbols,
+        labels,
+        positions,
+        exact_positions,
+        occs,
+        occs_exact,
+        occupancy_precisions,
+        coordinate_precision,
+    ) = _parse_atoms(cifblock, resolution=True)
 
     # figure out equivalent atoms based on labels
     labels_map = {}
@@ -439,6 +467,8 @@ def parse_asu_cell(cifblock):
         positions,
         exact_positions,
         occs,
+        occs_exact,
+        occupancy_precisions,
         coordinate_precision,
         basis_precision,
         symbols,
@@ -527,6 +557,8 @@ def cifblock_to_asu(cifblock, *, return_single=False):
         positions,
         exact_positions,
         occupancies,
+        occupancies_exact,
+        occupancy_precisions,
         coordinate_precision,
         basis_precision,
         symbols,
@@ -579,6 +611,8 @@ def cifblock_to_asu(cifblock, *, return_single=False):
         'positions': positions,
         'positions_exact': exact_positions,
         'occupancies': occupancies,
+        'occupancies_exact': occupancies_exact,
+        'occupancy_precisions': occupancy_precisions,
         'symbols': symbols,
         'symops': symops,
         'incomm': incomm,

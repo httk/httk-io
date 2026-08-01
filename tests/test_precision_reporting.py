@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from httk.io.cif.cif_parser import parse_cif_float, single_asu_from_cif_file
+from httk.io.cif.cif_reader import read_cif
+from httk.io.cif.mcif_parser import cifblock_to_mag_asu
 from httk.io.vasp import read_poscar
 
 F = fractions.Fraction
@@ -50,6 +52,8 @@ CUBIC_CELL = (
         ("1.234(5)", F(1, 1000), F(1, 200)),
         ("10", F(1), None),
         ("1.2e-3", F(1, 10000), None),
+        ("3(1)e-1", F(1, 10), F(1, 10)),
+        ("+4.2(3)e-1", F(1, 100), F(3, 100)),
         ("1/3", None, None),
         ("?", None, None),
     ],
@@ -66,6 +70,12 @@ def test_precision_and_esd_are_exact_not_floats() -> None:
     _value, meta = parse_cif_float("5.6402(3)", meta=True)
     assert isinstance(meta["precision"], F)
     assert isinstance(meta["esd"], F)
+
+
+def test_signed_exponent_with_esd_has_consistent_value_and_metadata() -> None:
+    value, meta = parse_cif_float("+4.2(3)e-1", meta=True)
+    assert value == 0.42
+    assert meta == {"precision": F(1, 100), "esd": F(3, 100)}
 
 
 # --- CIF ---
@@ -123,6 +133,87 @@ def test_the_cell_parameters_are_kept_as_written(tmp_path: Path) -> None:
 def test_the_dead_resolution_key_is_gone(tmp_path: Path) -> None:
     data = single_asu_from_cif_file(str(_cif(tmp_path, cell=CUBIC_CELL, sites="Na1 Na 0.1234 0.1234 0.1234 \n")))
     assert "resolution" not in data
+
+
+def test_cif_keeps_occupancy_value_spelling_and_precision(tmp_path: Path) -> None:
+    path = tmp_path / "occupancies.cif"
+    path.write_text(
+        "data_test\n"
+        f"{CUBIC_CELL}"
+        "loop_\n_space_group_symop_operation_xyz\n'x,y,z'\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n_atom_site_occupancy\n"
+        "Na1 Na 0 0 0 1\n"
+        "Na2 Na 0 0 0 1/3\n"
+        "Na3 Na 0 0 0 0.3333\n"
+        "Na4 Na 0 0 0 0.3333(7)\n"
+        "Na5 Na 0 0 0 ?\n",
+        encoding="utf-8",
+    )
+
+    data = single_asu_from_cif_file(str(path))
+    assert data["occupancies"] == [1.0, 1.0 / 3.0, 0.3333, 0.3333, None]
+    assert data["occupancies_exact"] == ["1", "1/3", "0.3333", "0.3333", None]
+    assert data["occupancy_precisions"] == [F(1), None, F(1, 10000), F(7, 10000), None]
+
+    _name, raw = read_cif(str(path))[0][0]
+    assert raw["atom_site_occupancy"] == ["1", "1/3", "0.3333", "0.3333(7)", "?"]
+
+
+def test_cif_occupancy_with_esd_preserves_exponent_and_leading_plus(tmp_path: Path) -> None:
+    path = tmp_path / "exponent-occupancies.cif"
+    path.write_text(
+        "data_test\n"
+        f"{CUBIC_CELL}"
+        "loop_\n_space_group_symop_operation_xyz\n'x,y,z'\n"
+        "loop_\n_atom_site_label\n_atom_site_type_symbol\n"
+        "_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n_atom_site_occupancy\n"
+        "Na1 Na 0 0 0 3(1)e-1\n"
+        "Na2 Na 0 0 0 +4.2(3)e-1\n",
+        encoding="utf-8",
+    )
+
+    data = single_asu_from_cif_file(str(path))
+    assert data["occupancies"] == [0.3, 0.42]
+    assert data["occupancies_exact"] == ["3e-1", "+4.2e-1"]
+    assert [F(token) for token in data["occupancies_exact"]] == [F(3, 10), F(21, 50)]
+    assert data["occupancy_precisions"] == [F(1, 10), F(3, 100)]
+
+    _name, raw = read_cif(str(path))[0][0]
+    assert raw["atom_site_occupancy"] == ["3(1)e-1", "+4.2(3)e-1"]
+
+
+def test_no_occupancy_column_keeps_all_occupancy_payload_keys_none(tmp_path: Path) -> None:
+    data = single_asu_from_cif_file(str(_cif(tmp_path, cell=CUBIC_CELL, sites="Na1 Na 0.1234 0.1234 0.1234 \n")))
+    assert data["occupancies"] is None
+    assert data["occupancies_exact"] is None
+    assert data["occupancy_precisions"] is None
+
+
+def test_mcif_payload_threads_occupancy_fidelity_from_shared_atom_parser() -> None:
+    data = cifblock_to_mag_asu(
+        {
+            "cell_length_a": "5.6402",
+            "cell_length_b": "5.6402",
+            "cell_length_c": "5.6402",
+            "cell_angle_alpha": "90",
+            "cell_angle_beta": "90",
+            "cell_angle_gamma": "90",
+            "atom_site_label": ["Na1"],
+            "atom_site_type_symbol": ["Na"],
+            "atom_site_fract_x": ["0"],
+            "atom_site_fract_y": ["0"],
+            "atom_site_fract_z": ["0"],
+            "atom_site_occupancy": ["0.3333(7)"],
+            "space_group_symop_magn_operation.xyz": ["x,y,z,+1"],
+            "parent_space_group.name_h-m_alt": "P 1",
+            "parent_space_group.it_number": "1",
+        }
+    )
+
+    assert data["occupancies"] == [0.3333]
+    assert data["occupancies_exact"] == ["0.3333"]
+    assert data["occupancy_precisions"] == [F(7, 10000)]
 
 
 # --- POSCAR ---
