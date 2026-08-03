@@ -20,8 +20,8 @@
 :func:`read_poscar` parses a POSCAR/CONTCAR file into a neutral, JSON-able
 mapping whose numeric fields are kept as the **verbatim strings** found in the
 file. It performs no numeric conversion and imports nothing from
-*httk-atomistic*; turning the mapping into a ``Structure`` is the job of
-``httk.atomistic.structure_from_poscar``.
+*httk-atomistic*; turning the mapping into a ``UnitcellStructure`` is the job of
+``httk.core.load``.
 """
 
 import os
@@ -72,7 +72,7 @@ def read_poscar(source: Any) -> dict[str, Any]:
     are still to be multiplied by the scaling factor, and the coordinates may be Cartesian
     or fractional depending on ``cartesian``. Doing that conversion needs the assembled
     cell, so it belongs to whoever builds the structure —
-    :func:`httk.atomistic.structure_from_poscar` — not to the reader.
+    :func:`httk.core.load` — not to the reader.
     """
     opened: TextstreamFileView | None = None
     if isinstance(source, (str, os.PathLike)):

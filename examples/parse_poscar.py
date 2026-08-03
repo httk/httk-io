@@ -6,8 +6,8 @@ each, a coordinate-mode line, and then the coordinates. It is a small format
 with a surprising number of variants, and `httk.io.read_poscar` handles them
 while making one strong promise: **it never converts a number**. Every numeric
 field comes back as the verbatim string found in the file, so no rounding
-happens at the I/O layer. Turning that mapping into an exact `Structure` is the
-separate job of `httk.atomistic.structure_from_poscar`.
+happens at the I/O layer. Turning that mapping into an exact `UnitcellStructure`
+is the job of `httk.core.load`.
 
 `read_poscar(source)` accepts a filename (`str` or `os.PathLike`), an open text
 stream, or a plain iterable of lines, and returns a neutral, JSON-able mapping:

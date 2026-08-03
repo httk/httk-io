@@ -68,11 +68,11 @@ identical mapping.
 
 The final section shows the same file arriving through `httk.core.load`, which
 dispatches `.cif` (and `.cif.bz2`) to *httk-io* because importing `httk.core`
-discovers the `httk.registry.io` registry package. Note that `load` returns the
-*interpreted* payload — a `format` tag plus one asymmetric unit per structural
-data block — rather than the token tree shown above, so that a CIF can be handed
-straight to `httk.atomistic.load_structure`. Blocks that are not structures are
-reported rather than raising, since a CIF may hold anything.
+discovers the `httk.registry.io` registry package. By default, `load(path)` returns
+the native `ASUStructure` when *httk-atomistic* is installed. This example uses
+`load(path, raw=True)`, which returns the neutral payload mapping instead. Blocks
+that are not structures are reported rather than raising, since a CIF may hold
+anything.
 
 Run this file to see every step printed.
 """

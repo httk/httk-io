@@ -648,7 +648,8 @@ def read_cif_asus(fs):
     The mapping stays neutral — plain lists, strings, and exact ``Fraction`` symmetry
     operations, with no domain objects — so *httk-io* need not know about
     *httk-atomistic*. Turning it into a structure is
-    ``httk.atomistic.asu_structure_from_cif``.
+    ``httk.core.load`` (which returns an ``ASUStructure`` when atomistic support
+    is installed).
     """
     cifblocks, header = read_cif(fs, allow_cif2=False)
 

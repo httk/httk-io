@@ -4,7 +4,7 @@
 `httk.io.read_poscar`. It parses the file into a neutral, JSON-able mapping whose
 numeric fields are kept as the **verbatim strings** found in the file — no
 floating-point rounding happens at the I/O layer. Turning that mapping into an
-exact `Structure` is the separate job of `httk.atomistic.structure_from_poscar`
+exact `UnitcellStructure` is the separate result of `httk.core.load`
 (see the *httk-atomistic* docs).
 
 ## The neutral mapping
