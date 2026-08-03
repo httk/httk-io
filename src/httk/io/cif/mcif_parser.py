@@ -16,22 +16,27 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import os
 import re
+from collections.abc import Iterable
 from fractions import Fraction
-from typing import Any
+from typing import Any, cast
 
 from httk.core import combined_precision
 
+from ._xyz_expr import _parse_linear_expr, _parse_linear_expr_algebraic
 from .cif_parser import (
+    _cell_parameter_tokens,
     parse_asu_cell,
     parse_cif_float,
-    parse_linear_expr,
+    parse_cif_fraction,
     parse_structural_modulation,
 )
 from .cif_reader import read_cif
+from .cif_tags import CIF_TAGS
 
 
-def extract_parent_q_basis(cifblock):
+def extract_parent_q_basis(cifblock: dict[str, Any]) -> list[tuple[Fraction, Fraction, Fraction]] | None:
     """
     Return the parent propagation basis as a list of ``(kx, ky, kz)`` tuples,
     or ``None`` if it is not present.
@@ -42,11 +47,14 @@ def extract_parent_q_basis(cifblock):
     basis = []
     for row in k_vectors:
         # each row like ('0', '0', '1/3') or [0,0,0.333...]
-        basis.append(tuple(parse_cif_float(v) for v in row))
+        vector = tuple(parse_cif_fraction(v) for v in row)
+        if len(vector) != 3 or any(value is None for value in vector):
+            raise ValueError(f"Invalid parent propagation vector: {row!r}")
+        basis.append(cast(tuple[Fraction, Fraction, Fraction], vector))
     return basis
 
 
-def extract_fourier_coeffs(cifblock, max_q_guess=12):
+def extract_fourier_coeffs(cifblock: dict[str, Any]) -> tuple[list[tuple[Any, ...]], int]:
     """
     Return ``(coeff_rows, m)`` where ``coeff_rows`` is a list of coefficient tuples
     ``(c1, c2, ..., cm)`` and ``m`` is the number of q-vectors detected (``>= 0``).
@@ -56,11 +64,11 @@ def extract_fourier_coeffs(cifblock, max_q_guess=12):
     """
     # discover which q*_coeff columns exist
     present_cols = []
-    for i in range(1, max_q_guess + 1):
-        key = f'atom_site_Fourier_wave_vector.q{i}_coeff'
-        col = cifblock.get(key)
-        if col is not None:
-            present_cols.append((i, key, col))
+    pattern = re.compile("^" + re.escape(CIF_TAGS['magnetic_fourier_coeff']).replace(r"\{\}", r"(\d+)") + "$")
+    for key, col in cifblock.items():
+        match = pattern.match(key)
+        if match and col is not None:
+            present_cols.append((int(match.group(1)), key, col))
 
     if not present_cols:
         return [], 0
@@ -71,7 +79,7 @@ def extract_fourier_coeffs(cifblock, max_q_guess=12):
 
     # Build a dense matrix of size (max_len x m), filling missing cols with zeros
     # 1-based indexing externally; 0-based in list
-    columns = [None] * m
+    columns: list[list[Any] | None] = [None] * m
     for i, key, col in present_cols:
         # normalize to numeric (ints preferred) but accept rational/float
         def norm(x):
@@ -99,7 +107,7 @@ def extract_fourier_coeffs(cifblock, max_q_guess=12):
             columns[idx] = [0] * max_len
 
     # transpose to rows
-    rows = list(zip(*columns))
+    rows = list(zip(*(cast(list[Any], column) for column in columns)))
 
     # deduplicate coefficient tuples
     coeff_rows = []
@@ -131,7 +139,7 @@ def extract_fourier(cifblock):
     if len(basis) < m:
         # If fewer basis vectors than coeff columns, pad missing q’s with (0,0,0)
         # (harmless for commensurability; or you can raise if you prefer strictness)
-        basis = list(basis) + [(0.0, 0.0, 0.0)] * (m - len(basis))
+        basis = list(basis) + [(Fraction(0), Fraction(0), Fraction(0))] * (m - len(basis))
     elif len(basis) > m:
         # Truncate extra basis vectors (common if multiple parent k’s present but only q1..qm used)
         basis = list(basis[:m])
@@ -160,19 +168,25 @@ def _parse_xyzt_op(op, use_fractions=False, time_reversal_convention="mcif"):
     if len(parts) != 4:
         raise ValueError(f"Unexpected op format: {op}")
     px, py, pz, ts = parts
-    rx, tx = parse_linear_expr(px, use_fractions=use_fractions)
-    ry, ty = parse_linear_expr(py, use_fractions=use_fractions)
-    rz, tz = parse_linear_expr(pz, use_fractions=use_fractions)
+    rx, tx = _parse_linear_expr(px, use_fractions=use_fractions)
+    ry, ty = _parse_linear_expr(py, use_fractions=use_fractions)
+    rz, tz = _parse_linear_expr(pz, use_fractions=use_fractions)
+    try:
+        time_value = int(ts)
+    except ValueError as error:
+        raise ValueError(f"Invalid time-reversal flag at end of operation: '{ts}' in {op}") from error
+    if time_value not in (-1, 1):
+        raise ValueError(f"Invalid time-reversal flag at end of operation: '{ts}' in {op}")
     if time_reversal_convention == "mcif":
-        ts = int(ts)
+        ts = time_value
     elif time_reversal_convention == "spglib":
-        ts = int((1 - int(ts)) / 2)
+        ts = int((1 - time_value) / 2)
     else:
-        raise Exception("Unrecognized time reversal convention.")
+        raise ValueError(f"Unrecognized time-reversal convention: {time_reversal_convention!r}")
     return (rx, ry, rz), (tx, ty, tz), ts
 
 
-def xyzt_symops_to_matrix(symops_xyz, use_fractions=False, time_reversal_convention="mcif"):
+def _xyzt_symops_to_matrix(symops_xyz, use_fractions=False, time_reversal_convention="mcif"):
     return [_parse_xyzt_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_xyz]
 
 
@@ -188,7 +202,7 @@ def _compose_ops_with_centerings(ops, centerings):
     for R, t, time_flag in ops:
         for Rc, c, time_c in centerings:
             if Rc != ((1, 0, 0), (0, 1, 0), (0, 0, 1)):
-                raise Exception("Centering symop that includes rotation is invalid")
+                raise ValueError("Magnetic centering symmetry operation must not include rotation")
             t_new = (t[0] + c[0], t[1] + c[1], t[2] + c[2])
             time_new = (time_flag + time_c) % 2  # time_flag * time_c for -1/+1 convention
             composed.append((R, t_new, time_new))
@@ -236,9 +250,7 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
     spin_basis = "crystal"
 
     if not _len_ok(xs, ys, zs, n):
-        xs = _get('atom_site_moment.Cartn_x')
-        ys = _get('atom_site_moment.Cartn_y')
-        zs = _get('atom_site_moment.Cartn_z')
+        xs, ys, zs = (_get(tag) for tag in CIF_TAGS['magnetic_cartesian_moment'])
         spin_basis = "cartesian"
         if not _len_ok(xs, ys, zs, n):
             return None if not resolution else (None, None, None, None)
@@ -312,74 +324,9 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
     return moments, labels, spin_basis, mag_res
 
 
-def _parse_linear_expr_algebraic(expr, allowed_vars=('x1', 'x2', 'x3'), use_fractions=False):
-    """
-    Parse a single algebraic coordinate expression from a superspace op.
-
-    Examples: 'x1-x2', '-x3+1/2', '2x1-x2', 'x1+1/3', 'x1-2x2+3/4'
-    Returns (row, const) where:
-      row is a list of integer coefficients (may be outside {-1,0,1})
-      const is float or Fraction
-    Raises if the expression involves variables not in allowed_vars,
-    or if a variable has a non-integer coefficient (e.g. 1/2 x1).
-    """
-    s = expr.replace(" ", "")
-    if not s:
-        raise ValueError("Empty expression")
-    if s[0] not in "+-":
-        s = "+" + s
-
-    # ([sign]) ( [optional number] x<digits>  |  standalone number )
-    # - number can be: integer, decimal, or fraction a/b
-    token_re = (
-        r'([+-])'
-        r'(?:(?:(?:(\d+(?:/\d+)?|\d*\.\d+)?)'  # optional coefficient before variable
-        r'(x\d+))|((?:\d+/\d+)|(?:\d+(?:\.\d+)?)))'  # or standalone number
-    )
-
-    coeffs = {v: 0 for v in allowed_vars}
-    const = Fraction(0) if use_fractions else 0.0
-
-    pos = 0
-    for m in re.finditer(token_re, s):
-        if m.start() != pos:
-            raise ValueError(f"Unparsed tail in '{expr}' near '{s[pos:]}'")
-        pos = m.end()
-
-        sign, coef_str, var, num = m.groups()
-        sgn = 1 if sign == '+' else -1
-
-        if var is not None:
-            if var not in allowed_vars:
-                raise ValueError(f"Expression '{expr}' references {var}, not in allowed {allowed_vars}.")
-            # default coefficient is 1 if omitted
-            if coef_str in (None, ""):
-                coef_val = 1
-            else:
-                # Coefficients on variables must be integers for symmetry ops
-                # Parse via Fraction to catch "2", "2.0", "3/1" etc.
-                f = Fraction(coef_str) if '/' in coef_str or '.' in coef_str else Fraction(int(coef_str))
-                if f.denominator != 1:
-                    raise ValueError(f"Non-integer coefficient {coef_str} on {var} in '{expr}'")
-                coef_val = int(f.numerator)
-            coeffs[var] += sgn * coef_val
-        else:
-            # standalone numeric translation
-            if use_fractions:
-                val = Fraction(num) if '/' in num or '.' in num else Fraction(int(num))
-            else:
-                val = float(Fraction(num)) if '/' in num else float(num)
-            const += sgn * val
-
-    if pos != len(s):
-        raise ValueError(f"Unparsed tail in '{expr}' near '{s[pos:]}'")
-
-    const_out = const if use_fractions else float(const)
-    row = tuple(int(coeffs[v]) for v in allowed_vars)
-    return row, const_out
-
-
-def parse_alg_op(op, use_fractions=False, time_reversal_convention="mcif"):
+def _parse_alg_op(
+    op: str, use_fractions: bool = False, time_reversal_convention: str = "mcif"
+) -> tuple[Any, tuple[Any, Any, Any], int]:
     """
     Parse an msCIF `_space_group_symop_magn_ssg_operation.algebraic` string.
 
@@ -440,8 +387,8 @@ def parse_alg_op(op, use_fractions=False, time_reversal_convention="mcif"):
     return R, t, time
 
 
-def alg_symops_to_matrix(symops_alg, use_fractions=False, time_reversal_convention="mcif"):
-    return [parse_alg_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_alg]
+def _alg_symops_to_matrix(symops_alg, use_fractions=False, time_reversal_convention="mcif"):
+    return [_parse_alg_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_alg]
 
 
 def crystal_to_cartesian(moments_cryst, basis):
@@ -486,54 +433,35 @@ def crystal_to_cartesian(moments_cryst, basis):
     return result
 
 
-def _parse_mag_asu_cell(cifblock, *, moment_equalization=True):
-    (
-        basis,
-        positions,
-        exact_positions,
-        occupancies,
-        occupancies_exact,
-        occupancy_precisions,
-        coordinate_precision,
-        basis_precision,
-        symbols,
-        labels,
-        equivalent_atoms,
-    ) = parse_asu_cell(cifblock)
+def _parse_mag_asu_cell(cifblock: dict[str, Any], *, moment_equalization: bool = True) -> tuple[Any, ...]:
+    asu = parse_asu_cell(cifblock)
     moments_result = _parse_moments(cifblock, equalize=moment_equalization, resolution=True)
     assert moments_result is not None  # resolution=True always yields a 4-tuple
     cif_moments, momlabels, spin_basis, magres = moments_result
 
+    if cif_moments is None:
+        return (
+            asu,
+            None,
+            None,
+            magres,
+        )
+
     if spin_basis == "crystal":
-        cif_moments = crystal_to_cartesian(cif_moments, basis)
+        cif_moments = crystal_to_cartesian(cif_moments, asu.basis)
         spin_basis = "cartesian"
 
     moments_map = {label: (mom[0], mom[1], mom[2]) for label, mom in zip(momlabels, cif_moments)}
-    magmoms = [moments_map.get(i, (0.0, 0.0, 0.0)) for i in labels]
+    magmoms = [moments_map.get(i, (0.0, 0.0, 0.0)) for i in asu.labels]
 
-    return (
-        basis,
-        positions,
-        exact_positions,
-        occupancies,
-        occupancies_exact,
-        occupancy_precisions,
-        coordinate_precision,
-        basis_precision,
-        magmoms,
-        spin_basis,
-        magres,
-        symbols,
-        labels,
-        equivalent_atoms,
-    )
+    return asu, magmoms, spin_basis, magres
 
 
-def _get_magnetic_fourier_info(cifblock):
+def _get_magnetic_fourier_info(cifblock: dict[str, Any]) -> tuple[bool, list[str]]:
     has = False
     atoms = set()
 
-    labels = cifblock.get('_atom_site_moment_Fourier.atom_site_label')
+    labels = cifblock.get(CIF_TAGS['magnetic_fourier_label'])
     if labels:
         has = True
         atoms.update(labels)
@@ -541,20 +469,26 @@ def _get_magnetic_fourier_info(cifblock):
     return has, sorted(atoms)
 
 
-def _parse_modulation(cifblock):
+def _parse_modulation(cifblock: dict[str, Any]) -> tuple[Any, ...]:
     structural_q, mod_dim, has_struct_mod, struct_mod_atoms = parse_structural_modulation(cifblock)
 
     # Magnetic q
     magnetic_q = None
 
     # (A) magnetic superspace -> uses same q as structural superspace
-    if '_space_group.magn_ssg_name' in cifblock and structural_q:
+    if cifblock.get(CIF_TAGS['magnetic_ssg_name']) is not None and structural_q:
         magnetic_q = structural_q
 
     # (B) commensurate magnetic propagation vector
     elif cifblock.get('parent_propagation_vector.kxkykz'):
         rows = cifblock['parent_propagation_vector.kxkykz']
-        magnetic_q = [[parse_cif_float(v) for v in row] for row in rows]
+        vectors: list[list[Fraction]] = []
+        for row in rows:
+            vector = [parse_cif_fraction(v) for v in row]
+            if len(vector) != 3 or any(value is None for value in vector):
+                raise ValueError(f"Invalid parent propagation vector: {row!r}")
+            vectors.append(cast(list[Fraction], vector))
+        magnetic_q = vectors
 
     # (C) Fourier-defined magnetic propagation vector
     else:
@@ -567,49 +501,24 @@ def _parse_modulation(cifblock):
     return structural_q, magnetic_q, mod_dim, has_struct_mod, has_mag_mod, struct_mod_atoms, mag_mod_atoms
 
 
-def is_rational_component(x, max_den=12, tol=1e-6):
-    from fractions import Fraction
-
-    fx = Fraction(x).limit_denominator(max_den)
-    return abs(float(fx) - x) < tol
-
-
-def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
-
+def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = False) -> dict[str, Any]:
     (
-        basis,
-        positions,
-        exact_positions,
-        occupancies,
-        occupancies_exact,
-        occupancy_precisions,
-        coordinate_precision,
-        basis_precision,
+        asu,
         magmoms,
         spin_basis,
         magres,
-        symbols,
-        labels,
-        equivalent_atoms,
     ) = _parse_mag_asu_cell(cifblock)
     structural_q, magnetic_q, mod_dim, has_struct_mod, has_mag_mod, struct_mod_atoms, mag_mod_atoms = _parse_modulation(
         cifblock
     )
 
     if error_on_nonmag and magmoms is None:
-        raise Exception("Could not extract magnetic moments from mcif file")
+        raise ValueError("Magnetic moment columns are missing or have mismatched lengths")
 
-    # Determine if magnetic q is incommensurate
-    mq_is_incomm = False
-    if magnetic_q:
-        for q in magnetic_q:
-            if any(not is_rational_component(x) for x in q):
-                mq_is_incomm = True
-                break
-
-    # Build incommensurate descriptor only when really needed
+    # Exact numeric CIF tokens are Fractions, so their commensurability never relies on
+    # a floating-point denominator guess.
     incomm = None
-    if mod_dim > 0 or mq_is_incomm:
+    if mod_dim > 0:
         incomm = {
             'structural_q': structural_q,
             'magnetic_q': magnetic_q,
@@ -624,44 +533,48 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
     if base_symops_xyz is None:
         base_symops_alg = cifblock.get('space_group_symop_magn_ssg_operation.algebraic')
         if base_symops_alg is None:
-            raise Exception("No symmetry operations in mcif")
-        base_symops = alg_symops_to_matrix(base_symops_alg, use_fractions=True, time_reversal_convention="spglib")
+            raise ValueError("mcif block has no symmetry operations")
+        raw_symops = cast(list[str], base_symops_alg)
+        base_symops = _alg_symops_to_matrix(base_symops_alg, use_fractions=True, time_reversal_convention="spglib")
     else:
-        base_symops = xyzt_symops_to_matrix(base_symops_xyz, use_fractions=True, time_reversal_convention="spglib")
+        raw_symops = cast(list[str], base_symops_xyz)
+        base_symops = _xyzt_symops_to_matrix(base_symops_xyz, use_fractions=True, time_reversal_convention="spglib")
 
     centering_symops_xyz = cifblock.get('space_group_symop_magn_centering.xyz')
     if centering_symops_xyz is None:
         centering_symops_alg = cifblock.get('space_group_symop_magn_ssg_centering.algebraic')
         if centering_symops_alg is None:
             centering_symops_xyz = ["x,y,z,+1"]
-            cent_symops = xyzt_symops_to_matrix(
+            cent_symops = _xyzt_symops_to_matrix(
                 centering_symops_xyz, use_fractions=True, time_reversal_convention="spglib"
             )
         else:
-            cent_symops = alg_symops_to_matrix(
+            cent_symops = _alg_symops_to_matrix(
                 centering_symops_alg, use_fractions=True, time_reversal_convention="spglib"
             )
     else:
-        cent_symops = xyzt_symops_to_matrix(centering_symops_xyz, use_fractions=True, time_reversal_convention="spglib")
+        cent_symops = _xyzt_symops_to_matrix(
+            centering_symops_xyz, use_fractions=True, time_reversal_convention="spglib"
+        )
 
-    symops = _compose_ops_with_centerings(base_symops, cent_symops)
+    _compose_ops_with_centerings(base_symops, cent_symops)
 
     bns_nbr = cifblock.get('space_group_magn.number_bns')
     bns_name = cifblock.get('space_group_magn.name_bns')
-    space_group_name_hm = re.sub("  +", " ", cifblock.get('parent_space_group.name_h-m_alt').strip())
+    parent_name_hm = cifblock.get('parent_space_group.name_h-m_alt')
+    space_group_name_hm = re.sub("  +", " ", parent_name_hm.strip()) if parent_name_hm is not None else None
     space_group_nbr = cifblock.get('parent_space_group.it_number')
     icsd = cifblock.get('database_code_ICSD')
     doi = cifblock.get('citation_doi')
 
     result = {
-        'basis': basis,
-        'positions': positions,
-        'positions_exact': exact_positions,
-        'occupancies': occupancies,
-        'occupancies_exact': occupancies_exact,
-        'occupancy_precisions': occupancy_precisions,
-        'symbols': symbols,
-        'symops': symops,
+        'cell_parameters_exact': _cell_parameter_tokens(cifblock),
+        'positions_exact': asu.positions_exact,
+        'occupancies': asu.occupancies,
+        'occupancies_exact': asu.occupancies_exact,
+        'occupancy_precisions': asu.occupancy_precisions,
+        'symbols': asu.symbols,
+        'symops_xyz': tuple(raw_symops),
         'incomm': incomm,
         'space_group_nbr': space_group_nbr,
         'space_group_name_hm': space_group_name_hm,
@@ -671,18 +584,20 @@ def cifblock_to_mag_asu(cifblock, *, error_on_nonmag=False):
         'magmoms': magmoms,
         'bns_nbr': bns_nbr,
         'bns_name': bns_name,
-        'equivalent_atoms': equivalent_atoms,
-        'coordinate_precision': coordinate_precision,
-        'basis_precision': basis_precision,
+        'equivalent_atoms': asu.equivalent_atoms,
+        'coordinate_precision': asu.coordinate_precision,
+        'basis_precision': asu.basis_precision,
         'magmom_precision': magres,
-        'labels': labels,
+        'labels': asu.labels,
     }
 
     return result
 
 
-def mag_asus_from_mcif_file(fs, *, error_on_nonmag=False):
-    cifblocks, _header = read_cif(fs, allow_cif2=True)
+def mag_asus_from_mcif_file(
+    source: str | os.PathLike[str] | Iterable[str], *, error_on_nonmag: bool = False
+) -> list[dict[str, Any]]:
+    cifblocks, _header = read_cif(source, allow_cif2=True)
 
     outputs = []
     for name, cifblock in cifblocks:
@@ -690,14 +605,31 @@ def mag_asus_from_mcif_file(fs, *, error_on_nonmag=False):
     return outputs
 
 
-def single_mag_asu_from_mcif_file(fs, *, error_on_nonmag=False):
-    cifblocks, _header = read_cif(fs, allow_cif2=True)
+def read_mcif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
+    """Read an mcif into the neutral payload used by the ``.mcif`` loader."""
+    cifblocks, header = read_cif(source, allow_cif2=True)
+    blocks = []
+    unparsed = []
+    for name, cifblock in cifblocks:
+        if 'atom_site_label' not in cifblock:
+            continue
+        try:
+            blocks.append(cifblock_to_mag_asu(cifblock))
+        except Exception as error:
+            unparsed.append({'block': name, 'reason': f'{type(error).__name__}: {error}'})
+    return {'format': 'mcif', 'blocks': blocks, 'unparsed': unparsed, 'header': header}
+
+
+def single_mag_asu_from_mcif_file(
+    source: str | os.PathLike[str] | Iterable[str], *, error_on_nonmag: bool = False
+) -> dict[str, Any]:
+    cifblocks, _header = read_cif(source, allow_cif2=True)
 
     # Get the first cifblock with atomic sites
     for name, cifblock in cifblocks:
         if 'atom_site_label' in cifblock:
             break
     else:
-        raise Exception("No structural block found in CIF.")
+        raise ValueError("No structural block found in mcif")
 
     return cifblock_to_mag_asu(cifblock, error_on_nonmag=error_on_nonmag)

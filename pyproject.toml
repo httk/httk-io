@@ -70,8 +70,6 @@ release = [
   "build>=1.2",
   "twine>=6.0",
 ]
-ase = ["ase"]
-default = ["ase"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-m 'not extended'"
@@ -109,7 +107,3 @@ mypy_path = ["src"]
 namespace_packages = true
 explicit_package_bases = true
 warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-module = ["yaml", "markdown", "docutils", "docutils.*"]
-ignore_missing_imports = true

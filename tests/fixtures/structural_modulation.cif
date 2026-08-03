@@ -1,0 +1,13 @@
+data_modulated
+_cell_modulation_dimension 1
+loop_
+_cell_wave_vector_x
+_cell_wave_vector_y
+_cell_wave_vector_z
+0 0 1/3
+loop_
+_atom_site_displace_Fourier.atom_site_label
+Fe1
+loop_
+_atom_site_occupancy_Fourier.atom_site_label
+Fe2

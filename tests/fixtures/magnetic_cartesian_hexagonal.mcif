@@ -1,0 +1,23 @@
+data_cartesian_hexagonal
+_cell_length_a 2
+_cell_length_b 2
+_cell_length_c 4
+_cell_angle_alpha 90
+_cell_angle_beta 90
+_cell_angle_gamma 120
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+Fe1 Fe 0 0 0
+loop_
+_atom_site_moment.label
+_atom_site_moment.Cartn_x
+_atom_site_moment.Cartn_y
+_atom_site_moment.Cartn_z
+Fe1 1 2 3
+loop_
+_space_group_symop_magn_operation.xyz
+x,y,z,+1

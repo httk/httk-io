@@ -6,6 +6,21 @@ register_loader(
     extensions=(".cif",),
 )
 
+from httk.core.register import register_writer
+
+register_writer(
+    name="cif",
+    writer="httk.io.cif.cif_writer:_write_cif_payload",
+    format="cif",
+    extensions=(".cif",),
+)
+
+register_loader(
+    name="mcif",
+    loader="httk.io.cif:read_mcif_asus",
+    extensions=(".mcif",),
+)
+
 register_loader(
     name="poscar",
     loader="httk.io.vasp:read_poscar",

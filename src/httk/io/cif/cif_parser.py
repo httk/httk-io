@@ -16,14 +16,18 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import os
 import re
+import warnings
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from fractions import Fraction
-from typing import Any, Literal, TypedDict, overload
+from typing import Any, Literal, NamedTuple, TypedDict, cast, overload
 
 from httk.core import combined_precision, decimal_precision
 
 from .cif_reader import read_cif
+from .cif_tags import CIF_TAGS
 
 
 class CifMeta(TypedDict):
@@ -75,7 +79,7 @@ def parse_cif_float(
         rationals or ``None``.
     """
     if token is None:
-        raise Exception("parse_cif_float parsing None")
+        raise ValueError("Cannot parse None as a CIF float")
 
     t = token.strip()
     if t == '?':
@@ -84,14 +88,14 @@ def parse_cif_float(
         return None
 
     if t in ('.', ''):
-        raise Exception("Missing cif value cannot be conveted to float")
+        raise ValueError("Missing CIF value cannot be converted to float")
 
     # Replace unicode minus
     if any(ch in t for ch in ("\u2212", "\u2013", "\u2014")):
         if pragmatic:
             t = t.replace("\u2212", "-").replace("\u2013", "-").replace("\u2014", "-")
         else:
-            raise Exception("Cif contains non-ascii minus sign: " + str(t))
+            raise ValueError("CIF contains a non-ASCII minus sign: " + str(t))
 
     m = _CIF_NUM_RE.match(t)
 
@@ -102,9 +106,14 @@ def parse_cif_float(
                 val = float(Fraction(t))
             else:
                 val = float(t)
-        except Exception:
-            # last resort: grab first float-looking chunk
-            val = float(re.split(r'([0-9]*(\.[0-9]+)?)', t)[1])
+        except (ValueError, ZeroDivisionError) as error:
+            if not pragmatic:
+                raise ValueError(f"Invalid CIF numeric token: {token!r}") from error
+            warnings.warn(f"Salvaging malformed CIF numeric token: {token!r}", RuntimeWarning, stacklevel=2)
+            try:
+                val = float(re.split(r'([0-9]*(\.[0-9]+)?)', t)[1])
+            except (IndexError, ValueError) as salvage_error:
+                raise ValueError(f"Invalid CIF numeric token: {token!r}") from salvage_error
 
         if meta:
             # Anything the CIF number pattern did not match: a fraction, or salvage. A
@@ -144,6 +153,17 @@ def parse_cif_float(
     return val, {'esd': esd_val, 'precision': precision}
 
 
+def parse_cif_fraction(token: str) -> Fraction | None:
+    """Parse a CIF numeric token exactly, preserving finite decimals and fractions."""
+    exact = cif_exact_token(token)
+    if exact is None:
+        return None
+    try:
+        return Fraction(exact)
+    except (ValueError, ZeroDivisionError) as error:
+        raise ValueError(f"Invalid exact CIF numeric token: {token!r}") from error
+
+
 def parse_cif_int(token: str, *, strict: bool = True, allow_round: bool = False) -> int:
     """
     Convert a CIF numeric token (e.g., '123(4)', '3E2', '1.0E3') to an int using the central value.
@@ -179,80 +199,6 @@ def parse_cif_int(token: str, *, strict: bool = True, allow_round: bool = False)
         raise ValueError(f"Non-integer numeric (set allow_round=True to round): {token!r}")
 
 
-def parse_linear_expr(expr, use_fractions=False):
-    """
-    expr: e.g. 'x-y', '-z+1/2', 'x', 'y', 'z-1', 'x-2y', '3x+1/2'
-    Returns (row, const) where row is [ax, ay, az] (integers or Fractions),
-    and const is a float or Fraction depending on use_fractions.
-    """
-    s = expr.replace(" ", "")
-    if not s:
-        raise ValueError("Empty expression")
-    if s[0] not in "+-":
-        s = "+" + s
-
-    coeffs: dict[str, Fraction | float | int] = {'x': 0, 'y': 0, 'z': 0}
-    const = Fraction(0) if use_fractions else 0.0
-
-    # ([sign]) ( [optional number] [var]  |  number )
-    token_re = r'([+-])(?:(?:(?:(\d+(?:/\d+)?|\d*\.\d+)?)' r'(x|y|z))|((?:\d+/\d+)|(?:\d+(?:\.\d+)?)))'
-
-    pos = 0
-    for m in re.finditer(token_re, s):
-        if m.start() != pos:
-            # There are leftover characters -> invalid tokenization
-            raise ValueError(f"Unparsed tail in '{expr}' near '{s[pos:]}'")
-        pos = m.end()
-
-        sign, coef_str, var, num = m.groups()
-        sgn = 1 if sign == '+' else -1
-
-        if var is not None:
-            # variable term ± (coef or 1) * var
-            if coef_str in (None, ""):
-                coef_val = 1
-            else:
-                coef_val = Fraction(coef_str) if '/' in coef_str else float(coef_str)
-            if use_fractions and not isinstance(coef_val, Fraction):
-                coef_val = Fraction(coef_val)
-            coeffs[var] += sgn * coef_val
-        else:
-            # standalone numeric translation
-            if use_fractions:
-                val = Fraction(num)
-            else:
-                val = float(Fraction(num)) if '/' in num else float(num)
-            const += sgn * val
-
-    if pos != len(s):
-        raise ValueError(f"Unparsed tail in '{expr}' near '{s[pos:]}'")
-
-    # Ensure output constant has requested type
-    const_out = const if use_fractions else float(const)
-
-    # Order as (x,y,z)
-    return (coeffs['x'], coeffs['y'], coeffs['z']), const_out
-
-
-def parse_xyz_op(op, use_fractions=False):
-    """
-    op: e.g. 'x-y,x,-z+1/2'
-    Returns (R, t) where R is 3x3 (list of rows), t is length-3 float list
-    """
-    parts = [p.strip() for p in op.split(",")]
-    if len(parts) != 3:
-        raise ValueError(f"Unexpected op format: {op}")
-    px, py, pz = parts
-    rx, tx = parse_linear_expr(px, use_fractions=use_fractions)
-    ry, ty = parse_linear_expr(py, use_fractions=use_fractions)
-    rz, tz = parse_linear_expr(pz, use_fractions=use_fractions)
-    return (rx, ry, rz), (tx, ty, tz)
-
-
-def xyz_symops_to_matrix(symops_xyz, use_fractions=False):
-    return [parse_xyz_op(s, use_fractions) for s in symops_xyz]
-
-
 def cif_exact_token(token: str) -> str | None:
     """The numeric part of a CIF value, as text, with any uncertainty estimate removed.
 
@@ -273,42 +219,32 @@ def cif_exact_token(token: str) -> str | None:
     return text.strip() or None
 
 
-def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
-    """
-    Returns:
-      if resolution == False:
-         (symbols, labels, positions, exact_positions, occupancies, occupancies_exact,
-          occupancy_precisions)
-      if resolution == True:
-         (symbols, labels, positions, exact_positions, occupancies, occupancies_exact,
-          occupancy_precisions, coordinate_precision)
-
-    positions: list of (x, y, z) floats
-    exact_positions: list of (x, y, z) numeric strings, uncertainties stripped, so a
-      consumer can embed the coordinate the file actually wrote rather than its binary
-      float approximation
-    coordinate_precision: the coarsest precision claimed by any coordinate, in fractional
-      units, or None if none of them claim one
-    occupancies:
-      - list of floats (same length as symbols) if '_atom_site_occupancy' exists
-      - None otherwise
-    occupancies_exact:
-      - exact central-value strings (same length as symbols), with ESDs stripped, if
-        '_atom_site_occupancy' exists
-      - None otherwise
-    occupancy_precisions:
-      - per-value coarsest digit-implied precision or ESD, as exact Fractions (same
-        length as symbols), if '_atom_site_occupancy' exists
-      - None otherwise
-    """
+def _parse_atoms(block: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Parse atom data without coordinate-precision reporting."""
     syms = block.get('atom_site_type_symbol')
     lbs = block.get('atom_site_label')
     xs = block.get('atom_site_fract_x')
     ys = block.get('atom_site_fract_y')
     zs = block.get('atom_site_fract_z')
 
-    n = len(xs)
-    assert len(ys) == len(zs) == len(lbs) == len(syms) == n
+    if not all(isinstance(column, list) for column in (syms, lbs, xs, ys, zs)):
+        raise ValueError("CIF block is missing one or more required atom-site columns")
+    syms = cast(list[str], syms)
+    lbs = cast(list[str], lbs)
+    xs = cast(list[str], xs)
+    ys = cast(list[str], ys)
+    zs = cast(list[str], zs)
+    counts = {
+        'atom_site_type_symbol': len(syms),
+        'atom_site_label': len(lbs),
+        'atom_site_fract_x': len(xs),
+        'atom_site_fract_y': len(ys),
+        'atom_site_fract_z': len(zs),
+    }
+    if len(set(counts.values())) != 1:
+        raise ValueError(
+            "CIF atom-site columns have mismatched lengths: " + ", ".join(f"{k}={v}" for k, v in counts.items())
+        )
 
     # Optional occupancy column
     occ_col = block.get('atom_site_occupancy')
@@ -316,10 +252,10 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
         occs = []
         occs_exact = []
         occupancy_precisions = []
-        for t in occ_col:
+        for index, t in enumerate(occ_col):
             v, meta = parse_cif_float(t, meta=True)
             occs.append(v)
-            occs_exact.append(cif_exact_token(t))
+            occs_exact.append(_prefer_exact_token(block, t, 'httk_atom_site_occupancy_exact', index=index))
             occupancy_precisions.append(combined_precision((meta['precision'], meta['esd'])))
     else:
         occs = None
@@ -330,63 +266,56 @@ def _parse_atoms(block, resolution=True) -> tuple[Any, ...]:
     labels = [lab.strip() for lab in lbs]
 
     exact_positions = [
-        (cif_exact_token(xi), cif_exact_token(yi), cif_exact_token(zi)) for xi, yi, zi in zip(xs, ys, zs)
+        (
+            _prefer_exact_token(block, xi, 'httk_atom_site_fract_x_exact', index=index),
+            _prefer_exact_token(block, yi, 'httk_atom_site_fract_y_exact', index=index),
+            _prefer_exact_token(block, zi, 'httk_atom_site_fract_z_exact', index=index),
+        )
+        for index, (xi, yi, zi) in enumerate(zip(xs, ys, zs))
     ]
+    positions = [(parse_cif_float(xi), parse_cif_float(yi), parse_cif_float(zi)) for xi, yi, zi in zip(xs, ys, zs)]
+    return symbols, labels, positions, exact_positions, occs, occs_exact, occupancy_precisions
 
-    # Fast path: no resolution / grid requested
-    if not resolution:
-        positions = [
-            (
-                parse_cif_float(xi, meta=False),
-                parse_cif_float(yi, meta=False),
-                parse_cif_float(zi, meta=False),
-            )
-            for xi, yi, zi in zip(xs, ys, zs)
-        ]
-        return symbols, labels, positions, exact_positions, occs, occs_exact, occupancy_precisions
 
-    # Full path: also report how precisely the coordinates were written.
-    positions = []
+def _prefer_exact_token(
+    block: Mapping[str, Any], standard: str, companion: str, *, index: int | None = None
+) -> str | None:
+    """Use an httk exact companion when present, otherwise the standard token."""
+    companion_value = block.get(companion)
+    if index is not None and isinstance(companion_value, list):
+        companion_value = companion_value[index] if index < len(companion_value) else None
+    if companion_value is not None:
+        token = cif_exact_token(companion_value)
+        if token is not None:
+            parse_cif_fraction(token)
+            return token
+    return cif_exact_token(standard)
+
+
+def _parse_atoms_with_precision(block: Mapping[str, Any]) -> tuple[Any, ...]:
+    """Parse atom data and report the coarsest coordinate precision."""
+    parsed = _parse_atoms(block)
+    xs = block['atom_site_fract_x']
+    ys = block['atom_site_fract_y']
+    zs = block['atom_site_fract_z']
+    companions = tuple(block.get(f'httk_atom_site_fract_{axis}_exact') for axis in 'xyz')
+    has_companion = any(value is not None for value in companions)
     claims: list[object] = []
-
-    for xi, yi, zi in zip(xs, ys, zs):
-        vx, mx = parse_cif_float(xi, meta=True)
-        vy, my = parse_cif_float(yi, meta=True)
-        vz, mz = parse_cif_float(zi, meta=True)
-
-        positions.append((vx, vy, vz))
-        # Both claims from every token. combined_precision takes the coarsest of the lot,
-        # so a stated uncertainty widens the digit-implied precision exactly when it is
-        # the weaker claim, and a coordinate written as an exact fraction contributes
-        # nothing rather than dragging the whole table down.
-        for entry in (mx, my, mz):
+    for index, values in enumerate(zip(xs, ys, zs)):
+        for axis, value in enumerate(values):
+            companion = companions[axis]
+            companion_value = companion[index] if isinstance(companion, list) and index < len(companion) else None
+            if companion_value is not None and cif_exact_token(companion_value) is not None:
+                continue
+            if has_companion and cif_exact_token(value) in {'0', '1'}:
+                continue
+            entry = parse_cif_float(value, meta=True)[1]
             claims.append(entry['precision'])
             claims.append(entry['esd'])
-
-    coordinate_precision = combined_precision(claims)
-
-    return symbols, labels, positions, exact_positions, occs, occs_exact, occupancy_precisions, coordinate_precision
+    return (*parsed, combined_precision(claims))
 
 
-def _parse_uc(block):
-    """The six cell parameters, or a message naming the tags the block is missing.
-
-    Reporting the missing tags matters because an incomplete cell is the most common
-    reason a data block turns out not to be a structure, and "parse_cif_float parsing
-    None" tells a reader nothing about which tag to go and look for.
-
-    See :func:`_parse_uc_with_precision` for the variant that also reports how precisely
-    the cell was written.
-    """
-    tags = _CELL_TAGS
-    missing = [tag for tag in tags if block.get(tag) is None]
-    if missing:
-        raise ValueError(f"CIF block has no unit cell: missing {', '.join('_' + tag for tag in missing)}")
-
-    return tuple(parse_cif_float(block.get(tag)) for tag in tags)
-
-
-def _parse_uc_with_precision(block):
+def _parse_uc_with_precision(block: Mapping[str, Any]) -> tuple[tuple[float | None, ...], Fraction | None]:
     """The six cell parameters, and how precisely the cell was stated.
 
     The precision is an absolute length, or ``None``, and is taken from the three
@@ -407,15 +336,23 @@ def _parse_uc_with_precision(block):
     values = []
     claims: list[object] = []
     for index, tag in enumerate(tags):
-        value, entry = parse_cif_float(block.get(tag), meta=True)
+        value, entry = parse_cif_float(block[tag], meta=True)
         values.append(value)
         if index < 3:  # lengths only
-            claims.append(entry['precision'])
-            claims.append(entry['esd'])
+            token = cif_exact_token(block[tag])
+            try:
+                exact_integer = token is not None and Fraction(token).denominator == 1
+            except (ValueError, ZeroDivisionError):
+                exact_integer = False
+            if not exact_integer:
+                claims.append(entry['precision'])
+                claims.append(entry['esd'])
     return tuple(values), combined_precision(claims)
 
 
-def _basis_from_lengths_angles(a, b, c, alpha, beta, gamma):
+def _basis_from_lengths_angles(
+    a: float, b: float, c: float, alpha: float, beta: float, gamma: float
+) -> list[list[float]]:
     """
     Conventional 3x3 lattice (rows are a,b,c in Cartesian Å) from a,b,c (Å) and angles (deg).
     """
@@ -437,9 +374,26 @@ def _basis_from_lengths_angles(a, b, c, alpha, beta, gamma):
     return [[ax, ay, az], [bx, by, bz], [cx, cy, cz]]
 
 
-def parse_asu_cell(cifblock):
+class AsuCell(NamedTuple):
+    basis: list[list[float]]
+    positions: list[tuple[float | None, float | None, float | None]]
+    positions_exact: list[tuple[str | None, str | None, str | None]]
+    occupancies: list[float | None] | None
+    occupancies_exact: list[str | None] | None
+    occupancy_precisions: list[Fraction | None] | None
+    coordinate_precision: Fraction | None
+    basis_precision: Fraction | None
+    symbols: list[str]
+    labels: list[str]
+    equivalent_atoms: list[int]
+
+
+def parse_asu_cell(cifblock: Mapping[str, Any]) -> AsuCell:
     parameters, basis_precision = _parse_uc_with_precision(cifblock)
     a, b, c, alpha, beta, gamma = parameters
+    if any(value is None for value in parameters):
+        raise ValueError("CIF unit-cell parameters cannot be unknown")
+    a, b, c, alpha, beta, gamma = cast(tuple[float, float, float, float, float, float], parameters)
     basis = _basis_from_lengths_angles(a, b, c, alpha, beta, gamma)
     (
         symbols,
@@ -450,7 +404,7 @@ def parse_asu_cell(cifblock):
         occs_exact,
         occupancy_precisions,
         coordinate_precision,
-    ) = _parse_atoms(cifblock, resolution=True)
+    ) = _parse_atoms_with_precision(cifblock)
 
     # figure out equivalent atoms based on labels
     labels_map = {}
@@ -462,7 +416,7 @@ def parse_asu_cell(cifblock):
             next_id += 1
         equivalent_atoms.append(labels_map[lab])
 
-    return (
+    return AsuCell(
         basis,
         positions,
         exact_positions,
@@ -477,7 +431,9 @@ def parse_asu_cell(cifblock):
     )
 
 
-def parse_structural_modulation(cifblock):
+def parse_structural_modulation(
+    cifblock: Mapping[str, Any],
+) -> tuple[list[list[Fraction]] | None, int, bool, list[str]]:
     """
     Extract structural superspace modulation information from a standard CIF.
 
@@ -491,22 +447,25 @@ def parse_structural_modulation(cifblock):
 
     # structural_q from cell_wave_vector (only if mod_dim > 0)
     structural_q = None
-    qx = cifblock.get('_cell_wave_vector_x')
-    qy = cifblock.get('_cell_wave_vector_y')
-    qz = cifblock.get('_cell_wave_vector_z')
+    qx, qy, qz = (cifblock.get(tag) for tag in CIF_TAGS['structural_q'])
     if qx and qy and qz:
-        structural_q = [[float(qx[i]), float(qy[i]), float(qz[i])] for i in range(len(qx))]
+        structural_q = []
+        for x, y, z in zip(qx, qy, qz):
+            q = [parse_cif_fraction(value) for value in (x, y, z)]
+            if any(value is None for value in q):
+                raise ValueError("CIF structural wave vector has an unknown component")
+            structural_q.append(cast(list[Fraction], q))
 
     # detect structural Fourier modulations
     has_struct_mod = False
     struct_mod_atoms = set()
 
-    labels = cifblock.get('_atom_site_displace_Fourier.atom_site_label')
+    labels = cifblock.get(CIF_TAGS['structural_displacement_label'])
     if labels:
         has_struct_mod = True
         struct_mod_atoms.update(labels)
 
-    labels = cifblock.get('_atom_site_occupancy_Fourier.atom_site_label')
+    labels = cifblock.get(CIF_TAGS['structural_occupancy_label'])
     if labels:
         has_struct_mod = True
         struct_mod_atoms.update(labels)
@@ -525,46 +484,29 @@ _CELL_TAGS = (
 )
 
 
-def _cell_parameter_tokens(cifblock):
+def _cell_parameter_tokens(cifblock: Mapping[str, Any]) -> tuple[str | None, ...]:
     """The six cell parameters as the text the file wrote, uncertainties stripped.
 
     The same fidelity argument as ``positions_exact``: ``5.6402`` should be able to become
     the rational 56402/10000, not the binary value of ``float("5.6402")``.
     """
-    return tuple(cif_exact_token(cifblock.get(tag)) for tag in _CELL_TAGS)
+    return tuple(
+        _prefer_exact_token(cifblock, tag_value, f'httk_{tag}_exact')
+        for tag, tag_value in ((tag, cifblock[tag]) for tag in _CELL_TAGS)
+    )
 
 
-def _first_tag(cifblock, *names):
-    """The value of the first tag present, or ``None``.
-
-    Tags are matched against the reader's normalized spelling (lower case, no leading
-    underscore) and, defensively, against the name as written, so a differently normalizing
-    reader would still resolve them.
-    """
+def _first_tag(cifblock: Mapping[str, Any], *names: str) -> Any | None:
+    """The first normalized CIF data name present, or ``None``."""
     for name in names:
-        for candidate in (name, name.lower(), '_' + name):
-            value = cifblock.get(candidate)
-            if value is not None:
-                return value
+        value = cifblock.get(name)
+        if value is not None:
+            return value
     return None
 
 
-def cifblock_to_asu(cifblock, *, return_single=False):
-
-    # basic atom-site parsing
-    (
-        basis,
-        positions,
-        exact_positions,
-        occupancies,
-        occupancies_exact,
-        occupancy_precisions,
-        coordinate_precision,
-        basis_precision,
-        symbols,
-        labels,
-        equivalent_atoms,
-    ) = parse_asu_cell(cifblock)
+def cifblock_to_asu(cifblock: Mapping[str, Any]) -> dict[str, Any]:
+    asu = parse_asu_cell(cifblock)
 
     # standard space group symmetry
     symops_xyz = cifblock.get('space_group_symop.operation_xyz')
@@ -576,9 +518,7 @@ def cifblock_to_asu(cifblock, *, return_single=False):
         symops_xyz = cifblock.get('symmetry_equiv_pos_as_xyz')
 
     if symops_xyz is None:
-        raise Exception("No symmetry operations in CIF.")
-
-    symops = xyz_symops_to_matrix(symops_xyz, use_fractions=True)
+        raise ValueError("CIF block has no symmetry operations")
 
     # structural modulation
     structural_q, mod_dim, has_struct_mod, struct_atoms = parse_structural_modulation(cifblock)
@@ -605,30 +545,27 @@ def cifblock_to_asu(cifblock, *, return_single=False):
 
     return {
         'format': 'cif',
-        'basis': basis,
-        'cell_parameters': _parse_uc(cifblock),
         'cell_parameters_exact': _cell_parameter_tokens(cifblock),
-        'positions': positions,
-        'positions_exact': exact_positions,
-        'occupancies': occupancies,
-        'occupancies_exact': occupancies_exact,
-        'occupancy_precisions': occupancy_precisions,
-        'symbols': symbols,
-        'symops': symops,
+        'positions_exact': asu.positions_exact,
+        'occupancies': asu.occupancies,
+        'occupancies_exact': asu.occupancies_exact,
+        'occupancy_precisions': asu.occupancy_precisions,
+        'symbols': asu.symbols,
+        'symops_xyz': tuple(symops_xyz),
         'incomm': incomm,
         'space_group_nbr': space_group_nbr,
         'space_group_name_hm': space_group_name_hm,
         'space_group_name_hall': space_group_name_hall,
         'icsd': icsd,
         'doi': doi,
-        'coordinate_precision': coordinate_precision,
-        'basis_precision': basis_precision,
-        'equivalent_atoms': equivalent_atoms,
-        'labels': labels,
+        'coordinate_precision': asu.coordinate_precision,
+        'basis_precision': asu.basis_precision,
+        'equivalent_atoms': asu.equivalent_atoms,
+        'labels': asu.labels,
     }
 
 
-def read_cif_asus(fs):
+def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
     """Read a CIF and return its asymmetric units as a neutral, tagged payload.
 
     This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with
@@ -651,7 +588,7 @@ def read_cif_asus(fs):
     ``httk.core.load`` (which returns an ``ASUStructure`` when atomistic support
     is installed).
     """
-    cifblocks, header = read_cif(fs, allow_cif2=False)
+    cifblocks, header = read_cif(source, allow_cif2=False)
 
     blocks = []
     unparsed = []
@@ -666,23 +603,11 @@ def read_cif_asus(fs):
     return {'format': 'cif', 'blocks': blocks, 'unparsed': unparsed, 'header': header}
 
 
-def asus_from_cif_file(fs):
-    cifblocks, _header = read_cif(fs, allow_cif2=False)
-
-    outputs = []
-    for name, cifblock in cifblocks:
-        outputs += [cifblock_to_asu(cifblock)]
-    return outputs
-
-
-def single_asu_from_cif_file(fs):
-    cifblocks, _header = read_cif(fs, allow_cif2=False)
-
-    # Get the first cifblock with atomic sites
-    for name, cifblock in cifblocks:
-        if 'atom_site_label' in cifblock:
-            break
-    else:
-        raise Exception("No structural block found in CIF.")
-
-    return cifblock_to_asu(cifblock)
+def single_asu_from_cif_file(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
+    """Return the first structural CIF block from :func:`read_cif_asus`."""
+    payload = read_cif_asus(source)
+    if payload['blocks']:
+        return payload['blocks'][0]
+    if payload['unparsed']:
+        raise ValueError(payload['unparsed'][0]['reason'])
+    raise ValueError("No structural block found in CIF")

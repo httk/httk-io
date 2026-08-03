@@ -135,6 +135,11 @@ def test_the_dead_resolution_key_is_gone(tmp_path: Path) -> None:
     assert "resolution" not in data
 
 
+def test_cif_payload_keeps_only_exact_geometry_channels(tmp_path: Path) -> None:
+    data = single_asu_from_cif_file(str(_cif(tmp_path, cell=CUBIC_CELL, sites="Na1 Na 0.1234 0.1234 0.1234 \n")))
+    assert {"basis", "positions", "cell_parameters"}.isdisjoint(data)
+
+
 def test_cif_keeps_occupancy_value_spelling_and_precision(tmp_path: Path) -> None:
     path = tmp_path / "occupancies.cif"
     path.write_text(

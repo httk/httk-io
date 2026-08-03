@@ -17,15 +17,14 @@
 
 import os
 import re
-from collections import OrderedDict
 from collections.abc import Iterable, Iterator
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from httk.core import TextstreamFileView
 
 
-class rewindable_iterator:
+class _RewindableIterator:
     def __init__(self, iterator: Iterable[str]) -> None:
         self._iter: Iterator[str] = iter(iterator)
         self._rewind = False
@@ -52,7 +51,7 @@ class rewindable_iterator:
             self._cache = rewindstr
 
 
-def _read_cif_rewind_if_needed(f, row, done_fields):
+def _read_cif_rewind_if_needed(f: _RewindableIterator, row: str, done_fields: int) -> bool:
     splitstr = row.lstrip().split(None, done_fields)
     if len(splitstr) > 1:
         rest = splitstr[-1]
@@ -64,9 +63,9 @@ def _read_cif_rewind_if_needed(f, row, done_fields):
         return False
 
 
-def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
+def _read_cif_loop(f: _RewindableIterator, pragmatic: bool = True, allow_cif2: bool = False) -> dict[str, list[Any]]:
     noteol = False
-    loop_data = OrderedDict()
+    loop_data: dict[str, list[Any]] = {}
     header = []
     for row in f:
         striprow = row.strip()
@@ -79,7 +78,7 @@ def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
             f.rewind()
             break
 
-    while True and len(header) > 0:
+    while len(header) > 0:
         for i in range(len(header)):
             try:
                 row = next(f)
@@ -93,7 +92,7 @@ def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
                 f.rewind()
                 break
             f.rewind()
-            val, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, use_types, inloop=True)
+            val, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, inloop=True)
             if val is None:
                 # Could be a comment line, etc.
                 continue
@@ -101,11 +100,22 @@ def _read_cif_loop(f, pragmatic=True, allow_cif2=False, use_types=False):
         else:
             continue
         break
+    counts = {name: len(values) for name, values in loop_data.items()}
+    if len(set(counts.values())) > 1:
+        rendered_counts = ", ".join(f"{name}={count}" for name, count in counts.items())
+        raise ValueError(f"CIF loop with {len(header)} columns has mismatched value counts: {rendered_counts}")
     return loop_data
 
 
-def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=False, inloop=False, inlist=False):
-    data_value = None
+def _read_cif_data_value(
+    f: _RewindableIterator,
+    noteol: bool,
+    pragmatic: bool = True,
+    allow_cif2: bool = False,
+    inloop: bool = False,
+    inlist: bool = False,
+) -> tuple[Any, bool]:
+    data_value: Any = None
     for row in f:
         striprow = row.strip()
         if striprow.startswith("#") or striprow == "":
@@ -182,9 +192,7 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
                 noteol = True
             data_value = []
             while True:
-                innerval, noteol = _read_cif_data_value(
-                    f, noteol, pragmatic, allow_cif2, use_types, inloop=False, inlist=True
-                )
+                innerval, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, inloop=False, inlist=True)
                 if innerval is None:
                     break
                 data_value += [innerval]
@@ -222,21 +230,11 @@ def _read_cif_data_value(f, noteol, pragmatic=True, allow_cif2=False, use_types=
             else:
                 noteol = False
             break
-    if use_types and isinstance(data_value, str):
-        # Imported lazily to avoid an import cycle (cif_parser imports read_cif).
-        from .cif_parser import parse_cif_float, parse_cif_int
-        from .cif_writer import _cif_is_float, _cif_is_int
-
-        if _cif_is_int(data_value):
-            data_value = parse_cif_int(data_value)
-        elif _cif_is_float(data_value):
-            data_value = parse_cif_float(data_value)
-
     return data_value, noteol
 
 
-def _read_cif_data_block(f, pragmatic=True, allow_cif2=False, use_types=False):
-    data_items = OrderedDict()
+def _read_cif_data_block(f: _RewindableIterator, pragmatic: bool = True, allow_cif2: bool = False) -> dict[str, Any]:
+    data_items: dict[str, Any] = {}
     loops = 0
     for row in f:
         striprow = row.strip()
@@ -248,7 +246,7 @@ def _read_cif_data_block(f, pragmatic=True, allow_cif2=False, use_types=False):
             return data_items
         elif lowrow.startswith("loop_"):
             _read_cif_rewind_if_needed(f, row, 1)
-            loopdata = _read_cif_loop(f, pragmatic, allow_cif2, use_types)
+            loopdata = _read_cif_loop(f, pragmatic, allow_cif2)
             data_items['loop_' + str(loops)] = list(loopdata.keys())
             loops += 1
             data_items.update(loopdata)
@@ -266,63 +264,41 @@ def _read_cif_data_block(f, pragmatic=True, allow_cif2=False, use_types=False):
                 f.rewind(rightside)
             else:
                 noteol = False
-            data_value, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, use_types, inloop=False)
+            data_value, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, inloop=False)
             data_items[data_name] = data_value
     return data_items
 
 
-def read_cif(fs, pragmatic=True, allow_cif2=False, use_types=False):
-    """
-    Generic cif reader, given a filename / ioadapter it places all data in a python dictionary.
+def _read_cif(
+    f: _RewindableIterator, pragmatic: bool, allow_cif2: bool
+) -> tuple[list[tuple[str, dict[str, Any]]], str]:
+    header = ""
+    datalist = []
+    for row in f:
+        if row.strip().startswith("#"):
+            header += row
+        else:
+            f.rewind()
+            break
 
-    It returns a tuple: (header, list)
-    Where list are pairs of data blocks names and data blocks
-
-    Each data block is a dictionary with tag_name:value
-
-    For loops, value is another dictionary with format column_name:value
-
-    The optional parameter pragmatic regulates handling of some counter-intuitive aspects of the cif specification, where
-    the default pragmatic=True handles these features the way people usually use them, whereas pragmatic=False means
-    to read the cif file precisely according to the spec. For example, in a multiline text field::
-
-        ;
-        some text
-        ;
-
-    Means the string '\\nsome text'. For this specific case pragmatic=True removes the leading newline.
-
-    set use_types to True to convert things that look like floats and integers to those respective types
-
-    A filename (``str`` or :class:`os.PathLike`) is opened through
-    :class:`httk.core.TextstreamFileView`, so a compressed file (``.cif.bz2``,
-    ``.cif.gz``, ...) is decompressed transparently. An already-open text stream
-    or a plain iterable of lines is consumed as-is and left open for the caller.
-    """
-    opened: TextstreamFileView | None = None
-    if isinstance(fs, (str, os.PathLike)):
-        opened = TextstreamFileView(Path(fs))
-        f = rewindable_iterator(opened)
-    else:
-        f = rewindable_iterator(fs)
-    try:
-        header = ""
-        datalist = []
-        for row in f:
-            if row.strip().startswith("#"):
-                header += row
-            else:
-                f.rewind()
-                break
-
-        for row in f:
-            lowrow = row.strip().lower()
-            if lowrow.startswith("data_"):
-                data_block_name = lowrow.partition('_')[2].split()[0].strip()
-                _read_cif_rewind_if_needed(f, row, 1)
-                data_block = _read_cif_data_block(f, pragmatic, allow_cif2, use_types)
-                datalist += [(data_block_name, data_block)]
-    finally:
-        if opened is not None:
-            opened.close()
+    for row in f:
+        lowrow = row.strip().lower()
+        if lowrow.startswith("data_"):
+            data_block_name = lowrow.partition('_')[2].split()[0].strip()
+            _read_cif_rewind_if_needed(f, row, 1)
+            datalist.append((data_block_name, _read_cif_data_block(f, pragmatic, allow_cif2)))
     return datalist, header
+
+
+def read_cif(
+    source: str | os.PathLike[str] | Iterable[str], pragmatic: bool = True, allow_cif2: bool = False
+) -> tuple[list[tuple[str, dict[str, Any]]], str]:
+    """Read CIF text as ``(data_blocks, header)``.
+
+    Paths are opened through :class:`httk.core.TextstreamFileView`, including compressed
+    CIF files. Open streams and iterables are consumed but left open.
+    """
+    if isinstance(source, (str, os.PathLike)):
+        with TextstreamFileView(Path(source)) as stream:
+            return _read_cif(_RewindableIterator(stream), pragmatic, allow_cif2)
+    return _read_cif(_RewindableIterator(source), pragmatic, allow_cif2)

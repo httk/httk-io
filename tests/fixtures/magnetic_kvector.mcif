@@ -1,0 +1,27 @@
+data_kvector
+_cell_length_a 1
+_cell_length_b 1
+_cell_length_c 1
+_cell_angle_alpha 90
+_cell_angle_beta 90
+_cell_angle_gamma 90
+_parent_propagation_vector.kxkykz [[0.125 0 1/3]]
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z
+Fe1 Fe 0 0 0
+loop_
+_atom_site_moment.label
+_atom_site_moment.crystalaxis_x
+_atom_site_moment.crystalaxis_y
+_atom_site_moment.crystalaxis_z
+Fe1 0 0 1
+loop_
+_atom_site_Fourier_wave_vector.q1_coeff
+1
+loop_
+_space_group_symop_magn_operation.xyz
+x,y,z,+1
