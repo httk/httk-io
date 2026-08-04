@@ -15,7 +15,6 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import math
 import os
 import re
 from collections.abc import Iterable
@@ -27,6 +26,7 @@ from httk.core import combined_precision
 from ._xyz_expr import _parse_linear_expr, _parse_linear_expr_algebraic
 from .cif_parser import (
     _cell_parameter_tokens,
+    cif_exact_token,
     parse_asu_cell,
     parse_cif_float,
     parse_cif_fraction,
@@ -209,24 +209,25 @@ def _compose_ops_with_centerings(ops, centerings):
     return composed
 
 
-def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tuple[Any, ...] | None:
+def _parse_moments(block, *, resolution=True) -> tuple[Any, ...] | None:
     """
-    Extract magnetic moments from a mcif block.
+    Extract magnetic moment tokens and their frame from an mcif block.
 
     Parameters
     ----------
     block: mcif block
-    equalize : bool
-        If True, perform symmetry-based equalization.
     resolution : bool
-        If True, return an additional grid_dens based on numeric resolution.
+        If True, return the combined precision of the moment tokens.
 
     Returns
     -------
     If resolution=False:
-        moments, labels, spin_basis
+        moments, labels, moment_basis
     If resolution=True:
-        moments, labels, spin_basis, grid_dens
+        moments, labels, moment_basis, magmom_precision
+
+    ``magmom_precision`` is in μB for either frame: crystalaxis components are
+    specified along the unit lattice axes.
     """
 
     def _get(name):
@@ -236,22 +237,23 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
     def _len_ok(xs, ys, zs, n):
         return len(xs) == len(ys) == len(zs) == n and n > 0
 
+    if 'atom_site_moment.label' not in block:
+        return None
+
     labels = _get('atom_site_moment.label')
     n = len(labels)
     if n == 0:
-        if resolution:
-            return [], [], "crystal", None
-        return [], [], "crystal"
+        return None
 
     # Try crystal basis first
     xs = _get('atom_site_moment.crystalaxis_x')
     ys = _get('atom_site_moment.crystalaxis_y')
     zs = _get('atom_site_moment.crystalaxis_z')
-    spin_basis = "crystal"
+    moment_basis = "crystalaxis"
 
     if not _len_ok(xs, ys, zs, n):
         xs, ys, zs = (_get(tag) for tag in CIF_TAGS['magnetic_cartesian_moment'])
-        spin_basis = "cartesian"
+        moment_basis = "cartesian"
         if not _len_ok(xs, ys, zs, n):
             return None if not resolution else (None, None, None, None)
 
@@ -259,69 +261,37 @@ def _parse_moments(block, *, k_sigma=2.0, equalize=True, resolution=True) -> tup
     if n != len(set(labels)):
         raise ValueError("Non-equivalent sites share the same moment label in CIF data.")
 
-    # Read optional equalization metadata only if needed
-    if equalize:
-        forms = _get('atom_site_moment.symmform')
-        mags = _get('atom_site_moment.magnitude')
-    else:
-        forms = []
-        mags = []
-
     moments = []
     component_claims: list[object] = []
 
     for i in range(n):
         if resolution:
-            mx, mx_meta = parse_cif_float(xs[i], meta=True)
-            my, my_meta = parse_cif_float(ys[i], meta=True)
-            mz, mz_meta = parse_cif_float(zs[i], meta=True)
+            _mx, mx_meta = parse_cif_float(xs[i], meta=True)
+            _my, my_meta = parse_cif_float(ys[i], meta=True)
+            _mz, mz_meta = parse_cif_float(zs[i], meta=True)
 
-            component_claims.extend([mx_meta['precision'], my_meta['precision'], mz_meta['precision']])
-        else:
-            mx = parse_cif_float(xs[i], meta=False)
-            my = parse_cif_float(ys[i], meta=False)
-            mz = parse_cif_float(zs[i], meta=False)
+            component_claims.extend(
+                [
+                    mx_meta['precision'],
+                    mx_meta['esd'],
+                    my_meta['precision'],
+                    my_meta['esd'],
+                    mz_meta['precision'],
+                    mz_meta['esd'],
+                ]
+            )
 
-        # Equalization
-        if equalize and i < len(forms):
-            form = forms[i].replace(' ', '').lower() if forms[i] else None
-
-            if i < len(mags) and mags[i] not in (None, '?', '.', ''):
-                _m_val, m_meta = parse_cif_float(mags[i], meta=True)
-                m_esd = m_meta['esd']
-            else:
-                m_esd = None
-
-            if (
-                form in ('mx,mx,mx', 'my,my,my', 'mz,mz,mz')
-                and m_esd is not None
-                and m_esd > 0.0
-                and mx is not None
-                and my is not None
-                and mz is not None
-            ):
-                sigma_comp = m_esd / (3.0**0.5)
-                mean_comp = (mx + my + mz) / 3.0
-                if max(abs(mx - mean_comp), abs(my - mean_comp), abs(mz - mean_comp)) <= k_sigma * sigma_comp:
-                    mx = my = mz = mean_comp
-
-        moments.append((mx, my, mz))
+        moments.append((cif_exact_token(xs[i]), cif_exact_token(ys[i]), cif_exact_token(zs[i])))
 
     # Fast path: no grid resolution requested
     if not resolution:
-        return moments, labels, spin_basis
+        return moments, labels, moment_basis
 
-    # The coarsest precision any component claims. Unlike the coordinate case there is no
-    # esd handling here, because the esd on a moment is already used above to decide
-    # whether symmetry-equal components should be averaged.
-    #
-    # Known limitation, unchanged: this is computed from the components as written, before
-    # crystal_to_cartesian converts them below, so for a file using crystalaxis moments the
-    # value is in crystal-axis units rather than the Cartesian units the moments come back
-    # in. Nothing consumes it yet; fix it when something does.
+    # Crystalaxis components are μB along the unit lattice axes, so this precision is in
+    # μB for both moment bases.
     mag_res = combined_precision(component_claims)
 
-    return moments, labels, spin_basis, mag_res
+    return moments, labels, moment_basis, mag_res
 
 
 def _parse_alg_op(
@@ -391,53 +361,13 @@ def _alg_symops_to_matrix(symops_alg, use_fractions=False, time_reversal_convent
     return [_parse_alg_op(s, use_fractions, time_reversal_convention=time_reversal_convention) for s in symops_alg]
 
 
-def crystal_to_cartesian(moments_cryst, basis):
-    """
-    moments_cryst : list of N vectors [mx, my, mz] in crystal coordinates
-    basis         : 3x3 list with rows a, b, c in Cartesian
-    returns       : list of N vectors in Cartesian coordinates
-    """
-
-    def normalize(v):
-        n = math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
-        return [v[0] / n, v[1] / n, v[2] / n]
-
-    # --- Extract basis vectors ---
-
-    a = basis[0]
-    b = basis[1]
-    c = basis[2]
-
-    # --- Unit crystallographic axes ---
-
-    ah = normalize(a)
-    bh = normalize(b)
-    ch = normalize(c)
-
-    # U matrix columns are ah, bh, ch
-    # We only need U^T for multiplication:
-    # U^T rows = ah, bh, ch
-
-    result = []
-
-    for m in moments_cryst:
-        mx, my, mz = m
-
-        # Row vector multiply by U^T
-        x = mx * ah[0] + my * bh[0] + mz * ch[0]
-        y = mx * ah[1] + my * bh[1] + mz * ch[1]
-        z = mx * ah[2] + my * bh[2] + mz * ch[2]
-
-        result.append([x, y, z])
-
-    return result
-
-
-def _parse_mag_asu_cell(cifblock: dict[str, Any], *, moment_equalization: bool = True) -> tuple[Any, ...]:
+def _parse_mag_asu_cell(cifblock: dict[str, Any]) -> tuple[Any, ...]:
     asu = parse_asu_cell(cifblock)
-    moments_result = _parse_moments(cifblock, equalize=moment_equalization, resolution=True)
-    assert moments_result is not None  # resolution=True always yields a 4-tuple
-    cif_moments, momlabels, spin_basis, magres = moments_result
+    moments_result = _parse_moments(cifblock, resolution=True)
+    if moments_result is None:
+        return asu, None, None, None
+
+    cif_moments, momlabels, moment_basis, magres = moments_result
 
     if cif_moments is None:
         return (
@@ -447,14 +377,10 @@ def _parse_mag_asu_cell(cifblock: dict[str, Any], *, moment_equalization: bool =
             magres,
         )
 
-    if spin_basis == "crystal":
-        cif_moments = crystal_to_cartesian(cif_moments, asu.basis)
-        spin_basis = "cartesian"
-
     moments_map = {label: (mom[0], mom[1], mom[2]) for label, mom in zip(momlabels, cif_moments)}
-    magmoms = [moments_map.get(i, (0.0, 0.0, 0.0)) for i in asu.labels]
+    magmoms_exact = tuple(moments_map.get(i, ("0", "0", "0")) for i in asu.labels)
 
-    return asu, magmoms, spin_basis, magres
+    return asu, magmoms_exact, moment_basis, magres
 
 
 def _get_magnetic_fourier_info(cifblock: dict[str, Any]) -> tuple[bool, list[str]]:
@@ -504,15 +430,15 @@ def _parse_modulation(cifblock: dict[str, Any]) -> tuple[Any, ...]:
 def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = False) -> dict[str, Any]:
     (
         asu,
-        magmoms,
-        spin_basis,
+        magmoms_exact,
+        moment_basis,
         magres,
     ) = _parse_mag_asu_cell(cifblock)
     structural_q, magnetic_q, mod_dim, has_struct_mod, has_mag_mod, struct_mod_atoms, mag_mod_atoms = _parse_modulation(
         cifblock
     )
 
-    if error_on_nonmag and magmoms is None:
+    if error_on_nonmag and magmoms_exact is None:
         raise ValueError("Magnetic moment columns are missing or have mismatched lengths")
 
     # Exact numeric CIF tokens are Fractions, so their commensurability never relies on
@@ -549,6 +475,7 @@ def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = Fal
                 centering_symops_xyz, use_fractions=True, time_reversal_convention="spglib"
             )
         else:
+            centering_symops_xyz = centering_symops_alg
             cent_symops = _alg_symops_to_matrix(
                 centering_symops_alg, use_fractions=True, time_reversal_convention="spglib"
             )
@@ -569,6 +496,7 @@ def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = Fal
 
     result = {
         'cell_parameters_exact': _cell_parameter_tokens(cifblock),
+        'format': 'mcif',
         'positions_exact': asu.positions_exact,
         'occupancies': asu.occupancies,
         'occupancies_exact': asu.occupancies_exact,
@@ -580,8 +508,9 @@ def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = Fal
         'space_group_name_hm': space_group_name_hm,
         'icsd': icsd,
         'doi': doi,
-        'spin_basis': spin_basis,
-        'magmoms': magmoms,
+        'moment_basis': moment_basis,
+        'magmoms_exact': magmoms_exact,
+        'centerings_xyz': tuple(centering_symops_xyz),
         'bns_nbr': bns_nbr,
         'bns_name': bns_name,
         'equivalent_atoms': asu.equivalent_atoms,
