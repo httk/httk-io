@@ -4,7 +4,7 @@ import httk.core
 
 
 def test_cif_extension_registered():
-    # Discovery runs on `import httk.core` and imports httk.registry.io,
+    # Discovery runs on `import httk.core` and imports httk.registry.io.io,
     # which registers the ".cif" loader.
     assert ".cif" in httk.core.register.known_extensions()
 
@@ -16,7 +16,7 @@ def test_cif_loader_points_at_the_asu_reader():
     verbatim; it is just not what the registry dispatches to, so that a ``.cif`` behaves
     like a ``POSCAR`` and can be handed straight to the structure builders.
     """
-    spec = httk.core.register.loaders.require(".cif")
+    spec = httk.core.register.readers.require(".cif")
     assert spec.name == "cif"
     assert spec.handler == "httk.io.cif:read_cif_asus"
 
@@ -24,7 +24,7 @@ def test_cif_loader_points_at_the_asu_reader():
 def test_cif_loader_resolves_to_callable():
     from httk.core._plugins import resolve_callable
 
-    spec = httk.core.register.loaders.require(".cif")
+    spec = httk.core.register.readers.require(".cif")
     fn = resolve_callable(spec.handler)
     from httk.io.cif.cif_parser import read_cif_asus
 
@@ -32,6 +32,6 @@ def test_cif_loader_resolves_to_callable():
 
 
 def test_mcif_extension_registered_with_neutral_loader():
-    spec = httk.core.register.loaders.require(".mcif")
+    spec = httk.core.register.readers.require(".mcif")
     assert spec.name == "mcif"
     assert spec.handler == "httk.io.cif:read_mcif_asus"

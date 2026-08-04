@@ -7,5 +7,5 @@ This section documents the supported public API.
 :maxdepth: 2
 
 autoapi/httk/io/index
-autoapi/httk/registry/io/index
+autoapi/httk/registry/io/io/index
 ```

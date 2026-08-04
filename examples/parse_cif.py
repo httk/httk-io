@@ -68,7 +68,7 @@ identical mapping.
 
 The final section shows the same file arriving through `httk.core.load`, which
 dispatches `.cif` (and `.cif.bz2`) to *httk-io* because importing `httk.core`
-discovers the `httk.registry.io` registry package. By default, `load(path)` returns
+discovers the `httk.registry.io.io` registry package. By default, `load(path)` returns
 the native `ASUStructure` when *httk-atomistic* is installed. This example uses
 `load(path, raw=True)`, which returns the neutral payload mapping instead. Blocks
 that are not structures are reported rather than raising, since a CIF may hold
@@ -226,7 +226,7 @@ def show_load_dispatch(directory: Path) -> None:
     """The interpreting reader, reached through httk.core.load — including compressed."""
     print("== httk.core.load: the registered '.cif' loader ==")
     print("registered extensions:", httk.core.register.known_extensions())
-    print("Importing httk.core discovers httk.registry.io, which registers these.")
+    print("Importing httk.core discovers httk.registry.io.io, which registers these.")
 
     compressed = directory / "nacl.cif.bz2"
     compressed.write_bytes(bz2.compress(NACL_CIF.encode("utf-8")))

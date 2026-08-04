@@ -1,8 +1,8 @@
-from httk.core.register import register_loader
+from httk.core.register import register_reader
 
-register_loader(
+register_reader(
     name="cif",
-    loader="httk.io.cif:read_cif_asus",
+    reader="httk.io.cif:read_cif_asus",
     extensions=(".cif",),
 )
 
@@ -15,15 +15,15 @@ register_writer(
     extensions=(".cif",),
 )
 
-register_loader(
+register_reader(
     name="mcif",
-    loader="httk.io.cif:read_mcif_asus",
+    reader="httk.io.cif:read_mcif_asus",
     extensions=(".mcif",),
 )
 
-register_loader(
+register_reader(
     name="poscar",
-    loader="httk.io.vasp:read_poscar",
+    reader="httk.io.vasp:read_poscar",
     extensions=(".poscar", ".vasp"),
     filenames=("POSCAR", "CONTCAR"),
 )

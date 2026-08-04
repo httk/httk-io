@@ -16,4 +16,4 @@ def test_import_cif_subpackage():
 
 def test_import_handlers_package():
     # Importing the handler package must register the cif loader as a side effect.
-    import httk.registry.io  # noqa: F401
+    import httk.registry.io.io  # noqa: F401

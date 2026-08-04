@@ -51,7 +51,7 @@ per-line species labels and velocity blocks are ignored.
 
 ## Loader registration and `load`
 
-Importing `httk.core` discovers `httk.registry.io`, which registers the POSCAR
+Importing `httk.core` discovers `httk.registry.io.io`, which registers the POSCAR
 loader under the extensions `.poscar` / `.vasp` and the exact basenames `POSCAR`
 / `CONTCAR`. `httk.core.load` therefore dispatches these files automatically,
 including compressed ones such as `CONTCAR.bz2` (the compression suffix is
