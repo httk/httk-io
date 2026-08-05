@@ -96,7 +96,9 @@ def test_load_mcif_returns_a_tagged_neutral_payload(tmp_path):
         encoding="utf-8",
     )
 
-    payload = httk.core.load(str(mcif))
+    # raw=True keeps the assertion valid when a domain module (httk-atomistic)
+    # is co-installed and its format adapter would otherwise convert the payload.
+    payload = httk.core.load(str(mcif), raw=True)
     assert payload["format"] == "mcif"
     assert len(payload["blocks"]) == 1
     assert payload["unparsed"] == []
