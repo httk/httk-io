@@ -1,12 +1,14 @@
 """Tests for the VASP POSCAR/CONTCAR reader and its loader registration."""
 
 import bz2
+import io
 from pathlib import Path
 
 import httk.core
 import pytest
 
 from httk.io.vasp import read_poscar
+from httk.io.vasp.poscar_writer import _write_poscar_payload
 
 VASP5_SELECTIVE = """SmFeO3 slab
 1.0
@@ -95,6 +97,66 @@ def test_poscar_registration() -> None:
     assert "contcar" in httk.core.register.known_filenames()
 
 
+def test_poscar_writer_registration() -> None:
+    for name in ("POSCAR", "CONTCAR", "x.vasp", "y.poscar", "POSCAR.bz2"):
+        assert httk.core.has_writer_for(name)
+
+
+def _without_precision(data: dict) -> dict:
+    return {key: value for key, value in data.items() if not key.endswith("_precision")}
+
+
+@pytest.mark.parametrize("source", (VASP5_SELECTIVE, VASP4_CARTESIAN_LABELS, NEGATIVE_SCALE))
+def test_poscar_writer_round_trips_payload(source: str, tmp_path: Path) -> None:
+    payload = read_poscar(source.splitlines(keepends=True))
+    path = tmp_path / "POSCAR"
+    httk.core.save(payload, path)
+    assert _without_precision(read_poscar(path)) == _without_precision(payload)
+
+
+def test_poscar_writer_round_trips_zero_count_species(tmp_path: Path) -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    payload["counts"] = [2, 0]
+    payload["coords"] = payload["coords"][:2]
+    payload["selective_dynamics"] = payload["selective_dynamics"][:2]
+    path = tmp_path / "POSCAR"
+    httk.core.save(payload, path)
+    assert _without_precision(read_poscar(path)) == _without_precision(payload)
+
+
+def test_poscar_writer_round_trips_compressed_destination(tmp_path: Path) -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    path = tmp_path / "POSCAR.bz2"
+    httk.core.save(payload, path)
+    assert _without_precision(httk.core.load(str(path), raw=True)) == _without_precision(payload)
+
+
+def test_poscar_writer_round_trips_open_stream() -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    stream = io.StringIO()
+    _write_poscar_payload(stream, payload)
+    stream.seek(0)
+    assert _without_precision(read_poscar(stream)) == _without_precision(payload)
+
+
+@pytest.mark.parametrize(
+    "update",
+    (
+        {"volume": "16.0"},
+        {"scale": None, "volume": None},
+        {"cell": [["1.0", "0.0", "0.0"], ["0.0", "1.0", "0.0"]]},
+        {"counts": [1, 1]},
+        {"symbols": ["Si"]},
+        {"selective_dynamics": [[True, True, False], [False, False, False]]},
+    ),
+)
+def test_poscar_writer_rejects_malformed_payload(update: dict, tmp_path: Path) -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    payload.update(update)
+    with pytest.raises(ValueError):
+        _write_poscar_payload(tmp_path / "POSCAR", payload)
+
+
 def test_load_contcar_by_basename(tmp_path: Path) -> None:
     contcar = tmp_path / "CONTCAR"
     contcar.write_text(VASP5_SELECTIVE, encoding="utf-8")
@@ -128,6 +190,6 @@ def test_load_cif_bz2_transparent(tmp_path: Path) -> None:
     # too, where the tags are visible verbatim.
     from httk.io.cif import read_cif
 
-    datalist, header = read_cif(str(cif_bz2))
-    name, block = datalist[0]
+    datalist, _header = read_cif(str(cif_bz2))
+    _name, block = datalist[0]
     assert block["cell_length_a"] == "5.64"
