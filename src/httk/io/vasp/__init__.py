@@ -17,6 +17,41 @@
 
 """VASP file-format readers for *httk-io*."""
 
+import io
+import os
+from collections.abc import Mapping
+from typing import Any
+
 from .poscar_reader import read_poscar
 
-__all__ = ["read_poscar"]
+
+def read_wavecar(
+    source: str | os.PathLike[str], *, double_precision: bool | None = None, gamma_half: str | None = None
+) -> dict[str, Any]:
+    """Lazily read a VASP WAVECAR path into a neutral payload."""
+    from .wavecar import read_wavecar as _read_wavecar
+
+    return _read_wavecar(source, double_precision=double_precision, gamma_half=gamma_half)
+
+
+def write_wavecar(destination: str | os.PathLike[str], payload: Mapping[str, Any]) -> None:
+    """Lazily write a neutral WAVECAR payload to a binary path."""
+    from .wavecar import write_wavecar as _write_wavecar
+
+    _write_wavecar(destination, payload)
+
+
+def write_vasp_volumetric(
+    destination: str | os.PathLike[str] | io.TextIOBase,
+    poscar_payload: Mapping[str, Any],
+    grid: Any,
+    *,
+    cols: int = 10,
+) -> None:
+    """Lazily write POSCAR content and a VASP/VESTA volumetric grid."""
+    from .volumetric import write_vasp_volumetric as _write_vasp_volumetric
+
+    _write_vasp_volumetric(destination, poscar_payload, grid, cols=cols)
+
+
+__all__ = ["read_poscar", "read_wavecar", "write_vasp_volumetric", "write_wavecar"]

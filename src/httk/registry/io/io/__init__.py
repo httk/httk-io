@@ -35,3 +35,18 @@ register_reader(
     extensions=(".poscar", ".vasp"),
     filenames=("POSCAR", "CONTCAR"),
 )
+
+register_reader(
+    name="wavecar",
+    reader="httk.io.vasp.wavecar:read_wavecar",
+    extensions=(".wavecar",),
+    filenames=("WAVECAR",),
+)
+
+register_writer(
+    name="wavecar",
+    writer="httk.io.vasp.wavecar:_write_wavecar_payload",
+    format="vasp-wavecar",
+    extensions=(".wavecar",),
+    filenames=("WAVECAR",),
+)

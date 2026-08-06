@@ -50,8 +50,10 @@ namespaces = true
 "httk.registry.io.io" = ["py.typed"]
 
 [project.optional-dependencies]
+numpy = ["httk-core[numpy]"]
 dev = [
   "pytest>=8.0",
+  "httk-io[numpy]",
   "ruff>=0.16,<0.17",
   "pyright",
   "mypy"
