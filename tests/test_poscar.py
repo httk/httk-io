@@ -103,7 +103,7 @@ def test_poscar_writer_registration() -> None:
 
 
 def _without_precision(data: dict) -> dict:
-    return {key: value for key, value in data.items() if not key.endswith("_precision")}
+    return {key: value for key, value in data.items() if not key.endswith("_precision") and key != "raw"}
 
 
 @pytest.mark.parametrize("source", (VASP5_SELECTIVE, VASP4_CARTESIAN_LABELS, NEGATIVE_SCALE))
@@ -171,6 +171,68 @@ def test_load_contcar_bz2_transparent(tmp_path: Path) -> None:
     data = httk.core.load(str(contcar_bz2), raw=True)
     assert data["format"] == "vasp-poscar"
     assert data["symbols"] == ["Si", "O"]
+
+
+def test_poscar_raw_round_trip(tmp_path: Path) -> None:
+    source = tmp_path / "POSCAR"
+    source.write_bytes(VASP5_SELECTIVE.encode("utf-8"))
+    payload = httk.core.load(str(source), raw=True)
+    output = tmp_path / "round-trip"
+    httk.core.save(payload, output, format="vasp-poscar")
+    assert output.read_bytes() == source.read_bytes()
+
+
+def test_poscar_raw_round_trip_from_bz2(tmp_path: Path) -> None:
+    original = VASP5_SELECTIVE.encode("utf-8")
+    source = tmp_path / "POSCAR.bz2"
+    source.write_bytes(bz2.compress(original))
+    payload = httk.core.load(str(source), raw=True)
+    output = tmp_path / "round-trip"
+    httk.core.save(payload, output, format="vasp-poscar")
+    assert output.read_bytes() == original
+
+
+def test_poscar_raw_preserves_crlf(tmp_path: Path) -> None:
+    original = VASP5_SELECTIVE.replace("\n", "\r\n").encode("utf-8")
+    source = tmp_path / "POSCAR"
+    source.write_bytes(original)
+    payload = httk.core.load(str(source), raw=True)
+    output = tmp_path / "round-trip"
+    httk.core.save(payload, output, format="vasp-poscar")
+    assert payload["raw"] == original.decode("utf-8")
+    assert output.read_bytes() == original
+
+
+def test_poscar_raw_wins_over_edited_tokens(tmp_path: Path) -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    payload["raw"] = VASP5_SELECTIVE
+    payload["comment"] = None
+    output = tmp_path / "POSCAR"
+    _write_poscar_payload(output, payload)
+    assert output.read_bytes() == VASP5_SELECTIVE.encode("utf-8")
+
+
+def test_poscar_payload_without_raw_keeps_token_serialization(tmp_path: Path) -> None:
+    payload = read_poscar(VASP5_SELECTIVE.splitlines(keepends=True))
+    payload.pop("raw")
+    output = tmp_path / "POSCAR"
+    _write_poscar_payload(output, payload)
+    assert (
+        output.read_text(encoding="utf-8")
+        == """SmFeO3 slab
+1.0
+1.0 0.0 0.0
+0.0 2.0 0.0
+0.0 0.0 3.0
+Si O
+1 2
+Selective dynamics
+Direct
+0.0 0.0 0.0 T T F
+0.25 0.25 0.25 F F F
+0.5 0.5 0.5 T T T
+"""
+    )
 
 
 CIF_TEXT = """#header

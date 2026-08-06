@@ -24,12 +24,12 @@ file. It performs no numeric conversion and imports nothing from
 ``httk.core.load``.
 """
 
-import os
-from collections.abc import Iterable, Iterator
-from pathlib import Path
+from collections.abc import Iterator
 from typing import Any
 
-from httk.core import TextstreamFileView, combined_precision
+from httk.core import combined_precision
+
+from ._text import source_lines
 
 
 def _next_line(lines: Iterator[str], lineno: int, what: str) -> str:
@@ -62,7 +62,8 @@ def read_poscar(source: Any) -> dict[str, Any]:
     (``list[str]`` for VASP-5, ``None`` for VASP-4), ``counts`` (``list[int]``),
     ``cartesian`` (``bool``), ``coords`` (an ``N``x3 list of strings), and
     ``selective_dynamics`` (an ``N``x3 list of booleans when the file declares
-    selective dynamics, else ``None``). Malformed input raises a clear
+    selective dynamics, else ``None``), and ``raw`` (the decompressed original
+    text, or ``None`` when unavailable). Malformed input raises a clear
     :class:`ValueError` naming the offending line.
 
     Three further keys report how precisely the file wrote its numbers, each the coarsest
@@ -74,17 +75,10 @@ def read_poscar(source: Any) -> dict[str, Any]:
     cell, so it belongs to whoever builds the structure —
     :func:`httk.core.load` — not to the reader.
     """
-    opened: TextstreamFileView | None = None
-    if isinstance(source, (str, os.PathLike)):
-        opened = TextstreamFileView(Path(source))
-        raw: Iterable[str] = opened
-    else:
-        raw = source
-    try:
-        return _read_poscar(iter(raw))
-    finally:
-        if opened is not None:
-            opened.close()
+    with source_lines(source, preserve_path=True, capture_stream=True) as (lines, raw):
+        data = _read_poscar(iter(lines))
+    data["raw"] = raw
+    return data
 
 
 def _read_poscar(lines: Iterator[str]) -> dict[str, Any]:

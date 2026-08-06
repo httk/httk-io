@@ -8,9 +8,22 @@ from typing import Any
 
 
 def _write_poscar_payload(destination: str | os.PathLike[str] | io.TextIOBase, data: Mapping[str, Any]) -> None:
-    """Write a neutral payload returned by :func:`read_poscar`."""
+    """Write a POSCAR payload; a string ``raw`` field takes precedence verbatim."""
     if "format" in data and data["format"] != "vasp-poscar":
         raise ValueError("POSCAR payload format must be 'vasp-poscar'.")
+
+    raw = data.get("raw")
+    if isinstance(raw, str):
+        if isinstance(destination, (str, os.PathLike)):
+            with open(destination, "wb") as binary_file:
+                binary_file.write(raw.encode("utf-8"))
+        else:
+            raw_buffer = getattr(destination, "buffer", None)
+            if isinstance(raw_buffer, io.BufferedIOBase):
+                raw_buffer.write(raw.encode(destination.encoding or "utf-8"))
+            else:
+                destination.write(raw)
+        return
 
     scale = data.get("scale")
     volume = data.get("volume")
@@ -75,24 +88,24 @@ def _write_poscar_payload(destination: str | os.PathLike[str] | io.TextIOBase, d
         raise ValueError("POSCAR payload cartesian must be a boolean.")
 
     with ExitStack() as stack:
-        f: io.TextIOBase
+        text_file: io.TextIOBase
         if isinstance(destination, (str, os.PathLike)):
-            f = stack.enter_context(open(destination, "w", encoding="utf-8"))
+            text_file = stack.enter_context(open(destination, "w", encoding="utf-8"))
         else:
-            f = destination
+            text_file = destination
 
-        f.write(comment + "\n")
-        f.write(scale_line + "\n")
+        text_file.write(comment + "\n")
+        text_file.write(scale_line + "\n")
         for row in cell:
-            f.write(" ".join(row) + "\n")
+            text_file.write(" ".join(row) + "\n")
         if symbols is not None:
-            f.write(" ".join(symbols) + "\n")
-        f.write(" ".join(str(count) for count in counts) + "\n")
+            text_file.write(" ".join(symbols) + "\n")
+        text_file.write(" ".join(str(count) for count in counts) + "\n")
         if selective_dynamics is not None:
-            f.write("Selective dynamics\n")
-        f.write(("Cartesian" if cartesian else "Direct") + "\n")
+            text_file.write("Selective dynamics\n")
+        text_file.write(("Cartesian" if cartesian else "Direct") + "\n")
         for row, flags in zip(coords, selective_dynamics or []):
-            f.write(" ".join(row + ["T" if flag else "F" for flag in flags]) + "\n")
+            text_file.write(" ".join(row + ["T" if flag else "F" for flag in flags]) + "\n")
         if selective_dynamics is None:
             for row in coords:
-                f.write(" ".join(row) + "\n")
+                text_file.write(" ".join(row) + "\n")

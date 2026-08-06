@@ -13,7 +13,9 @@ and a string-preserving VASP POSCAR/CONTCAR reader.
 
 - **API reference**: {doc}`reference/index`
 - **Reading POSCAR/CONTCAR files**: {doc}`poscar`
+- **Reading VASP output files**: {doc}`vasp_outputs`
 - **Reading and writing WAVECAR files**: {doc}`wavecar`
+- **Trajectory JSON Lines**: {doc}`trajectory_jsonl`
 - **Runnable examples**: {doc}`examples/index`
 ````
 
@@ -46,7 +48,9 @@ print(block["cell_length_a"])
 :caption: Documentation
 
 poscar
+vasp_outputs
 wavecar
+trajectory_jsonl
 examples/index
 reference/index
 ```

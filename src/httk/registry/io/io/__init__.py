@@ -37,10 +37,44 @@ register_reader(
 )
 
 register_reader(
+    name="oszicar",
+    reader="httk.io.vasp:read_oszicar",
+    extensions=(".oszicar",),
+    filenames=("OSZICAR",),
+)
+
+register_reader(
+    name="outcar",
+    reader="httk.io.vasp:read_outcar",
+    extensions=(".outcar",),
+    filenames=("OUTCAR",),
+)
+
+register_reader(
+    name="potcar",
+    reader="httk.io.vasp:read_potcar_summary",
+    extensions=(".potcar",),
+    filenames=("POTCAR", "POTCAR.summary"),
+)
+
+register_reader(
+    name="xdatcar",
+    reader="httk.io.vasp:read_xdatcar",
+    extensions=(".xdatcar",),
+    filenames=("XDATCAR",),
+)
+
+register_reader(
     name="wavecar",
     reader="httk.io.vasp.wavecar:read_wavecar",
     extensions=(".wavecar",),
     filenames=("WAVECAR",),
+)
+
+register_reader(
+    name="trajectory-jsonl",
+    reader="httk.io.optimade_jsonl:read_trajectory_jsonl",
+    extensions=(".jsonl",),
 )
 
 register_writer(
@@ -49,4 +83,11 @@ register_writer(
     format="vasp-wavecar",
     extensions=(".wavecar",),
     filenames=("WAVECAR",),
+)
+
+register_writer(
+    name="trajectory-jsonl",
+    writer="httk.io.optimade_jsonl:_write_trajectory_jsonl_payload",
+    format="httk-trajectory-jsonl",
+    extensions=(".jsonl",),
 )

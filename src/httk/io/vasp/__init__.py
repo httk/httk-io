@@ -22,7 +22,12 @@ import os
 from collections.abc import Mapping
 from typing import Any
 
+from .oszicar import read_oszicar
+from .outcar import ElasticModuliBlock, OutcarFile, OutcarFrame, read_outcar
+from .outputs import VASPOutputs
 from .poscar_reader import read_poscar
+from .potcar import read_potcar_summary
+from .xdatcar import XdatcarFile, read_xdatcar
 
 
 def read_wavecar(
@@ -54,4 +59,18 @@ def write_vasp_volumetric(
     _write_vasp_volumetric(destination, poscar_payload, grid, cols=cols)
 
 
-__all__ = ["read_poscar", "read_wavecar", "write_vasp_volumetric", "write_wavecar"]
+__all__ = [
+    "ElasticModuliBlock",
+    "OutcarFile",
+    "OutcarFrame",
+    "VASPOutputs",
+    "XdatcarFile",
+    "read_oszicar",
+    "read_outcar",
+    "read_poscar",
+    "read_potcar_summary",
+    "read_wavecar",
+    "read_xdatcar",
+    "write_vasp_volumetric",
+    "write_wavecar",
+]
