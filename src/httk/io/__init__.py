@@ -1,3 +1,5 @@
+"""Public file readers for httk-io."""
+
 from .cif.cif_reader import read_cif
 from .vasp.poscar_reader import read_poscar
 

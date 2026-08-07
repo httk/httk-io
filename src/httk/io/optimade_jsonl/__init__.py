@@ -27,13 +27,13 @@ Each following line is a frame object with exactly these semantic members::
      "observables": {"energy": -1.25}}
 
 ``index`` is the zero-based frame number.  ``fractional_site_positions`` is an
-N-by-3 array of float64 presentation values.  ``observables`` contains every
+N-by-3 array of floating-point presentation values.  ``observables`` contains every
 name declared by the header, with ``null`` allowed.  If ``constant_cell`` is
 null, each frame additionally contains ``lattice_vectors`` as a 3-by-3 array
-of float64 presentation values.  If it is non-null, a frame may include that
+of floating-point presentation values.  If it is non-null, a frame may include that
 member only when it is equal to the declared constant cell.  The writer emits
 the compact form and the reader accepts either form.  No exact-token channel
-exists: JSON numbers intentionally follow the float64 presentation, like the
+exists: JSON numbers intentionally follow the floating-point presentation, like the
 numeric layer.
 
 This is a holding/container format, not a database representation.  It follows
@@ -206,9 +206,14 @@ def _json_numbers(value: Any, *, field: str) -> Any:
 
 
 class TrajectoryJsonlFile:
-    """A closed-by-default, re-openable, lazy trajectory JSONL reader.
+    """A handle-free, re-scanning, lazy trajectory JSONL reader.
 
-    The public :attr:`path` property returns the source filename as a string.
+    The reader opens short-lived streams for each access and retains no open
+    handle. Header access is lazy, frame iteration streams the file, and
+    full-pass properties cache the count and issue summary. :meth:`close` is
+    terminal; access after closing is rejected.
+
+    :param filename: Filesystem path to a trajectory JSONL file, optionally compressed.
     """
 
     def __init__(self, filename: str | os.PathLike[str]) -> None:
@@ -231,9 +236,11 @@ class TrajectoryJsonlFile:
 
     @property
     def closed(self) -> bool:
+        """Whether this lazy reader has been closed."""
         return self._closed
 
     def close(self) -> None:
+        """Close this reader; future access raises an error."""
         self._closed = True
 
     def __enter__(self) -> Self:
@@ -268,10 +275,12 @@ class TrajectoryJsonlFile:
 
     @property
     def header(self) -> Mapping[str, Any]:
+        """Return the validated header, loading it on first access."""
         return self._read_header()[0]
 
     @property
     def issues(self) -> tuple[str, ...]:
+        """Return issues collected by the full frame scan."""
         self._ensure_full()
         return self._issues or ()
 
@@ -296,6 +305,10 @@ class TrajectoryJsonlFile:
                 index += 1
 
     def frames(self) -> Iterator[Mapping[str, Any]]:
+        """Stream validated frames without buffering the trajectory.
+
+        :yield: One validated frame mapping at a time.
+        """
         self._check_open()
         issues: list[str] = []
         count = 0
@@ -322,6 +335,7 @@ class TrajectoryJsonlFile:
 
     @property
     def nframes(self) -> int:
+        """Return the declared frame count or determine it by scanning lazily."""
         self._check_open()
         if self._nframes is None:
             declared = self._read_header()[1].get("nframes")
@@ -332,6 +346,12 @@ class TrajectoryJsonlFile:
         return self._nframes or 0
 
     def frame(self, i: int) -> Mapping[str, Any]:
+        """Return one frame, rescanning from the start when necessary.
+
+        :param i: Zero-based frame index; negative values count backward from the end.
+        :return: The selected validated frame mapping.
+        :raises IndexError: If ``i`` is outside the available frames.
+        """
         self._check_open()
         index = i if i >= 0 else self.nframes + i
         if index < 0:
@@ -347,7 +367,17 @@ def write_trajectory_jsonl(
     header: Mapping[str, Any],
     frames: Iterable[Mapping[str, Any]],
 ) -> None:
-    """Write a validated trajectory header and frame iterator without buffering frames."""
+    """Write a validated header and frame iterator without buffering frames.
+
+    JSON numbers are normalized to floating-point presentation values while
+    each frame is written, and compressed output is selected from the filename
+    suffix when applicable.
+
+    :param destination: Filesystem path or open text stream for the output.
+    :param header: Trajectory header describing sites, observables, and cell policy.
+    :param frames: Iterable of frame mappings to validate and write in order.
+    :raises ValueError: If the header, a frame, or the declared frame count is invalid.
+    """
     full_header, info = _header_info(header)
     close = False
     stream: TextIO
@@ -385,7 +415,13 @@ def write_trajectory_jsonl(
 
 
 def read_trajectory_jsonl(source: str | os.PathLike[str]) -> dict[str, Any]:
-    """Read a trajectory JSONL path into a lazy neutral payload."""
+    """Read a trajectory JSONL path into a lazy neutral payload.
+
+    :param source: Filesystem path to a trajectory JSONL file, optionally compressed.
+    :return: A neutral payload containing the lazy trajectory reader.
+    :raises TypeError: If ``source`` is not a filesystem path.
+    :raises FileNotFoundError: If the path does not exist.
+    """
     return {"format": FORMAT, "trajectory_jsonl": TrajectoryJsonlFile(source)}
 
 

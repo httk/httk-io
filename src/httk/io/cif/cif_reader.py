@@ -297,6 +297,12 @@ def read_cif(
 
     Paths are opened through :class:`httk.core.TextstreamFileView`, including compressed
     CIF files. Open streams and iterables are consumed but left open.
+
+    :param source: A filename, open text stream, or iterable of CIF lines.
+    :param pragmatic: Accept selected common deviations from strict CIF tokenization.
+    :param allow_cif2: Parse CIF2 list values in addition to CIF1 data.
+    :return: The data blocks and the leading comment header.
+    :raises ValueError: If a loop contains mismatched column value counts.
     """
     if isinstance(source, (str, os.PathLike)):
         with TextstreamFileView(Path(source)) as stream:

@@ -72,7 +72,13 @@ _ELASTIC_HEADINGS = (
 
 @dataclass(frozen=True)
 class FinalEnergies:
-    """Final energy lexemes from the last complete or partial energy block."""
+    """Store energy lexemes from the last complete or partial energy block.
+
+    :param free_energy: Free-energy lexeme from the block, when present.
+    :param energy_without_entropy: Energy-without-entropy lexeme, when present.
+    :param energy_sigma0: Sigma-zero energy lexeme, when present.
+    :param final: Whether the block was complete when parsing ended.
+    """
 
     free_energy: str | None
     energy_without_entropy: str | None
@@ -82,7 +88,18 @@ class FinalEnergies:
 
 @dataclass(frozen=True)
 class OutcarFrame:
-    """One complete ionic-step snapshot, retaining VASP numeric lexemes."""
+    """Store one complete ionic-step snapshot with VASP numeric lexemes unchanged.
+
+    :param index: Zero-based ionic-step index.
+    :param cell: Lattice-vector lexemes, when the step contains a cell.
+    :param positions: Position lexemes, when the step contains positions.
+    :param forces: Force lexemes, when the step contains forces.
+    :param stress_kbar: Six stress lexemes in VASP order, when present.
+    :param free_energy: Free-energy lexeme, when present.
+    :param energy_without_entropy: Energy-without-entropy lexeme, when present.
+    :param energy_sigma0: Sigma-zero energy lexeme, when present.
+    :param temperature: Temperature lexeme, when present.
+    """
 
     index: int
     cell: tuple[tuple[str, str, str], ...] | None
@@ -99,15 +116,34 @@ class OutcarFrame:
         return None if rows is None else tuple((float(row[0]), float(row[1]), float(row[2])) for row in rows)
 
     def cell_floats(self) -> tuple[tuple[float, float, float], ...] | None:
+        """Convert the cell lexemes to floating-point values when present.
+
+        :return: Converted cell values, or ``None`` when the frame has no cell.
+        """
         return self._floats(self.cell)
 
     def positions_floats(self) -> tuple[tuple[float, float, float], ...] | None:
+        """Convert the position lexemes to floating-point values when present.
+
+        :return: Converted position values, or ``None`` when the frame has no positions.
+        """
         return self._floats(self.positions)
 
     def forces_floats(self) -> tuple[tuple[float, float, float], ...] | None:
+        """Convert the force lexemes to floating-point values when present.
+
+        :return: Converted force values, or ``None`` when the frame has no forces.
+        """
         return self._floats(self.forces)
 
     def stress_gpa_voigt(self) -> tuple[float, ...] | None:
+        """Convert stress to tensile-positive GPa Voigt order ``xx, yy, zz, yz, xz, xy``.
+
+        The conversion multiplies kbar by ``0.1``, reverses VASP's
+        compressive-positive sign, and reorders the shear components.
+
+        :return: Stress in tensile-positive GPa Voigt order, or ``None`` when absent.
+        """
         if self.stress_kbar is None:
             return None
         values = tuple(float(token) for token in self.stress_kbar)
@@ -117,7 +153,11 @@ class OutcarFrame:
 
 @dataclass(frozen=True)
 class ElasticModuliBlock:
-    """One six-by-six elastic-moduli table."""
+    """Store one six-by-six elastic-moduli table.
+
+    :param heading: Heading identifying the table in the source.
+    :param rows: Table rows with their source numeric lexemes.
+    """
 
     heading: str
     rows: tuple[tuple[str, ...], ...]
@@ -438,9 +478,17 @@ def _iter_parsed_frames(
 class OutcarFile:
     """Lazy OUTCAR metadata reader whose scans reopen the source each time.
 
-    OUTCAR paths, including compressed paths, are accepted. No source handle is
+    OUTCAR paths, including compressed paths, are accepted by deliberate
+    forward-streaming divergence from :class:`~httk.io.vasp.wavecar.WavecarFile`;
+    random frame access re-streams the file. Construction validates only that
+    the path exists. Prologue and full scans are lazy: the first prologue access
+    scans to the ionic marker and can traverse the whole file when no marker
+    exists. The full pass streams the source once and caches summary fields,
+    all stress rows, and all elastic-moduli blocks. No source handle is
     retained, so :meth:`close` only marks this lazy object closed. The public
-    :attr:`path` property returns the source filename as a string.
+    :attr:`path` property returns the source filename.
+
+    :param filename: Filesystem path to an OUTCAR, optionally compressed.
     """
 
     def __init__(self, filename: str | os.PathLike[str]) -> None:
@@ -456,6 +504,7 @@ class OutcarFile:
 
     @property
     def closed(self) -> bool:
+        """Whether this lazy reader has been closed."""
         return self._closed
 
     def close(self) -> None:
@@ -600,36 +649,45 @@ class OutcarFile:
 
     @property
     def version_string(self) -> str:
+        """Return the VASP version string found during the prologue scan."""
         self._require_open()
         return self._ensure_prologue().version_string
 
     @property
     def version_numbers(self) -> tuple[int, ...]:
+        """Return the numeric components of the VASP version string."""
         self._require_open()
         return self._ensure_prologue().version_numbers
 
     @property
     def parameters(self) -> Mapping[str, str]:
+        """Return the first recognized VASP parameter lexeme for each parameter."""
         self._require_open()
         return self._ensure_prologue().parameters
 
     @property
     def ions_per_type(self) -> tuple[int, ...] | None:
+        """Return the number of ions for each potential type, when reported."""
         self._require_open()
         return self._ensure_prologue().ions_per_type
 
     @property
     def xc(self) -> str | None:
+        """Return the recognized exchange-correlation description, when available."""
         self._require_open()
         return self._ensure_prologue().xc
 
     @property
     def potcar_titles(self) -> tuple[str, ...]:
+        """Return distinct POTCAR titles in first-seen order."""
         self._require_open()
         return self._ensure_prologue().potcar_titles
 
     def frames(self) -> Iterator[OutcarFrame]:
-        """Stream complete ionic frames without retaining the sequence."""
+        """Stream complete ionic frames without retaining the sequence.
+
+        :return: An iterator yielding one :class:`OutcarFrame` at a time.
+        """
         self._require_open()
         return self._frames()
 
@@ -640,7 +698,12 @@ class OutcarFile:
             yield from _iter_parsed_frames(iter(lines), nions=prologue.nions)
 
     def frame(self, index: int) -> OutcarFrame | None:
-        """Return one frame by rescanning from the start of the file."""
+        """Return one frame by rescanning from the start of the file.
+
+        :param index: Zero-based frame index.
+        :return: The requested frame, or ``None`` when it is beyond the file.
+        :raises ValueError: If ``index`` is negative or not an integer.
+        """
         if not isinstance(index, int) or index < 0:
             raise ValueError("OUTCAR frame index must be a non-negative integer.")
         # ponytail: frame(i) is O(file); add a byte-offset index only if random access matters.
@@ -648,45 +711,61 @@ class OutcarFile:
 
     @property
     def final_energies(self) -> FinalEnergies:
+        """Return energies from the last complete or partial energy block."""
         self._require_open()
         return self._ensure_full().final_energies
 
     @property
     def nframes(self) -> int:
+        """Return the number of complete ionic frames after the full pass."""
         self._require_open()
         return self._ensure_full().nframes
 
     @property
     def last_frame(self) -> OutcarFrame | None:
+        """Return the last complete ionic frame, when one exists."""
         self._require_open()
         return self._ensure_full().last_frame
 
     def stresses(self) -> tuple[tuple[str, ...], ...]:
-        """Return all six-token ``in kB`` rows in file order."""
+        """Return all six-token ``in kB`` rows in file order.
+
+        :return: Stress rows retaining their source numeric lexemes.
+        """
         self._require_open()
         return self._ensure_full().stresses
 
     @property
     def elastic_moduli(self) -> tuple[ElasticModuliBlock, ...]:
+        """Return parsed elastic-moduli tables in source order."""
         self._require_open()
         return self._ensure_full().elastic_moduli
 
     @property
     def completed(self) -> bool:
+        """Whether the source contains completion-footer evidence."""
         self._require_open()
         return self._ensure_full().completed
 
     @property
     def completion_evidence(self) -> tuple[str, ...]:
+        """Return completion-footer lines found during the full pass."""
         self._require_open()
         return self._ensure_full().completion_evidence
 
     @property
     def issues(self) -> tuple[str, ...]:
+        """Return parsing issues collected during the available scans."""
         self._require_open()
         return self._ensure_full().issues
 
 
 def read_outcar(source: Any) -> dict[str, Any]:
-    """Return a lazy OUTCAR payload; only filesystem filenames are accepted."""
+    """Return a lazy OUTCAR payload; only filesystem filenames are accepted.
+
+    :param source: Filesystem path to an OUTCAR, optionally compressed.
+    :return: A neutral payload containing the lazy OUTCAR reader.
+    :raises TypeError: If ``source`` is not a filesystem path.
+    :raises FileNotFoundError: If the path does not exist.
+    """
     return {"format": "vasp-outcar", "outcar": OutcarFile(source)}

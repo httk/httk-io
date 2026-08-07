@@ -4,7 +4,16 @@ from typing import TypedDict
 
 
 class CifTags(TypedDict):
-    """The normalized spellings of the special-purpose CIF data names this package consults."""
+    """Hold normalized spellings of the special-purpose CIF data names this package consults.
+
+    :param structural_q: Normalized tags for the structural modulation wave-vector components.
+    :param structural_displacement_label: Tag identifying structurally displaced atom labels.
+    :param structural_occupancy_label: Tag identifying structurally modulated occupancy labels.
+    :param magnetic_cartesian_moment: Normalized tags for Cartesian magnetic-moment components.
+    :param magnetic_fourier_coeff: Template for magnetic Fourier coefficient tags.
+    :param magnetic_fourier_label: Tag identifying magnetically modulated atom labels.
+    :param magnetic_ssg_name: Tag identifying the magnetic superspace-group name.
+    """
 
     structural_q: tuple[str, ...]
     structural_displacement_label: str

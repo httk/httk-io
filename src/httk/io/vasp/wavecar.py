@@ -55,10 +55,15 @@ def _index(value: int, size: int, name: str) -> int:
 class WavecarFile:
     """Open a VASP WAVECAR and eagerly read its small metadata headers.
 
-    Public indices are all zero-based. ``cell`` has shape ``(3, 3)``,
-    ``kpoints`` has shape ``(nkpts, 3)``, the eigenvalue and occupation arrays
-    have shape ``(nspins, nkpts, nbands)``, and ``nplanewaves`` has shape
-    ``(nkpts,)``. Coefficients are read afresh for each call.
+    Public indices are all zero-based. The small metadata headers and band
+    summaries are read eagerly, while each coefficient vector is loaded lazily
+    from its band record. Compressed paths are refused because random access
+    cannot stream decompression. ``cell`` has shape ``(3, 3)``, ``kpoints`` has
+    shape ``(nkpts, 3)``, the eigenvalue and occupation arrays have shape
+    ``(nspins, nkpts, nbands)``, and ``nplanewaves`` has shape ``(nkpts,)``.
+
+    :param filename: Filesystem path to an uncompressed WAVECAR.
+    :param double_precision: Override the precision indicated by the WAVECAR header.
     """
 
     nspins: int
@@ -180,7 +185,14 @@ class WavecarFile:
         self.close()
 
     def coefficients(self, spin: int, kpt: int, band: int) -> Any:
-        """Read one zero-based spin/k-point/band coefficient vector."""
+        """Read one zero-based spin/k-point/band coefficient vector.
+
+        :param spin: Zero-based spin-channel index.
+        :param kpt: Zero-based k-point index.
+        :param band: Zero-based band index.
+        :return: The coefficient vector for the selected band record.
+        :raises ValueError: If the file is closed, an index is invalid, or the record is truncated.
+        """
         if self.closed:
             raise ValueError("Cannot read coefficients from a closed WAVECAR file.")
         spin = _index(spin, self.nspins, "spin")
@@ -203,7 +215,14 @@ class WavecarFile:
 def read_wavecar(
     source: str | os.PathLike[str], *, double_precision: bool | None = None, gamma_half: str | None = None
 ) -> dict[str, Any]:
-    """Read a WAVECAR path into a neutral ``vasp-wavecar`` payload."""
+    """Read a WAVECAR path into a neutral ``vasp-wavecar`` payload.
+
+    :param source: Filesystem path to an uncompressed WAVECAR.
+    :param double_precision: Override the precision indicated by the WAVECAR header.
+    :param gamma_half: Consumer hint for the gamma-half orientation, or ``None`` when unspecified.
+    :return: A payload containing the lazy WAVECAR source and the gamma-half hint.
+    :raises ValueError: If an option is invalid, compression is present, or the file is malformed.
+    """
     if gamma_half not in (None, "x", "z"):
         raise ValueError("gamma_half must be None, 'x', or 'z'.")
     return {
@@ -288,5 +307,12 @@ def _write_wavecar_payload(destination: str | os.PathLike[str], data: Mapping[st
 
 
 def write_wavecar(destination: str | os.PathLike[str], payload: Mapping[str, Any]) -> None:
-    """Write a neutral ``vasp-wavecar`` payload to a binary path."""
+    """Write a neutral ``vasp-wavecar`` payload to a binary path.
+
+    :param destination: Filesystem path for the uncompressed binary output.
+    :param payload: Neutral payload containing a WAVECAR source.
+    :raises ValueError: If the destination or payload cannot represent a WAVECAR.
+    :raises TypeError: If the payload is not a mapping.
+    :raises KeyError: If the payload mapping does not contain ``"wavecar"``.
+    """
     _write_wavecar_payload(destination, payload)

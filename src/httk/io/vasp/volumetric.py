@@ -21,7 +21,14 @@ def write_vasp_volumetric(
     *,
     cols: int = 10,
 ) -> None:
-    """Write POSCAR content followed by a Fortran-order real-valued grid."""
+    """Write POSCAR content followed by a Fortran-order real-valued grid.
+
+    :param destination: Filesystem path or open text stream for the output.
+    :param poscar_payload: Neutral POSCAR payload supplying the structure header.
+    :param grid: Three-dimensional real-valued grid to write in Fortran order.
+    :param cols: Maximum number of values written on each grid line.
+    :raises ValueError: If ``cols`` or ``grid`` cannot be represented in the format.
+    """
     if isinstance(cols, bool) or not isinstance(cols, int) or cols <= 0:
         raise ValueError("volumetric cols must be a positive integer.")
     grid = numpy.asarray(grid)

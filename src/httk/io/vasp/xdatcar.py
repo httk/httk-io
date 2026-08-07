@@ -108,12 +108,16 @@ def _read_header(reader: _NumberedLines, first: tuple[int, str] | None = None) -
 class XdatcarFile:
     """Re-openable, forward-streaming XDATCAR source.
 
-    Construction checks only that ``filename`` exists.  Header properties scan the
-    seven-line header; ``frames`` opens a fresh stream and never caches frames.
-    Variable-cell files are identified by a repeated POSCAR-like header and expose
-    that header's cell on the following frame.  An incomplete final coordinate block
-    is dropped and reported in :attr:`issues` during the full pass. The public
-    :attr:`path` property returns the source filename as a string.
+    Construction checks only that ``filename`` exists. Compressed paths are
+    accepted by deliberate forward-streaming divergence from
+    :class:`~httk.io.vasp.wavecar.WavecarFile`; repeated scans re-stream the file. Header properties scan the header;
+    ``frames`` opens a fresh stream and never caches frames. Variable-cell files
+    are identified by a repeated POSCAR-like header and expose that header's
+    cell on the following frame. An incomplete final coordinate block is dropped
+    and reported in :attr:`issues` during the full pass. The public :attr:`path`
+    property returns the source filename.
+
+    :param filename: Filesystem path to an XDATCAR, optionally compressed.
     """
 
     def __init__(self, filename: str | os.PathLike[str]) -> None:
@@ -136,6 +140,7 @@ class XdatcarFile:
 
     @property
     def closed(self) -> bool:
+        """Whether this lazy reader has been closed."""
         return self._closed
 
     def close(self) -> None:
@@ -183,30 +188,37 @@ class XdatcarFile:
 
     @property
     def comment(self) -> str:
+        """Return the source comment line."""
         return self._ensure_header().comment
 
     @property
     def scale(self) -> str:
+        """Return the source scaling-factor lexeme."""
         return self._ensure_header().scale
 
     @property
     def cell(self) -> tuple[tuple[str, str, str], ...]:
+        """Return the initial cell-vector lexemes."""
         return self._ensure_header().cell
 
     @property
     def symbols(self) -> tuple[str, ...] | None:
+        """Return initial species symbols, or ``None`` for the older header form."""
         return self._ensure_header().symbols
 
     @property
     def counts(self) -> tuple[int, ...]:
+        """Return the number of sites for each initial species entry."""
         return self._ensure_header().counts
 
     @property
     def cartesian(self) -> bool:
+        """Whether the first configuration uses Cartesian coordinates."""
         return self._ensure_header().cartesian
 
     @property
     def issues(self) -> tuple[str, ...]:
+        """Return issues collected while scanning all frames."""
         self._ensure_full()
         return self._issues or ()
 
@@ -295,7 +307,10 @@ class XdatcarFile:
                 atom_count = sum(repeated_header.counts)
 
     def frames(self) -> Iterator[Mapping[str, Any]]:
-        """Yield complete frames in file order without retaining them."""
+        """Yield complete frames in file order without retaining them.
+
+        :yield: One complete frame mapping at a time.
+        """
         self._check_open()
         issues: list[str] = []
         yield from self._iter_frames(issues=issues)
@@ -314,10 +329,17 @@ class XdatcarFile:
 
     @property
     def nframes(self) -> int:
+        """Return the number of complete frames after a full scan."""
         self._ensure_full()
         return self._nframes or 0
 
 
 def read_xdatcar(source: str | os.PathLike[str]) -> dict[str, Any]:
-    """Read an XDATCAR path into a lazy neutral ``vasp-xdatcar`` payload."""
+    """Read an XDATCAR path into a lazy neutral ``vasp-xdatcar`` payload.
+
+    :param source: Filesystem path to an XDATCAR, optionally compressed.
+    :return: A neutral payload containing the lazy XDATCAR reader.
+    :raises TypeError: If ``source`` is not a filesystem path.
+    :raises FileNotFoundError: If the path does not exist.
+    """
     return {"format": "vasp-xdatcar", "xdatcar": XdatcarFile(source)}

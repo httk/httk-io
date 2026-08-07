@@ -41,6 +41,9 @@ class CifMeta(TypedDict):
     ``esd`` is the standard uncertainty a file states explicitly, so ``0.3333(7)`` reports
     a precision of ``1/10000`` *and* an esd of ``7/10000``. They measure different things
     and the coarser of the two is the honest claim.
+
+    :param esd: Standard uncertainty explicitly stated by the CIF token.
+    :param precision: Precision implied by the digits written in the CIF token.
     """
 
     esd: Fraction | None
@@ -67,8 +70,7 @@ def parse_cif_float(token: str, *, meta: Literal[True], pragmatic: bool = ...) -
 def parse_cif_float(
     token: str, *, meta: bool = False, pragmatic: bool = False
 ) -> float | None | tuple[float | None, CifMeta]:
-    """
-    Parse a CIF numeric field.
+    """Parse a CIF numeric field.
 
     If meta=False:
         return float_value or None.
@@ -77,6 +79,12 @@ def parse_cif_float(
         return ``(float_value_or_None, CifMeta)`` — the value plus what the token claims
         about its own precision. See :class:`CifMeta`; both of its fields are exact
         rationals or ``None``.
+
+    :param token: Numeric text to parse, including CIF uncertainty notation when present.
+    :param meta: Include the value's claimed precision and standard uncertainty.
+    :param pragmatic: Salvage selected non-standard numeric spellings instead of rejecting them.
+    :return: The parsed value, optionally paired with its precision metadata.
+    :raises ValueError: If the token is missing or cannot be interpreted as a CIF number.
     """
     if token is None:
         raise ValueError("Cannot parse None as a CIF float")
@@ -154,7 +162,12 @@ def parse_cif_float(
 
 
 def parse_cif_fraction(token: str) -> Fraction | None:
-    """Parse a CIF numeric token exactly, preserving finite decimals and fractions."""
+    """Parse a CIF numeric token exactly, preserving finite decimals and fractions.
+
+    :param token: Numeric text whose exact central value should be preserved.
+    :return: The exact value, or ``None`` for an unknown CIF value.
+    :raises ValueError: If the token does not contain a valid exact numeric value.
+    """
     exact = cif_exact_token(token)
     if exact is None:
         return None
@@ -165,10 +178,18 @@ def parse_cif_fraction(token: str) -> Fraction | None:
 
 
 def parse_cif_int(token: str, *, strict: bool = True, allow_round: bool = False) -> int:
-    """
-    Convert a CIF numeric token (e.g., '123(4)', '3E2', '1.0E3') to an int using the central value.
+    """Convert a CIF numeric token to an integer using its central value.
+
+    The accepted forms include ``'123(4)'``, ``'3E2'``, and ``'1.0E3'``.
     - strict=True: require the value to be exactly integral; otherwise raise ValueError.
     - allow_round=True (only if strict=False): round half-even to the nearest int.
+
+    :param token: Numeric text to convert.
+    :param strict: Require the central value to be integral.
+    :param allow_round: Permit half-even rounding when ``strict`` is false.
+    :return: The converted integer.
+    :raises ValueError: If the token is missing or its central value cannot be converted under the selected rules.
+    :raises decimal.InvalidOperation: If an unmatched token has malformed decimal syntax.
     """
     t = token.strip()
     if t in ('.', '?', ''):
@@ -208,6 +229,9 @@ def cif_exact_token(token: str) -> str | None:
     rational 3333/10000, which is what the file says, whereas ``float("0.3333")`` is a
     binary approximation whose exact rational value is 6004199023210345/18014398509481984
     and says something the file did not.
+
+    :param token: CIF value text whose uncertainty estimate should be removed.
+    :return: The central numeric text, or ``None`` for an unknown value.
     """
     text = token.strip().strip("'\"")
     if text in ("?", ".", ""):
@@ -375,6 +399,21 @@ def _basis_from_lengths_angles(
 
 
 class AsuCell(NamedTuple):
+    """Hold the parsed cell, atom sites, exact tokens, and precision claims.
+
+    :param basis: Conventional Cartesian basis vectors for the unit cell.
+    :param positions: Fractional atom positions.
+    :param positions_exact: Original central coordinate tokens for each atom.
+    :param occupancies: Parsed atom occupancies, when supplied.
+    :param occupancies_exact: Original central occupancy tokens, when supplied.
+    :param occupancy_precisions: Coarsest claimed precision for each occupancy, when supplied.
+    :param coordinate_precision: Coarsest claimed precision across the coordinates.
+    :param basis_precision: Coarsest claimed precision across the cell lengths.
+    :param symbols: Atom-site symbols in input order.
+    :param labels: Atom-site labels in input order.
+    :param equivalent_atoms: One-based identifiers grouping equal atom-site labels.
+    """
+
     basis: list[list[float]]
     positions: list[tuple[float | None, float | None, float | None]]
     positions_exact: list[tuple[str | None, str | None, str | None]]
@@ -389,6 +428,12 @@ class AsuCell(NamedTuple):
 
 
 def parse_asu_cell(cifblock: Mapping[str, Any]) -> AsuCell:
+    """Parse a CIF block into its asymmetric-unit cell data.
+
+    :param cifblock: Normalized CIF data for one data block.
+    :return: The parsed unit cell and atom-site data.
+    :raises ValueError: If required cell or atom-site data is missing or invalid.
+    """
     parameters, basis_precision = _parse_uc_with_precision(cifblock)
     a, b, c, alpha, beta, gamma = parameters
     if any(value is None for value in parameters):
@@ -438,9 +483,13 @@ def parse_structural_modulation(
     Extract structural superspace modulation information from a standard CIF.
 
     Returns a tuple ``(structural_q, mod_dim, has_struct_mod, struct_mod_atoms)`` where
-    ``structural_q`` is a list of q-vectors or ``None``, ``mod_dim`` is the modulation
-    dimension (0 if absent), ``has_struct_mod`` is a bool, and ``struct_mod_atoms`` is a
-    sorted list of atom-site labels.
+        ``structural_q`` is a list of q-vectors or ``None``, ``mod_dim`` is the modulation
+        dimension (0 if absent), ``has_struct_mod`` is a bool, and ``struct_mod_atoms`` is a
+        sorted list of atom-site labels.
+
+    :param cifblock: Normalized CIF data for one data block.
+    :return: Structural q-vectors, modulation dimension, presence flag, and affected labels.
+    :raises ValueError: If a structural wave vector contains an unknown component.
     """
     # modulation dimension (0 if absent)
     mod_dim = int(cifblock.get('cell_modulation_dimension', 0))
@@ -506,6 +555,17 @@ def _first_tag(cifblock: Mapping[str, Any], *names: str) -> Any | None:
 
 
 def cifblock_to_asu(cifblock: Mapping[str, Any]) -> dict[str, Any]:
+    """Convert one normalized CIF block to a neutral asymmetric-unit payload.
+
+    The payload keeps ``cell_parameters_exact`` and ``positions_exact`` as the central
+    numeric text written by the file, and keeps ``symops_xyz`` as the raw operation strings.
+    The dual numeric channel gives ``_httk_*_exact`` companion tags precedence over standard
+    numeric tags on read, preserving central text after a lossy display write.
+
+    :param cifblock: Normalized CIF data for one data block.
+    :return: A neutral mapping containing cell, atom, symmetry, and metadata channels.
+    :raises ValueError: If the block lacks required cell, atom-site, or symmetry data.
+    """
     asu = parse_asu_cell(cifblock)
 
     # standard space group symmetry
@@ -582,11 +642,15 @@ def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, A
     reason, so that nothing is dropped silently and the failure surfaces when a structure
     is actually asked for.
 
-    The mapping stays neutral — plain lists, strings, and exact ``Fraction`` symmetry
-    operations, with no domain objects — so *httk-io* need not know about
+    The mapping stays neutral — plain lists, strings, exact numeric text channels, and raw
+    symmetry-operation strings, with no domain objects — so *httk-io* need not know about
     *httk-atomistic*. Turning it into a structure is
     ``httk.core.load`` (which returns an ``ASUStructure`` when atomistic support
     is installed).
+
+    :param source: A filename, open text stream, or iterable of CIF lines.
+    :return: A neutral CIF payload containing structural blocks, unparsed block reasons, and the header.
+    :raises ValueError: If the CIF stream contains malformed data that prevents parsing.
     """
     cifblocks, header = read_cif(source, allow_cif2=False)
 
@@ -604,7 +668,12 @@ def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, A
 
 
 def single_asu_from_cif_file(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
-    """Return the first structural CIF block from :func:`read_cif_asus`."""
+    """Return the first structural CIF block from :func:`read_cif_asus`.
+
+    :param source: A filename, open text stream, or iterable of CIF lines.
+    :return: The first parsed asymmetric-unit mapping.
+    :raises ValueError: If no structural block is available.
+    """
     payload = read_cif_asus(source)
     if payload['blocks']:
         return payload['blocks'][0]

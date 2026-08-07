@@ -22,7 +22,15 @@ def _symbol(title: str) -> str:
 
 
 def read_potcar_summary(source: Any) -> dict[str, Any]:
-    """Extract one metadata mapping per ``TITEL`` header, without retaining body text."""
+    """Extract one metadata mapping per ``TITEL`` header without retaining POTCAR text.
+
+    Only header metadata is returned; the potential body is never retained or
+    exposed because it can contain licensed data. Concatenated
+    ``POTCAR.summary`` headers are accepted.
+
+    :param source: POTCAR or POTCAR.summary filename, text stream, or iterable of source lines.
+    :return: A neutral payload containing one metadata mapping per potential.
+    """
     potentials: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
 

@@ -1,3 +1,5 @@
+"""Register httk-io readers and writers with the httk-core registry."""
+
 from httk.core.register import register_reader
 
 register_reader(

@@ -40,6 +40,10 @@ def extract_parent_q_basis(cifblock: dict[str, Any]) -> list[tuple[Fraction, Fra
     """
     Return the parent propagation basis as a list of ``(kx, ky, kz)`` tuples,
     or ``None`` if it is not present.
+
+    :param cifblock: Normalized mcif data for one data block.
+    :return: Parent propagation vectors, or ``None`` when the block has none.
+    :raises ValueError: If a propagation vector is not a three-component exact vector.
     """
     k_vectors = cifblock.get('parent_propagation_vector.kxkykz')
     if not k_vectors:
@@ -61,6 +65,9 @@ def extract_fourier_coeffs(cifblock: dict[str, Any]) -> tuple[list[tuple[Any, ..
 
     All present ``q{i}_coeff`` columns are found, zipped row-wise with missing entries
     filled by zeros, and duplicate coefficient tuples are removed.
+
+    :param cifblock: Normalized mcif data for one data block.
+    :return: Unique coefficient rows and the number of q-vector columns detected.
     """
     # discover which q*_coeff columns exist
     present_cols = []
@@ -122,12 +129,17 @@ def extract_fourier_coeffs(cifblock: dict[str, Any]) -> tuple[list[tuple[Any, ..
     return coeff_rows, m
 
 
-def extract_fourier(cifblock):
+def extract_fourier(
+    cifblock: dict[str, Any],
+) -> tuple[list[tuple[Fraction, Fraction, Fraction]], list[tuple[Any, ...]]] | None:
     """
     Return the ``(basis, coeffs)`` descriptor, or ``None`` if there is insufficient data.
 
     ``basis`` comes from ``parent_propagation_vector.kxkykz`` and ``coeffs`` are the
     unique coefficient tuples from ``atom_site_Fourier_wave_vector.q*_coeff``.
+
+    :param cifblock: Normalized mcif data for one data block.
+    :return: The parent basis and unique coefficient rows, or ``None`` when either is absent.
     """
     basis = extract_parent_q_basis(cifblock)
     coeff_rows, m = extract_fourier_coeffs(cifblock)
@@ -428,6 +440,16 @@ def _parse_modulation(cifblock: dict[str, Any]) -> tuple[Any, ...]:
 
 
 def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = False) -> dict[str, Any]:
+    """Convert one normalized mcif block to a neutral magnetic payload.
+
+    The payload keeps exact numeric tokens for positions and magnetic moments, raw
+    symmetry-operation strings, and plain mappings and sequences rather than domain objects.
+
+    :param cifblock: Normalized mcif data for one data block.
+    :param error_on_nonmag: Reject blocks without usable magnetic moment columns.
+    :return: A neutral mapping containing structural and magnetic channels.
+    :raises ValueError: If required structural or magnetic data is missing or invalid.
+    """
     (
         asu,
         magmoms_exact,
@@ -526,6 +548,13 @@ def cifblock_to_mag_asu(cifblock: dict[str, Any], *, error_on_nonmag: bool = Fal
 def mag_asus_from_mcif_file(
     source: str | os.PathLike[str] | Iterable[str], *, error_on_nonmag: bool = False
 ) -> list[dict[str, Any]]:
+    """Read every mcif data block as a neutral magnetic asymmetric-unit payload.
+
+    :param source: A filename, open text stream, or iterable of mcif lines.
+    :param error_on_nonmag: Reject blocks without usable magnetic moment columns.
+    :return: Magnetic payloads for the data blocks in the source.
+    :raises ValueError: If the mcif stream or a selected block is invalid.
+    """
     cifblocks, _header = read_cif(source, allow_cif2=True)
 
     outputs = []
@@ -535,7 +564,16 @@ def mag_asus_from_mcif_file(
 
 
 def read_mcif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
-    """Read an mcif into the neutral payload used by the ``.mcif`` loader."""
+    """Read an mcif into the neutral payload used by the ``.mcif`` loader.
+
+    Magnetic positions and moments remain exact central tokens, symmetry operations remain
+    raw strings, and the result contains no magnetic-domain objects. Blocks without atom
+    sites are skipped; blocks that cannot be interpreted are reported in ``unparsed``.
+
+    :param source: A filename, open text stream, or iterable of mcif lines.
+    :return: A neutral mcif payload containing magnetic blocks, unparsed reasons, and the header.
+    :raises ValueError: If the mcif stream contains malformed data that prevents parsing.
+    """
     cifblocks, header = read_cif(source, allow_cif2=True)
     blocks = []
     unparsed = []
@@ -552,6 +590,13 @@ def read_mcif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, 
 def single_mag_asu_from_mcif_file(
     source: str | os.PathLike[str] | Iterable[str], *, error_on_nonmag: bool = False
 ) -> dict[str, Any]:
+    """Return the first structural mcif block as a neutral magnetic payload.
+
+    :param source: A filename, open text stream, or iterable of mcif lines.
+    :param error_on_nonmag: Reject the selected block without usable magnetic moments.
+    :return: The first magnetic asymmetric-unit payload.
+    :raises ValueError: If no structural block is available or the selected block is invalid.
+    """
     cifblocks, _header = read_cif(source, allow_cif2=True)
 
     # Get the first cifblock with atomic sites

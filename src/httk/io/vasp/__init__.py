@@ -33,14 +33,28 @@ from .xdatcar import XdatcarFile, read_xdatcar
 def read_wavecar(
     source: str | os.PathLike[str], *, double_precision: bool | None = None, gamma_half: str | None = None
 ) -> dict[str, Any]:
-    """Lazily read a VASP WAVECAR path into a neutral payload."""
+    """Read a VASP WAVECAR path into a neutral payload.
+
+    :param source: Filesystem path to an uncompressed WAVECAR.
+    :param double_precision: Override the coefficient precision declared by the file.
+    :param gamma_half: Consumer hint for the gamma-half orientation, or ``None`` when unspecified.
+    :return: A payload containing the lazy WAVECAR source and the gamma-half hint.
+    :raises ValueError: If an option is invalid or the file is malformed.
+    """
     from .wavecar import read_wavecar as _read_wavecar
 
     return _read_wavecar(source, double_precision=double_precision, gamma_half=gamma_half)
 
 
 def write_wavecar(destination: str | os.PathLike[str], payload: Mapping[str, Any]) -> None:
-    """Lazily write a neutral WAVECAR payload to a binary path."""
+    """Write a neutral WAVECAR payload to a binary path.
+
+    :param destination: Filesystem path for the uncompressed binary output.
+    :param payload: Neutral payload containing a WAVECAR source.
+    :raises ValueError: If the destination or payload cannot represent a WAVECAR.
+    :raises TypeError: If the payload is not a mapping.
+    :raises KeyError: If the payload mapping does not contain ``"wavecar"``.
+    """
     from .wavecar import write_wavecar as _write_wavecar
 
     _write_wavecar(destination, payload)
@@ -53,7 +67,14 @@ def write_vasp_volumetric(
     *,
     cols: int = 10,
 ) -> None:
-    """Lazily write POSCAR content and a VASP/VESTA volumetric grid."""
+    """Write POSCAR content followed by a VASP/VESTA volumetric grid.
+
+    :param destination: Filesystem path or open text stream for the output.
+    :param poscar_payload: Neutral POSCAR payload supplying the structure header.
+    :param grid: Three-dimensional real-valued grid in the order written by the format.
+    :param cols: Maximum number of values written on each grid line.
+    :raises ValueError: If the grid or column count is not writable as volumetric data.
+    """
     from .volumetric import write_vasp_volumetric as _write_vasp_volumetric
 
     _write_vasp_volumetric(destination, poscar_payload, grid, cols=cols)

@@ -28,7 +28,15 @@ def _compression_suffixes() -> tuple[str, ...]:
 
 
 class VASPOutputs:
-    """Lazily resolve the standard VASP files in ``directory``."""
+    """Lazily resolve standard VASP files in a calculation directory.
+
+    File lookup probes each registered compression suffix after the plain
+    filename. Payload readers are created only when their properties are first
+    accessed. The lazy OUTCAR and XDATCAR children are owned here and closed by
+    :meth:`close`; payload mappings do not retain open handles.
+
+    :param directory: Filesystem directory containing VASP output files.
+    """
 
     def __init__(self, directory: str | os.PathLike[str]) -> None:
         if not isinstance(directory, (str, os.PathLike)):
@@ -41,6 +49,7 @@ class VASPOutputs:
 
     @property
     def closed(self) -> bool:
+        """Whether this directory view has been closed."""
         return self._closed
 
     def close(self) -> None:
@@ -86,26 +95,32 @@ class VASPOutputs:
 
     @property
     def poscar(self) -> dict[str, Any] | None:
+        """Return the lazily loaded POSCAR payload, or ``None`` when absent."""
         return self._get("poscar", read_poscar, "POSCAR")
 
     @property
     def contcar(self) -> dict[str, Any] | None:
+        """Return the lazily loaded CONTCAR payload, or ``None`` when absent."""
         return self._get("contcar", read_poscar, "CONTCAR")
 
     @property
     def outcar(self) -> OutcarFile | None:
+        """Return the owned lazy OUTCAR reader, or ``None`` when absent."""
         return self._get("outcar", OutcarFile, "OUTCAR")
 
     @property
     def xdatcar(self) -> XdatcarFile | None:
+        """Return the owned lazy XDATCAR reader, or ``None`` when absent."""
         return self._get("xdatcar", XdatcarFile, "XDATCAR")
 
     @property
     def oszicar(self) -> dict[str, Any] | None:
+        """Return the lazily loaded OSZICAR payload, or ``None`` when absent."""
         return self._get("oszicar", read_oszicar, "OSZICAR")
 
     @property
     def potcar(self) -> dict[str, Any] | None:
+        """Return the lazily loaded POTCAR summary, or ``None`` when absent."""
         self._check_open()
         if "potcar" not in self._cache:
             path = self._find("POTCAR") or self._find("POTCAR.summary")

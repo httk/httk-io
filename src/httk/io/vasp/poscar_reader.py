@@ -51,19 +51,21 @@ def _parse_flag(token: str, lineno: int) -> bool:
 def read_poscar(source: Any) -> dict[str, Any]:
     """Parse a VASP POSCAR/CONTCAR into a neutral, string-preserving mapping.
 
-    ``source`` may be a filename (``str`` or :class:`os.PathLike`, opened through
+    ``source`` may be a filename, opened through
     :class:`httk.core.TextstreamFileView` so compressed files such as
-    ``CONTCAR.bz2`` are decompressed transparently) or an already-open text
+    ``CONTCAR.bz2`` are decompressed transparently, or an already-open text
     stream / iterable of lines.
 
     The returned mapping has the keys ``format`` (always ``"vasp-poscar"``),
-    ``comment``, ``scale`` and ``volume`` (exactly one is a string, the other
-    ``None``), ``cell`` (a 3x3 list of coordinate strings), ``symbols``
-    (``list[str]`` for VASP-5, ``None`` for VASP-4), ``counts`` (``list[int]``),
-    ``cartesian`` (``bool``), ``coords`` (an ``N``x3 list of strings), and
-    ``selective_dynamics`` (an ``N``x3 list of booleans when the file declares
-    selective dynamics, else ``None``), and ``raw`` (the decompressed original
-    text, or ``None`` when unavailable). Malformed input raises a clear
+    ``comment``, ``scale`` and ``volume`` (both keys are always present; exactly
+    one is non-``None``), ``cell``, ``symbols`` (which may be ``None`` for
+    VASP-4), ``counts``, ``cartesian``, ``coords``, and
+    ``selective_dynamics`` (which may be ``None`` when selective dynamics is not
+    declared), and ``raw`` (the original decompressed text, or ``None`` when
+    unavailable). For filenames and binary sources, ``raw`` preserves CRLF and
+    provides the writer's byte-exact round-trip channel. For an open text
+    stream, it reflects the stream's already translated text and is not
+    byte-exact. Malformed input raises a clear
     :class:`ValueError` naming the offending line.
 
     Three further keys report how precisely the file wrote its numbers, each the coarsest
@@ -74,6 +76,10 @@ def read_poscar(source: Any) -> dict[str, Any]:
     or fractional depending on ``cartesian``. Doing that conversion needs the assembled
     cell, so it belongs to whoever builds the structure —
     :func:`httk.core.load` — not to the reader.
+
+    :param source: POSCAR/CONTCAR filename, text stream, or iterable of source lines.
+    :return: The neutral mapping, including the original text in ``raw`` when available.
+    :raises ValueError: If the input is malformed.
     """
     with source_lines(source, preserve_path=True, capture_stream=True) as (lines, raw):
         data = _read_poscar(iter(lines))

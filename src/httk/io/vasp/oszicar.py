@@ -45,7 +45,15 @@ def _electronic(line: str) -> dict[str, Any] | None:
 
 
 def read_oszicar(source: Any) -> dict[str, Any]:
-    """Read OSZICAR text without converting numeric lexemes."""
+    """Read OSZICAR text without converting numeric lexemes.
+
+    Electronic iterations are attached to the following ionic summary. A
+    trailing electronic block is retained as an incomplete final entry when no
+    summary follows it.
+
+    :param source: OSZICAR filename, text stream, or iterable of source lines.
+    :return: A neutral payload containing ionic steps and parsing issues.
+    """
     ionic_steps: list[dict[str, Any]] = []
     pending: list[dict[str, Any]] = []
     pending_start: int | None = None

@@ -147,7 +147,12 @@ def _cif_write_data_value(f, orig_data_value, noteol, max_line_length, inloop):
         return True
 
 
-def is_sequence(val):
+def is_sequence(val: object) -> bool:
+    """Report whether a value should be written as a CIF loop or sequence.
+
+    :param val: Value to classify, treating strings as scalar values.
+    :return: ``True`` for iterable non-string values.
+    """
     return isinstance(val, Iterable) and not isinstance(val, str)
 
 
@@ -199,7 +204,7 @@ def _cif_write_data_block(f, data_block, max_line_length):
 
 def write_cif(
     destination: str | os.PathLike[str] | io.TextIOBase,
-    data,
+    data: Iterable[tuple[str | None, Mapping[str, object]]],
     header: str | None = None,
     max_line_length: int = 80,
 ) -> None:
@@ -208,6 +213,11 @@ def write_cif(
     ``data`` is an iterable of ``(block_name, block)`` pairs. A block maps data names to
     scalar values and uses ``loop_N`` keys to list its loop columns. ``header``, when
     supplied, is written before the data blocks.
+
+    :param destination: Filename or open text stream receiving the CIF text.
+    :param data: Data-block pairs containing scalar data names and loop columns.
+    :param header: Optional text written before the data blocks.
+    :param max_line_length: Maximum preferred line length for emitted values.
     """
 
     with ExitStack() as stack:
