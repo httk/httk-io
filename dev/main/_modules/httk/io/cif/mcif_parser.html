@@ -1,0 +1,972 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>httk.io.cif.mcif_parser - httk-io dev:main documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/selector.css?v=626bada3" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Development documentation (dev:main) — content may differ from any release. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">httk-io dev:main documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <span class="sidebar-brand-text">httk-io dev:main documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../poscar.html">Reading VASP POSCAR / CONTCAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../vasp_outputs.html">Reading VASP output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../wavecar.html">Reading and writing VASP WAVECAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../trajectory_jsonl.html">OPTIMADE trajectory JSON Lines</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../examples/index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_cif.html">Reading, inspecting and writing CIF files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_poscar.html">Reading VASP POSCAR and CONTCAR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_vasp_outputs.html">Read a small synthetic VASP output directory.</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/index.html">Reference</a><input aria-label="Toggle navigation of Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/autoapi/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for httk.io.cif.mcif_parser</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1">#    The high-throughput toolkit (httk)</span>
+<span class="c1">#    Copyright (C) 2012-2025 The httk AUTHORS</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#    it under the terms of the GNU Affero General Public License as</span>
+<span class="c1">#    published by the Free Software Foundation, either version 3 of the</span>
+<span class="c1">#    License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#    GNU Affero General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#    You should have received a copy of the GNU Affero General Public License</span>
+<span class="c1">#    along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fractions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fraction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">httk.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">combined_precision</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">._xyz_expr</span><span class="w"> </span><span class="kn">import</span> <span class="n">_parse_linear_expr</span><span class="p">,</span> <span class="n">_parse_linear_expr_algebraic</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cif_parser</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_cell_parameter_tokens</span><span class="p">,</span>
+    <span class="n">cif_exact_token</span><span class="p">,</span>
+    <span class="n">parse_asu_cell</span><span class="p">,</span>
+    <span class="n">parse_cif_float</span><span class="p">,</span>
+    <span class="n">parse_cif_fraction</span><span class="p">,</span>
+    <span class="n">parse_structural_modulation</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cif_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cif</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cif_tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIF_TAGS</span>
+
+
+<div class="viewcode-block" id="extract_parent_q_basis">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.extract_parent_q_basis">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_parent_q_basis</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the parent propagation basis as a list of ``(kx, ky, kz)`` tuples,</span>
+<span class="sd">    or ``None`` if it is not present.</span>
+
+<span class="sd">    :param cifblock: Normalized mcif data for one data block.</span>
+<span class="sd">    :return: Parent propagation vectors, or ``None`` when the block has none.</span>
+<span class="sd">    :raises ValueError: If a propagation vector is not a three-component exact vector.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">k_vectors</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parent_propagation_vector.kxkykz&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">k_vectors</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">k_vectors</span><span class="p">:</span>
+        <span class="c1"># each row like (&#39;0&#39;, &#39;0&#39;, &#39;1/3&#39;) or [0,0,0.333...]</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">parse_cif_fraction</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid parent propagation vector: </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">basis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">],</span> <span class="n">vector</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">basis</span></div>
+
+
+
+<div class="viewcode-block" id="extract_fourier_coeffs">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.extract_fourier_coeffs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_fourier_coeffs</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``(coeff_rows, m)`` where ``coeff_rows`` is a list of coefficient tuples</span>
+<span class="sd">    ``(c1, c2, ..., cm)`` and ``m`` is the number of q-vectors detected (``&gt;= 0``).</span>
+
+<span class="sd">    All present ``q{i}_coeff`` columns are found, zipped row-wise with missing entries</span>
+<span class="sd">    filled by zeros, and duplicate coefficient tuples are removed.</span>
+
+<span class="sd">    :param cifblock: Normalized mcif data for one data block.</span>
+<span class="sd">    :return: Unique coefficient rows and the number of q-vector columns detected.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># discover which q*_coeff columns exist</span>
+    <span class="n">present_cols</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;^&quot;</span> <span class="o">+</span> <span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;magnetic_fourier_coeff&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\{\}&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;(\d+)&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;$&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">and</span> <span class="n">col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">present_cols</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span> <span class="n">key</span><span class="p">,</span> <span class="n">col</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">present_cols</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[],</span> <span class="mi">0</span>
+
+    <span class="c1"># All present columns must have same length (number of rows). We’ll be permissive: pad shorter ones with zeros.</span>
+    <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">col</span><span class="p">)</span> <span class="ow">in</span> <span class="n">present_cols</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">present_cols</span><span class="p">)</span>
+
+    <span class="c1"># Build a dense matrix of size (max_len x m), filling missing cols with zeros</span>
+    <span class="c1"># 1-based indexing externally; 0-based in list</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">m</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">present_cols</span><span class="p">:</span>
+        <span class="c1"># normalize to numeric (ints preferred) but accept rational/float</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">norm</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="c1"># msCIF usually stores integer coeffs; permit &#39;1&#39;, &#39;-1&#39;, &#39;0&#39;, &#39;2/3&#39;, &#39;0.5&#39;</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Fraction</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">v</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">s</span>
+
+        <span class="n">col_norm</span> <span class="o">=</span> <span class="p">[</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">col</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_norm</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_len</span><span class="p">:</span>
+            <span class="n">col_norm</span> <span class="o">=</span> <span class="n">col_norm</span> <span class="o">+</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">max_len</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_norm</span><span class="p">))</span>
+        <span class="n">columns</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_norm</span>
+
+    <span class="c1"># Any missing columns among 1..m become zeros</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">columns</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">columns</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">max_len</span>
+
+    <span class="c1"># transpose to rows</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">column</span><span class="p">)</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">)))</span>
+
+    <span class="c1"># deduplicate coefficient tuples</span>
+    <span class="n">coeff_rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">tup</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="c1"># For dedup, coerce Fractions to a canonical string (since Fraction is hashable, this is optional)</span>
+        <span class="k">if</span> <span class="n">tup</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
+            <span class="n">coeff_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tup</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">coeff_rows</span><span class="p">,</span> <span class="n">m</span></div>
+
+
+
+<div class="viewcode-block" id="extract_fourier">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.extract_fourier">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_fourier</span><span class="p">(</span>
+    <span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">,</span> <span class="n">Fraction</span><span class="p">]],</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the ``(basis, coeffs)`` descriptor, or ``None`` if there is insufficient data.</span>
+
+<span class="sd">    ``basis`` comes from ``parent_propagation_vector.kxkykz`` and ``coeffs`` are the</span>
+<span class="sd">    unique coefficient tuples from ``atom_site_Fourier_wave_vector.q*_coeff``.</span>
+
+<span class="sd">    :param cifblock: Normalized mcif data for one data block.</span>
+<span class="sd">    :return: The parent basis and unique coefficient rows, or ``None`` when either is absent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">extract_parent_q_basis</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+    <span class="n">coeff_rows</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">extract_fourier_coeffs</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">basis</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">coeff_rows</span><span class="p">:</span>
+        <span class="c1"># Not enough to build a fourier descriptor</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">m</span><span class="p">:</span>
+        <span class="c1"># If fewer basis vectors than coeff columns, pad missing q’s with (0,0,0)</span>
+        <span class="c1"># (harmless for commensurability; or you can raise if you prefer strictness)</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">+</span> <span class="p">[(</span><span class="n">Fraction</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">Fraction</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">Fraction</span><span class="p">(</span><span class="mi">0</span><span class="p">))]</span> <span class="o">*</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">basis</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">:</span>
+        <span class="c1"># Truncate extra basis vectors (common if multiple parent k’s present but only q1..qm used)</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">basis</span><span class="p">[:</span><span class="n">m</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">basis</span><span class="p">,</span> <span class="n">coeff_rows</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_k_from_fourier</span><span class="p">(</span><span class="n">fourier</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Collect the magnetic propagation k-vectors from a fourier descriptor.</span>
+
+<span class="sd">    `fourier` is the ``(basis, coeff_rows)`` tuple returned by</span>
+<span class="sd">    :func:`extract_fourier`; the basis vectors are the parent propagation</span>
+<span class="sd">    k-vectors, returned here as a list of ``[kx, ky, kz]`` lists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">basis</span><span class="p">,</span> <span class="n">_coeff_rows</span> <span class="o">=</span> <span class="n">fourier</span>
+    <span class="k">return</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">basis</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_xyzt_op</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;mcif&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    op: e.g. &#39;x-y,x,-z+1/2,-1&#39;</span>
+<span class="sd">    Returns (R, t, time) where R is 3x3 (list of rows), t is length-3 float list, time is +1/-1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected op format: </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">pz</span><span class="p">,</span> <span class="n">ts</span> <span class="o">=</span> <span class="n">parts</span>
+    <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span> <span class="o">=</span> <span class="n">_parse_linear_expr</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+    <span class="n">ry</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">_parse_linear_expr</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+    <span class="n">rz</span><span class="p">,</span> <span class="n">tz</span> <span class="o">=</span> <span class="n">_parse_linear_expr</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time_value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time-reversal flag at end of operation: &#39;</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">&#39; in </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+    <span class="k">if</span> <span class="n">time_value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time-reversal flag at end of operation: &#39;</span><span class="si">{</span><span class="n">ts</span><span class="si">}</span><span class="s2">&#39; in </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_reversal_convention</span> <span class="o">==</span> <span class="s2">&quot;mcif&quot;</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">time_value</span>
+    <span class="k">elif</span> <span class="n">time_reversal_convention</span> <span class="o">==</span> <span class="s2">&quot;spglib&quot;</span><span class="p">:</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">time_value</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized time-reversal convention: </span><span class="si">{</span><span class="n">time_reversal_convention</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="n">ry</span><span class="p">,</span> <span class="n">rz</span><span class="p">),</span> <span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">tz</span><span class="p">),</span> <span class="n">ts</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_xyzt_symops_to_matrix</span><span class="p">(</span><span class="n">symops_xyz</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;mcif&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_parse_xyzt_op</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">use_fractions</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="n">time_reversal_convention</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symops_xyz</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_compose_ops_with_centerings</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="n">centerings</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ops:         list of (R, t, time_flag) from _space_group_symop_magn_operation</span>
+<span class="sd">    centerings:  list of (c, time_c) where c is 3-vector fractional translation,</span>
+<span class="sd">                 time_c is 0 or 1 (0 = no time reversal)</span>
+
+<span class="sd">    Returns a new list of (R, t&#39;, time&#39;) where t&#39; = t + c and time&#39; = (time_flag + time_c)%2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">composed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">time_flag</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">Rc</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">time_c</span> <span class="ow">in</span> <span class="n">centerings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">Rc</span> <span class="o">!=</span> <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Magnetic centering symmetry operation must not include rotation&quot;</span><span class="p">)</span>
+            <span class="n">t_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">time_new</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_flag</span> <span class="o">+</span> <span class="n">time_c</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span>  <span class="c1"># time_flag * time_c for -1/+1 convention</span>
+            <span class="n">composed</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">R</span><span class="p">,</span> <span class="n">t_new</span><span class="p">,</span> <span class="n">time_new</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">composed</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_moments</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract magnetic moment tokens and their frame from an mcif block.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    block: mcif block</span>
+<span class="sd">    resolution : bool</span>
+<span class="sd">        If True, return the combined precision of the moment tokens.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    If resolution=False:</span>
+<span class="sd">        moments, labels, moment_basis</span>
+<span class="sd">    If resolution=True:</span>
+<span class="sd">        moments, labels, moment_basis, magmom_precision</span>
+
+<span class="sd">    ``magmom_precision`` is in μB for either frame: crystalaxis components are</span>
+<span class="sd">    specified along the unit lattice axes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_len_ok</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">zs</span><span class="p">)</span> <span class="o">==</span> <span class="n">n</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="s1">&#39;atom_site_moment.label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">block</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">_get</span><span class="p">(</span><span class="s1">&#39;atom_site_moment.label&#39;</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="c1"># Try crystal basis first</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">_get</span><span class="p">(</span><span class="s1">&#39;atom_site_moment.crystalaxis_x&#39;</span><span class="p">)</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">_get</span><span class="p">(</span><span class="s1">&#39;atom_site_moment.crystalaxis_y&#39;</span><span class="p">)</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="n">_get</span><span class="p">(</span><span class="s1">&#39;atom_site_moment.crystalaxis_z&#39;</span><span class="p">)</span>
+    <span class="n">moment_basis</span> <span class="o">=</span> <span class="s2">&quot;crystalaxis&quot;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_len_ok</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span> <span class="o">=</span> <span class="p">(</span><span class="n">_get</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;magnetic_cartesian_moment&#39;</span><span class="p">])</span>
+        <span class="n">moment_basis</span> <span class="o">=</span> <span class="s2">&quot;cartesian&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_len_ok</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">resolution</span> <span class="k">else</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="c1"># Labels must be unique</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Non-equivalent sites share the same moment label in CIF data.&quot;</span><span class="p">)</span>
+
+    <span class="n">moments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">component_claims</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">resolution</span><span class="p">:</span>
+            <span class="n">_mx</span><span class="p">,</span> <span class="n">mx_meta</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">_my</span><span class="p">,</span> <span class="n">my_meta</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">_mz</span><span class="p">,</span> <span class="n">mz_meta</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">zs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">component_claims</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">mx_meta</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">],</span>
+                    <span class="n">mx_meta</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">],</span>
+                    <span class="n">my_meta</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">],</span>
+                    <span class="n">my_meta</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">],</span>
+                    <span class="n">mz_meta</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">],</span>
+                    <span class="n">mz_meta</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">],</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="n">moments</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cif_exact_token</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">ys</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">zs</span><span class="p">[</span><span class="n">i</span><span class="p">])))</span>
+
+    <span class="c1"># Fast path: no grid resolution requested</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">resolution</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">moments</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">moment_basis</span>
+
+    <span class="c1"># Crystalaxis components are μB along the unit lattice axes, so this precision is in</span>
+    <span class="c1"># μB for both moment bases.</span>
+    <span class="n">mag_res</span> <span class="o">=</span> <span class="n">combined_precision</span><span class="p">(</span><span class="n">component_claims</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">moments</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">moment_basis</span><span class="p">,</span> <span class="n">mag_res</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_alg_op</span><span class="p">(</span>
+    <span class="n">op</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">use_fractions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mcif&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parse an msCIF `_space_group_symop_magn_ssg_operation.algebraic` string.</span>
+
+<span class="sd">    Examples of `op`:</span>
+<span class="sd">      &#39;x1,x2,x3,x4,x5,x6,+1&#39;</span>
+<span class="sd">      &#39;x1,x2,x3,x4+1/2,-1&#39;</span>
+<span class="sd">      &#39;x1+1/2,x2+1/2,-x3,-x4,-1&#39;</span>
+<span class="sd">      &#39;x1-x2,x1,x3+1/3,x4-1/6,x5,+1&#39;</span>
+
+<span class="sd">    Returns (R, t, time):</span>
+<span class="sd">      R: 3x3 list of rows with entries in {-1,0,1}</span>
+<span class="sd">      t: length-3 list of floats (or Fractions if use_fractions=True)</span>
+<span class="sd">      time: +1 / -1 (or mapped for spglib)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected op format (need at least 3 coords + time): </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># last item is the time-reversal flag (&#39;+1&#39; / &#39;-1&#39;)</span>
+    <span class="n">ts_str</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">coord_parts</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coord_parts</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Need at least 3 coordinate expressions before time flag: </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Only the first three coordinates define the 3D spatial mapping we return.</span>
+    <span class="n">px</span><span class="p">,</span> <span class="n">py</span><span class="p">,</span> <span class="n">pz</span> <span class="o">=</span> <span class="n">coord_parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coord_parts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">coord_parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Parse rows; only x1,x2,x3 are permitted to appear in the first three expressions.</span>
+    <span class="n">allowed</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;x1&#39;</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">,</span> <span class="s1">&#39;x3&#39;</span><span class="p">)</span>
+    <span class="n">rx</span><span class="p">,</span> <span class="n">tx</span> <span class="o">=</span> <span class="n">_parse_linear_expr_algebraic</span><span class="p">(</span><span class="n">px</span><span class="p">,</span> <span class="n">allowed_vars</span><span class="o">=</span><span class="n">allowed</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+    <span class="n">ry</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">_parse_linear_expr_algebraic</span><span class="p">(</span><span class="n">py</span><span class="p">,</span> <span class="n">allowed_vars</span><span class="o">=</span><span class="n">allowed</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+    <span class="n">rz</span><span class="p">,</span> <span class="n">tz</span> <span class="o">=</span> <span class="n">_parse_linear_expr_algebraic</span><span class="p">(</span><span class="n">pz</span><span class="p">,</span> <span class="n">allowed_vars</span><span class="o">=</span><span class="n">allowed</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="n">use_fractions</span><span class="p">)</span>
+
+    <span class="c1"># Time reversal handling</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ts_val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ts_str</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ts_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid time-reversal flag at end of operation: &#39;</span><span class="si">{</span><span class="n">ts_str</span><span class="si">}</span><span class="s2">&#39; in </span><span class="si">{</span><span class="n">op</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">time_reversal_convention</span> <span class="o">==</span> <span class="s2">&quot;mcif&quot;</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">ts_val</span>
+    <span class="k">elif</span> <span class="n">time_reversal_convention</span> <span class="o">==</span> <span class="s2">&quot;spglib&quot;</span><span class="p">:</span>
+        <span class="c1"># Map +1 -&gt; 0 (no time-reversal), -1 -&gt; 1 (time-reversal)</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ts_val</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized time reversal convention. Use &#39;mcif&#39; or &#39;spglib&#39;.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Prepare translations as requested type</span>
+    <span class="k">if</span> <span class="n">use_fractions</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">tz</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">tx</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">ty</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">tz</span><span class="p">))</span>
+
+    <span class="n">R</span> <span class="o">=</span> <span class="p">(</span><span class="n">rx</span><span class="p">,</span> <span class="n">ry</span><span class="p">,</span> <span class="n">rz</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">R</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">time</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_alg_symops_to_matrix</span><span class="p">(</span><span class="n">symops_alg</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;mcif&quot;</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">_parse_alg_op</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">use_fractions</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="n">time_reversal_convention</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">symops_alg</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_mag_asu_cell</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">asu</span> <span class="o">=</span> <span class="n">parse_asu_cell</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+    <span class="n">moments_result</span> <span class="o">=</span> <span class="n">_parse_moments</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">moments_result</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">asu</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="n">cif_moments</span><span class="p">,</span> <span class="n">momlabels</span><span class="p">,</span> <span class="n">moment_basis</span><span class="p">,</span> <span class="n">magres</span> <span class="o">=</span> <span class="n">moments_result</span>
+
+    <span class="k">if</span> <span class="n">cif_moments</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">asu</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span>
+            <span class="n">magres</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">moments_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="p">(</span><span class="n">mom</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mom</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mom</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">mom</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">momlabels</span><span class="p">,</span> <span class="n">cif_moments</span><span class="p">)}</span>
+    <span class="n">magmoms_exact</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">moments_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">asu</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">asu</span><span class="p">,</span> <span class="n">magmoms_exact</span><span class="p">,</span> <span class="n">moment_basis</span><span class="p">,</span> <span class="n">magres</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_magnetic_fourier_info</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+    <span class="n">has</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;magnetic_fourier_label&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="n">has</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">atoms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">has</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">atoms</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_modulation</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+    <span class="n">structural_q</span><span class="p">,</span> <span class="n">mod_dim</span><span class="p">,</span> <span class="n">has_struct_mod</span><span class="p">,</span> <span class="n">struct_mod_atoms</span> <span class="o">=</span> <span class="n">parse_structural_modulation</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="c1"># Magnetic q</span>
+    <span class="n">magnetic_q</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># (A) magnetic superspace -&gt; uses same q as structural superspace</span>
+    <span class="k">if</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;magnetic_ssg_name&#39;</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">structural_q</span><span class="p">:</span>
+        <span class="n">magnetic_q</span> <span class="o">=</span> <span class="n">structural_q</span>
+
+    <span class="c1"># (B) commensurate magnetic propagation vector</span>
+    <span class="k">elif</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parent_propagation_vector.kxkykz&#39;</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">cifblock</span><span class="p">[</span><span class="s1">&#39;parent_propagation_vector.kxkykz&#39;</span><span class="p">]</span>
+        <span class="n">vectors</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Fraction</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="n">vector</span> <span class="o">=</span> <span class="p">[</span><span class="n">parse_cif_fraction</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">row</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid parent propagation vector: </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">vectors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="n">Fraction</span><span class="p">],</span> <span class="n">vector</span><span class="p">))</span>
+        <span class="n">magnetic_q</span> <span class="o">=</span> <span class="n">vectors</span>
+
+    <span class="c1"># (C) Fourier-defined magnetic propagation vector</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fourier</span> <span class="o">=</span> <span class="n">extract_fourier</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fourier</span><span class="p">:</span>
+            <span class="n">magnetic_q</span> <span class="o">=</span> <span class="n">_collect_k_from_fourier</span><span class="p">(</span><span class="n">fourier</span><span class="p">)</span>
+
+    <span class="n">has_mag_mod</span><span class="p">,</span> <span class="n">mag_mod_atoms</span> <span class="o">=</span> <span class="n">_get_magnetic_fourier_info</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">structural_q</span><span class="p">,</span> <span class="n">magnetic_q</span><span class="p">,</span> <span class="n">mod_dim</span><span class="p">,</span> <span class="n">has_struct_mod</span><span class="p">,</span> <span class="n">has_mag_mod</span><span class="p">,</span> <span class="n">struct_mod_atoms</span><span class="p">,</span> <span class="n">mag_mod_atoms</span>
+
+
+<div class="viewcode-block" id="cifblock_to_mag_asu">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.cifblock_to_mag_asu">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cifblock_to_mag_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">error_on_nonmag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert one normalized mcif block to a neutral magnetic payload.</span>
+
+<span class="sd">    The payload keeps exact numeric tokens for positions and magnetic moments, raw</span>
+<span class="sd">    symmetry-operation strings, and plain mappings and sequences rather than domain objects.</span>
+
+<span class="sd">    :param cifblock: Normalized mcif data for one data block.</span>
+<span class="sd">    :param error_on_nonmag: Reject blocks without usable magnetic moment columns.</span>
+<span class="sd">    :return: A neutral mapping containing structural and magnetic channels.</span>
+<span class="sd">    :raises ValueError: If required structural or magnetic data is missing or invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="p">(</span>
+        <span class="n">asu</span><span class="p">,</span>
+        <span class="n">magmoms_exact</span><span class="p">,</span>
+        <span class="n">moment_basis</span><span class="p">,</span>
+        <span class="n">magres</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">_parse_mag_asu_cell</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+    <span class="n">structural_q</span><span class="p">,</span> <span class="n">magnetic_q</span><span class="p">,</span> <span class="n">mod_dim</span><span class="p">,</span> <span class="n">has_struct_mod</span><span class="p">,</span> <span class="n">has_mag_mod</span><span class="p">,</span> <span class="n">struct_mod_atoms</span><span class="p">,</span> <span class="n">mag_mod_atoms</span> <span class="o">=</span> <span class="n">_parse_modulation</span><span class="p">(</span>
+        <span class="n">cifblock</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">error_on_nonmag</span> <span class="ow">and</span> <span class="n">magmoms_exact</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Magnetic moment columns are missing or have mismatched lengths&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Exact numeric CIF tokens are Fractions, so their commensurability never relies on</span>
+    <span class="c1"># a floating-point denominator guess.</span>
+    <span class="n">incomm</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">mod_dim</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">incomm</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;structural_q&#39;</span><span class="p">:</span> <span class="n">structural_q</span><span class="p">,</span>
+            <span class="s1">&#39;magnetic_q&#39;</span><span class="p">:</span> <span class="n">magnetic_q</span><span class="p">,</span>
+            <span class="s1">&#39;mod_dim&#39;</span><span class="p">:</span> <span class="n">mod_dim</span><span class="p">,</span>
+            <span class="s1">&#39;has_structural_modulation&#39;</span><span class="p">:</span> <span class="n">has_struct_mod</span><span class="p">,</span>
+            <span class="s1">&#39;structural_modulated_atoms&#39;</span><span class="p">:</span> <span class="n">struct_mod_atoms</span><span class="p">,</span>
+            <span class="s1">&#39;has_magnetic_modulation&#39;</span><span class="p">:</span> <span class="n">has_mag_mod</span><span class="p">,</span>
+            <span class="s1">&#39;magnetic_modulated_atoms&#39;</span><span class="p">:</span> <span class="n">mag_mod_atoms</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="n">base_symops_xyz</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop_magn_operation.xyz&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">base_symops_xyz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base_symops_alg</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop_magn_ssg_operation.algebraic&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">base_symops_alg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mcif block has no symmetry operations&quot;</span><span class="p">)</span>
+        <span class="n">raw_symops</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">base_symops_alg</span><span class="p">)</span>
+        <span class="n">base_symops</span> <span class="o">=</span> <span class="n">_alg_symops_to_matrix</span><span class="p">(</span><span class="n">base_symops_alg</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;spglib&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">raw_symops</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">base_symops_xyz</span><span class="p">)</span>
+        <span class="n">base_symops</span> <span class="o">=</span> <span class="n">_xyzt_symops_to_matrix</span><span class="p">(</span><span class="n">base_symops_xyz</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;spglib&quot;</span><span class="p">)</span>
+
+    <span class="n">centering_symops_xyz</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop_magn_centering.xyz&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">centering_symops_xyz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">centering_symops_alg</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop_magn_ssg_centering.algebraic&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">centering_symops_alg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">centering_symops_xyz</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;x,y,z,+1&quot;</span><span class="p">]</span>
+            <span class="n">cent_symops</span> <span class="o">=</span> <span class="n">_xyzt_symops_to_matrix</span><span class="p">(</span>
+                <span class="n">centering_symops_xyz</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;spglib&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">centering_symops_xyz</span> <span class="o">=</span> <span class="n">centering_symops_alg</span>
+            <span class="n">cent_symops</span> <span class="o">=</span> <span class="n">_alg_symops_to_matrix</span><span class="p">(</span>
+                <span class="n">centering_symops_alg</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;spglib&quot;</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cent_symops</span> <span class="o">=</span> <span class="n">_xyzt_symops_to_matrix</span><span class="p">(</span>
+            <span class="n">centering_symops_xyz</span><span class="p">,</span> <span class="n">use_fractions</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">time_reversal_convention</span><span class="o">=</span><span class="s2">&quot;spglib&quot;</span>
+        <span class="p">)</span>
+
+    <span class="n">_compose_ops_with_centerings</span><span class="p">(</span><span class="n">base_symops</span><span class="p">,</span> <span class="n">cent_symops</span><span class="p">)</span>
+
+    <span class="n">bns_nbr</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_magn.number_bns&#39;</span><span class="p">)</span>
+    <span class="n">bns_name</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_magn.name_bns&#39;</span><span class="p">)</span>
+    <span class="n">parent_name_hm</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parent_space_group.name_h-m_alt&#39;</span><span class="p">)</span>
+    <span class="n">space_group_name_hm</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;  +&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">parent_name_hm</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">if</span> <span class="n">parent_name_hm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">space_group_nbr</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;parent_space_group.it_number&#39;</span><span class="p">)</span>
+    <span class="n">icsd</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;database_code_ICSD&#39;</span><span class="p">)</span>
+    <span class="n">doi</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;citation_doi&#39;</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;cell_parameters_exact&#39;</span><span class="p">:</span> <span class="n">_cell_parameter_tokens</span><span class="p">(</span><span class="n">cifblock</span><span class="p">),</span>
+        <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;mcif&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;positions_exact&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">positions_exact</span><span class="p">,</span>
+        <span class="s1">&#39;occupancies&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancies</span><span class="p">,</span>
+        <span class="s1">&#39;occupancies_exact&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancies_exact</span><span class="p">,</span>
+        <span class="s1">&#39;occupancy_precisions&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancy_precisions</span><span class="p">,</span>
+        <span class="s1">&#39;symbols&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span>
+        <span class="s1">&#39;symops_xyz&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">raw_symops</span><span class="p">),</span>
+        <span class="s1">&#39;incomm&#39;</span><span class="p">:</span> <span class="n">incomm</span><span class="p">,</span>
+        <span class="s1">&#39;space_group_nbr&#39;</span><span class="p">:</span> <span class="n">space_group_nbr</span><span class="p">,</span>
+        <span class="s1">&#39;space_group_name_hm&#39;</span><span class="p">:</span> <span class="n">space_group_name_hm</span><span class="p">,</span>
+        <span class="s1">&#39;icsd&#39;</span><span class="p">:</span> <span class="n">icsd</span><span class="p">,</span>
+        <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="n">doi</span><span class="p">,</span>
+        <span class="s1">&#39;moment_basis&#39;</span><span class="p">:</span> <span class="n">moment_basis</span><span class="p">,</span>
+        <span class="s1">&#39;magmoms_exact&#39;</span><span class="p">:</span> <span class="n">magmoms_exact</span><span class="p">,</span>
+        <span class="s1">&#39;centerings_xyz&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">centering_symops_xyz</span><span class="p">),</span>
+        <span class="s1">&#39;bns_nbr&#39;</span><span class="p">:</span> <span class="n">bns_nbr</span><span class="p">,</span>
+        <span class="s1">&#39;bns_name&#39;</span><span class="p">:</span> <span class="n">bns_name</span><span class="p">,</span>
+        <span class="s1">&#39;equivalent_atoms&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">equivalent_atoms</span><span class="p">,</span>
+        <span class="s1">&#39;coordinate_precision&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">coordinate_precision</span><span class="p">,</span>
+        <span class="s1">&#39;basis_precision&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">basis_precision</span><span class="p">,</span>
+        <span class="s1">&#39;magmom_precision&#39;</span><span class="p">:</span> <span class="n">magres</span><span class="p">,</span>
+        <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<div class="viewcode-block" id="mag_asus_from_mcif_file">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.mag_asus_from_mcif_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mag_asus_from_mcif_file</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">error_on_nonmag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read every mcif data block as a neutral magnetic asymmetric-unit payload.</span>
+
+<span class="sd">    :param source: A filename, open text stream, or iterable of mcif lines.</span>
+<span class="sd">    :param error_on_nonmag: Reject blocks without usable magnetic moment columns.</span>
+<span class="sd">    :return: Magnetic payloads for the data blocks in the source.</span>
+<span class="sd">    :raises ValueError: If the mcif stream or a selected block is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cifblocks</span><span class="p">,</span> <span class="n">_header</span> <span class="o">=</span> <span class="n">read_cif</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">allow_cif2</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cifblock</span> <span class="ow">in</span> <span class="n">cifblocks</span><span class="p">:</span>
+        <span class="n">outputs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">cifblock_to_mag_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="n">error_on_nonmag</span><span class="o">=</span><span class="n">error_on_nonmag</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">outputs</span></div>
+
+
+
+<div class="viewcode-block" id="read_mcif_asus">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.read_mcif_asus">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_mcif_asus</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read an mcif into the neutral payload used by the ``.mcif`` loader.</span>
+
+<span class="sd">    Magnetic positions and moments remain exact central tokens, symmetry operations remain</span>
+<span class="sd">    raw strings, and the result contains no magnetic-domain objects. Blocks without atom</span>
+<span class="sd">    sites are skipped; blocks that cannot be interpreted are reported in ``unparsed``.</span>
+
+<span class="sd">    :param source: A filename, open text stream, or iterable of mcif lines.</span>
+<span class="sd">    :return: A neutral mcif payload containing magnetic blocks, unparsed reasons, and the header.</span>
+<span class="sd">    :raises ValueError: If the mcif stream contains malformed data that prevents parsing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cifblocks</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">read_cif</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">allow_cif2</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unparsed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cifblock</span> <span class="ow">in</span> <span class="n">cifblocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;atom_site_label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cifblock</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cifblock_to_mag_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="n">unparsed</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;block&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;mcif&#39;</span><span class="p">,</span> <span class="s1">&#39;blocks&#39;</span><span class="p">:</span> <span class="n">blocks</span><span class="p">,</span> <span class="s1">&#39;unparsed&#39;</span><span class="p">:</span> <span class="n">unparsed</span><span class="p">,</span> <span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="n">header</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="single_mag_asu_from_mcif_file">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html#httk.io.cif.single_mag_asu_from_mcif_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">single_mag_asu_from_mcif_file</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">error_on_nonmag</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the first structural mcif block as a neutral magnetic payload.</span>
+
+<span class="sd">    :param source: A filename, open text stream, or iterable of mcif lines.</span>
+<span class="sd">    :param error_on_nonmag: Reject the selected block without usable magnetic moments.</span>
+<span class="sd">    :return: The first magnetic asymmetric-unit payload.</span>
+<span class="sd">    :raises ValueError: If no structural block is available or the selected block is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cifblocks</span><span class="p">,</span> <span class="n">_header</span> <span class="o">=</span> <span class="n">read_cif</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">allow_cif2</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Get the first cifblock with atomic sites</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cifblock</span> <span class="ow">in</span> <span class="n">cifblocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;atom_site_label&#39;</span> <span class="ow">in</span> <span class="n">cifblock</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No structural block found in mcif&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cifblock_to_mag_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="n">error_on_nonmag</span><span class="o">=</span><span class="n">error_on_nonmag</span><span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, The httk-io AUTHORS
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=fe42cd0d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../../_static/selector.js?v=875006ce"></script>
+    <script>window.HTTK_DOCS_VERSIONING = {"channel":"dev","version":"dev:main","versionPathDepth":2};</script>
+    </body>
+</html>

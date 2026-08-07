@@ -1,0 +1,93 @@
+httk.io.vasp.outputs
+====================
+
+.. py:module:: httk.io.vasp.outputs
+
+.. autoapi-nested-parse::
+
+   Lazy directory-level access to a VASP calculation's registered files.
+
+   ``VASPOutputs`` is deliberately not a registered reader: a directory is a
+   container of inputs, not one VASP file.  Payload-returning properties retain no
+   open handles; the lazy OUTCAR and XDATCAR objects are owned and closed here.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.vasp.outputs.VASPOutputs
+
+
+Module Contents
+---------------
+
+.. py:class:: VASPOutputs(directory)
+
+   Lazily resolve standard VASP files in a calculation directory.
+
+   File lookup probes each registered compression suffix after the plain
+   filename. Payload readers are created only when their properties are first
+   accessed. The lazy OUTCAR and XDATCAR children are owned here and closed by
+   :meth:`close`; payload mappings do not retain open handles.
+
+   :param directory: Filesystem directory containing VASP output files.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this directory view has been closed.
+
+
+   .. py:method:: close()
+
+      Close owned lazy file objects; repeated calls are harmless.
+
+
+
+   .. py:property:: poscar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded POSCAR payload, or ``None`` when absent.
+
+
+   .. py:property:: contcar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded CONTCAR payload, or ``None`` when absent.
+
+
+   .. py:property:: outcar
+      :type: httk.io.vasp.outcar.OutcarFile | None
+
+
+      Return the owned lazy OUTCAR reader, or ``None`` when absent.
+
+
+   .. py:property:: xdatcar
+      :type: httk.io.vasp.xdatcar.XdatcarFile | None
+
+
+      Return the owned lazy XDATCAR reader, or ``None`` when absent.
+
+
+   .. py:property:: oszicar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded OSZICAR payload, or ``None`` when absent.
+
+
+   .. py:property:: potcar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded POTCAR summary, or ``None`` when absent.
+
+

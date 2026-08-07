@@ -1,0 +1,147 @@
+httk.io.vasp.wavecar
+====================
+
+.. py:module:: httk.io.vasp.wavecar
+
+.. autoapi-nested-parse::
+
+   Neutral, numpy-backed VASP WAVECAR binary I/O.
+
+   The ``wavecar`` value returned by :func:`read_wavecar` is a WavecarSource:
+   an object exposing ``nspins``, ``nkpts``, ``nbands``, ``encut``, ``cell``,
+   ``kpoints``, ``eigenvalues``, ``occupations``, ``nplanewaves``,
+   ``double_precision``, and ``coefficients(spin, kpt, band)``. ``WavecarFile``
+   also exposes its ``record_length``. The gamma-half orientation is not stored
+   in a WAVECAR; ``gamma_half`` is a pass-through hint because the consumer's
+   default (``"x"``) cannot be inferred from the data.
+   The atomistic phase may provide the same contract for in-memory data without
+   depending on this module's concrete class.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.vasp.wavecar.WavecarFile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.wavecar.read_wavecar
+   httk.io.vasp.wavecar.write_wavecar
+
+
+Module Contents
+---------------
+
+.. py:class:: WavecarFile(filename, *, double_precision = None)
+
+   Open a VASP WAVECAR and eagerly read its small metadata headers.
+
+   Public indices are all zero-based. The small metadata headers and band
+   summaries are read eagerly, while each coefficient vector is loaded lazily
+   from its band record. Compressed paths are refused because random access
+   cannot stream decompression. ``cell`` has shape ``(3, 3)``, ``kpoints`` has
+   shape ``(nkpts, 3)``, the eigenvalue and occupation arrays have shape
+   ``(nspins, nkpts, nbands)``, and ``nplanewaves`` has shape ``(nkpts,)``.
+
+   :param filename: Filesystem path to an uncompressed WAVECAR.
+   :param double_precision: Override the precision indicated by the WAVECAR header.
+
+
+   .. py:attribute:: nspins
+      :type:  int
+
+
+   .. py:attribute:: nkpts
+      :type:  int
+
+
+   .. py:attribute:: nbands
+      :type:  int
+
+
+   .. py:attribute:: encut
+      :type:  float
+
+
+   .. py:attribute:: cell
+      :type:  Any
+
+
+   .. py:attribute:: kpoints
+      :type:  Any
+
+
+   .. py:attribute:: eigenvalues
+      :type:  Any
+
+
+   .. py:attribute:: occupations
+      :type:  Any
+
+
+   .. py:attribute:: nplanewaves
+      :type:  Any
+
+
+   .. py:attribute:: double_precision
+      :type:  bool
+
+
+   .. py:attribute:: record_length
+      :type:  int
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether the underlying WAVECAR file is closed.
+
+
+   .. py:method:: close()
+
+      Close the WAVECAR file.
+
+
+
+   .. py:method:: coefficients(spin, kpt, band)
+
+      Read one zero-based spin/k-point/band coefficient vector.
+
+      :param spin: Zero-based spin-channel index.
+      :param kpt: Zero-based k-point index.
+      :param band: Zero-based band index.
+      :return: The coefficient vector for the selected band record.
+      :raises ValueError: If the file is closed, an index is invalid, or the record is truncated.
+
+
+
+.. py:function:: read_wavecar(source, *, double_precision = None, gamma_half = None)
+
+   Read a WAVECAR path into a neutral ``vasp-wavecar`` payload.
+
+   :param source: Filesystem path to an uncompressed WAVECAR.
+   :param double_precision: Override the precision indicated by the WAVECAR header.
+   :param gamma_half: Consumer hint for the gamma-half orientation, or ``None`` when unspecified.
+   :return: A payload containing the lazy WAVECAR source and the gamma-half hint.
+   :raises ValueError: If an option is invalid, compression is present, or the file is malformed.
+
+
+.. py:function:: write_wavecar(destination, payload)
+
+   Write a neutral ``vasp-wavecar`` payload to a binary path.
+
+   :param destination: Filesystem path for the uncompressed binary output.
+   :param payload: Neutral payload containing a WAVECAR source.
+   :raises ValueError: If the destination or payload cannot represent a WAVECAR.
+   :raises TypeError: If the payload is not a mapping.
+   :raises KeyError: If the payload mapping does not contain ``"wavecar"``.
+
+

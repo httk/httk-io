@@ -1,0 +1,77 @@
+httk.io.cif.cif_tags
+====================
+
+.. py:module:: httk.io.cif.cif_tags
+
+.. autoapi-nested-parse::
+
+   CIF data names after :func:`httk.io.cif.cif_reader.read_cif` has normalized them.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   httk.io.cif.cif_tags.CIF_TAGS
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.cif.cif_tags.CifTags
+
+
+Module Contents
+---------------
+
+.. py:class:: CifTags
+
+   Bases: :py:obj:`TypedDict`
+
+
+   Hold normalized spellings of the special-purpose CIF data names this package consults.
+
+   :param structural_q: Normalized tags for the structural modulation wave-vector components.
+   :param structural_displacement_label: Tag identifying structurally displaced atom labels.
+   :param structural_occupancy_label: Tag identifying structurally modulated occupancy labels.
+   :param magnetic_cartesian_moment: Normalized tags for Cartesian magnetic-moment components.
+   :param magnetic_fourier_coeff: Template for magnetic Fourier coefficient tags.
+   :param magnetic_fourier_label: Tag identifying magnetically modulated atom labels.
+   :param magnetic_ssg_name: Tag identifying the magnetic superspace-group name.
+
+
+   .. py:attribute:: structural_q
+      :type:  tuple[str, Ellipsis]
+
+
+   .. py:attribute:: structural_displacement_label
+      :type:  str
+
+
+   .. py:attribute:: structural_occupancy_label
+      :type:  str
+
+
+   .. py:attribute:: magnetic_cartesian_moment
+      :type:  tuple[str, Ellipsis]
+
+
+   .. py:attribute:: magnetic_fourier_coeff
+      :type:  str
+
+
+   .. py:attribute:: magnetic_fourier_label
+      :type:  str
+
+
+   .. py:attribute:: magnetic_ssg_name
+      :type:  str
+
+
+.. py:data:: CIF_TAGS
+   :type:  CifTags
+

@@ -1,0 +1,335 @@
+httk.io.vasp.outcar
+===================
+
+.. py:module:: httk.io.vasp.outcar
+
+.. autoapi-nested-parse::
+
+   Lazy, streaming access to the bounded metadata and final results of OUTCAR.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   httk.io.vasp.outcar.vasp_xc_tags
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.vasp.outcar.FinalEnergies
+   httk.io.vasp.outcar.OutcarFrame
+   httk.io.vasp.outcar.ElasticModuliBlock
+   httk.io.vasp.outcar.OutcarFile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.outcar.read_outcar
+
+
+Module Contents
+---------------
+
+.. py:data:: vasp_xc_tags
+
+.. py:class:: FinalEnergies
+
+   Store energy lexemes from the last complete or partial energy block.
+
+   :param free_energy: Free-energy lexeme from the block, when present.
+   :param energy_without_entropy: Energy-without-entropy lexeme, when present.
+   :param energy_sigma0: Sigma-zero energy lexeme, when present.
+   :param final: Whether the block was complete when parsing ended.
+
+
+   .. py:attribute:: free_energy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_without_entropy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_sigma0
+      :type:  str | None
+
+
+   .. py:attribute:: final
+      :type:  bool
+
+
+.. py:class:: OutcarFrame
+
+   Store one complete ionic-step snapshot with VASP numeric lexemes unchanged.
+
+   :param index: Zero-based ionic-step index.
+   :param cell: Lattice-vector lexemes, when the step contains a cell.
+   :param positions: Position lexemes, when the step contains positions.
+   :param forces: Force lexemes, when the step contains forces.
+   :param stress_kbar: Six stress lexemes in VASP order, when present.
+   :param free_energy: Free-energy lexeme, when present.
+   :param energy_without_entropy: Energy-without-entropy lexeme, when present.
+   :param energy_sigma0: Sigma-zero energy lexeme, when present.
+   :param temperature: Temperature lexeme, when present.
+
+
+   .. py:attribute:: index
+      :type:  int
+
+
+   .. py:attribute:: cell
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: positions
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: forces
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: stress_kbar
+      :type:  tuple[str, Ellipsis] | None
+
+
+   .. py:attribute:: free_energy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_without_entropy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_sigma0
+      :type:  str | None
+
+
+   .. py:attribute:: temperature
+      :type:  str | None
+
+
+   .. py:method:: cell_floats()
+
+      Convert the cell lexemes to floating-point values when present.
+
+      :return: Converted cell values, or ``None`` when the frame has no cell.
+
+
+
+   .. py:method:: positions_floats()
+
+      Convert the position lexemes to floating-point values when present.
+
+      :return: Converted position values, or ``None`` when the frame has no positions.
+
+
+
+   .. py:method:: forces_floats()
+
+      Convert the force lexemes to floating-point values when present.
+
+      :return: Converted force values, or ``None`` when the frame has no forces.
+
+
+
+   .. py:method:: stress_gpa_voigt()
+
+      Convert stress to tensile-positive GPa Voigt order ``xx, yy, zz, yz, xz, xy``.
+
+      The conversion multiplies kbar by ``0.1``, reverses VASP's
+      compressive-positive sign, and reorders the shear components.
+
+      :return: Stress in tensile-positive GPa Voigt order, or ``None`` when absent.
+
+
+
+.. py:class:: ElasticModuliBlock
+
+   Store one six-by-six elastic-moduli table.
+
+   :param heading: Heading identifying the table in the source.
+   :param rows: Table rows with their source numeric lexemes.
+
+
+   .. py:attribute:: heading
+      :type:  str
+
+
+   .. py:attribute:: rows
+      :type:  tuple[tuple[str, Ellipsis], Ellipsis]
+
+
+.. py:class:: OutcarFile(filename)
+
+   Lazy OUTCAR metadata reader whose scans reopen the source each time.
+
+   OUTCAR paths, including compressed paths, are accepted by deliberate
+   forward-streaming divergence from :class:`~httk.io.vasp.wavecar.WavecarFile`;
+   random frame access re-streams the file. Construction validates only that
+   the path exists. Prologue and full scans are lazy: the first prologue access
+   scans to the ionic marker and can traverse the whole file when no marker
+   exists. The full pass streams the source once and caches summary fields,
+   all stress rows, and all elastic-moduli blocks. No source handle is
+   retained, so :meth:`close` only marks this lazy object closed. The public
+   :attr:`path` property returns the source filename.
+
+   :param filename: Filesystem path to an OUTCAR, optionally compressed.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this lazy reader has been closed.
+
+
+   .. py:method:: close()
+
+      Mark this lazy object closed; it owns no persistent stream.
+
+
+
+   .. py:property:: path
+      :type: str
+
+
+      Return the source filename used to construct this lazy reader.
+
+
+   .. py:property:: version_string
+      :type: str
+
+
+      Return the VASP version string found during the prologue scan.
+
+
+   .. py:property:: version_numbers
+      :type: tuple[int, Ellipsis]
+
+
+      Return the numeric components of the VASP version string.
+
+
+   .. py:property:: parameters
+      :type: collections.abc.Mapping[str, str]
+
+
+      Return the first recognized VASP parameter lexeme for each parameter.
+
+
+   .. py:property:: ions_per_type
+      :type: tuple[int, Ellipsis] | None
+
+
+      Return the number of ions for each potential type, when reported.
+
+
+   .. py:property:: xc
+      :type: str | None
+
+
+      Return the recognized exchange-correlation description, when available.
+
+
+   .. py:property:: potcar_titles
+      :type: tuple[str, Ellipsis]
+
+
+      Return distinct POTCAR titles in first-seen order.
+
+
+   .. py:method:: frames()
+
+      Stream complete ionic frames without retaining the sequence.
+
+      :return: An iterator yielding one :class:`OutcarFrame` at a time.
+
+
+
+   .. py:method:: frame(index)
+
+      Return one frame by rescanning from the start of the file.
+
+      :param index: Zero-based frame index.
+      :return: The requested frame, or ``None`` when it is beyond the file.
+      :raises ValueError: If ``index`` is negative or not an integer.
+
+
+
+   .. py:property:: final_energies
+      :type: FinalEnergies
+
+
+      Return energies from the last complete or partial energy block.
+
+
+   .. py:property:: nframes
+      :type: int
+
+
+      Return the number of complete ionic frames after the full pass.
+
+
+   .. py:property:: last_frame
+      :type: OutcarFrame | None
+
+
+      Return the last complete ionic frame, when one exists.
+
+
+   .. py:method:: stresses()
+
+      Return all six-token ``in kB`` rows in file order.
+
+      :return: Stress rows retaining their source numeric lexemes.
+
+
+
+   .. py:property:: elastic_moduli
+      :type: tuple[ElasticModuliBlock, Ellipsis]
+
+
+      Return parsed elastic-moduli tables in source order.
+
+
+   .. py:property:: completed
+      :type: bool
+
+
+      Whether the source contains completion-footer evidence.
+
+
+   .. py:property:: completion_evidence
+      :type: tuple[str, Ellipsis]
+
+
+      Return completion-footer lines found during the full pass.
+
+
+   .. py:property:: issues
+      :type: tuple[str, Ellipsis]
+
+
+      Return parsing issues collected during the available scans.
+
+
+.. py:function:: read_outcar(source)
+
+   Return a lazy OUTCAR payload; only filesystem filenames are accepted.
+
+   :param source: Filesystem path to an OUTCAR, optionally compressed.
+   :return: A neutral payload containing the lazy OUTCAR reader.
+   :raises TypeError: If ``source`` is not a filesystem path.
+   :raises FileNotFoundError: If the path does not exist.
+
+

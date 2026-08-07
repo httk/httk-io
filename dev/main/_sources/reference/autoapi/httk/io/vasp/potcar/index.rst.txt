@@ -1,0 +1,38 @@
+httk.io.vasp.potcar
+===================
+
+.. py:module:: httk.io.vasp.potcar
+
+.. autoapi-nested-parse::
+
+   Header-only reader for VASP POTCAR and POTCAR.summary files.
+
+   Only potential header metadata is retained. The reader never returns or
+   otherwise exposes the full POTCAR text, whose body can contain licensed data.
+   ``POTCAR.summary`` files made by concatenating those headers are supported.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.potcar.read_potcar_summary
+
+
+Module Contents
+---------------
+
+.. py:function:: read_potcar_summary(source)
+
+   Extract one metadata mapping per ``TITEL`` header without retaining POTCAR text.
+
+   Only header metadata is returned; the potential body is never retained or
+   exposed because it can contain licensed data. Concatenated
+   ``POTCAR.summary`` headers are accepted.
+
+   :param source: POTCAR or POTCAR.summary filename, text stream, or iterable of source lines.
+   :return: A neutral payload containing one metadata mapping per potential.
+
+

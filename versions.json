@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "project": "httk-io",
+  "url": "https://docs.httk.org/httk-io",
+  "source_commit": "fb87bbca0a9c783560d9ac573ad157a5d4bc2628",
+  "default": {
+    "name": "dev:main",
+    "path": "dev/main/",
+    "channel": "dev"
+  },
+  "versions": [
+    {
+      "name": "dev:main",
+      "path": "dev/main/",
+      "channel": "dev"
+    }
+  ]
+}

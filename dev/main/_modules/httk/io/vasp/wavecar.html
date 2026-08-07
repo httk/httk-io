@@ -1,0 +1,711 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>httk.io.vasp.wavecar - httk-io dev:main documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/selector.css?v=626bada3" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Development documentation (dev:main) — content may differ from any release. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">httk-io dev:main documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <span class="sidebar-brand-text">httk-io dev:main documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../poscar.html">Reading VASP POSCAR / CONTCAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../vasp_outputs.html">Reading VASP output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../wavecar.html">Reading and writing VASP WAVECAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../trajectory_jsonl.html">OPTIMADE trajectory JSON Lines</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../examples/index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_cif.html">Reading, inspecting and writing CIF files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_poscar.html">Reading VASP POSCAR and CONTCAR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_vasp_outputs.html">Read a small synthetic VASP output directory.</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/index.html">Reference</a><input aria-label="Toggle navigation of Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/autoapi/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for httk.io.vasp.wavecar</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Neutral, numpy-backed VASP WAVECAR binary I/O.</span>
+
+<span class="sd">The ``wavecar`` value returned by :func:`read_wavecar` is a WavecarSource:</span>
+<span class="sd">an object exposing ``nspins``, ``nkpts``, ``nbands``, ``encut``, ``cell``,</span>
+<span class="sd">``kpoints``, ``eigenvalues``, ``occupations``, ``nplanewaves``,</span>
+<span class="sd">``double_precision``, and ``coefficients(spin, kpt, band)``. ``WavecarFile``</span>
+<span class="sd">also exposes its ``record_length``. The gamma-half orientation is not stored</span>
+<span class="sd">in a WAVECAR; ``gamma_half`` is a pass-through hint because the consumer&#39;s</span>
+<span class="sd">default (``&quot;x&quot;``) cannot be inferred from the data.</span>
+<span class="sd">The atomistic phase may provide the same contract for in-memory data without</span>
+<span class="sd">depending on this module&#39;s concrete class.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">TracebackType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">BinaryIO</span><span class="p">,</span> <span class="n">Self</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">httk.core.datastream.compression</span><span class="w"> </span><span class="kn">import</span> <span class="n">split_compression_suffix</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;httk.io.vasp.wavecar requires numpy; install httk-io[numpy]&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+
+<span class="n">_HEADER_FLOATS</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="n">_HEADER_BYTES</span> <span class="o">=</span> <span class="n">_HEADER_FLOATS</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_floats</span><span class="p">(</span><span class="n">file</span><span class="p">:</span> <span class="n">BinaryIO</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="n">count</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR is truncated while reading </span><span class="si">{</span><span class="n">description</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_positive_integer</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a positive integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">number</span><span class="o">.</span><span class="n">is_integer</span><span class="p">()</span> <span class="ow">or</span> <span class="n">number</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a positive integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_index</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> index </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2"> is out of range [0, </span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WavecarFile">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">WavecarFile</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open a VASP WAVECAR and eagerly read its small metadata headers.</span>
+
+<span class="sd">    Public indices are all zero-based. The small metadata headers and band</span>
+<span class="sd">    summaries are read eagerly, while each coefficient vector is loaded lazily</span>
+<span class="sd">    from its band record. Compressed paths are refused because random access</span>
+<span class="sd">    cannot stream decompression. ``cell`` has shape ``(3, 3)``, ``kpoints`` has</span>
+<span class="sd">    shape ``(nkpts, 3)``, the eigenvalue and occupation arrays have shape</span>
+<span class="sd">    ``(nspins, nkpts, nbands)``, and ``nplanewaves`` has shape ``(nkpts,)``.</span>
+
+<span class="sd">    :param filename: Filesystem path to an uncompressed WAVECAR.</span>
+<span class="sd">    :param double_precision: Override the precision indicated by the WAVECAR header.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WavecarFile.nspins">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.nspins">[docs]</a>
+    <span class="n">nspins</span><span class="p">:</span> <span class="nb">int</span></div>
+
+<div class="viewcode-block" id="WavecarFile.nkpts">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.nkpts">[docs]</a>
+    <span class="n">nkpts</span><span class="p">:</span> <span class="nb">int</span></div>
+
+<div class="viewcode-block" id="WavecarFile.nbands">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.nbands">[docs]</a>
+    <span class="n">nbands</span><span class="p">:</span> <span class="nb">int</span></div>
+
+<div class="viewcode-block" id="WavecarFile.encut">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.encut">[docs]</a>
+    <span class="n">encut</span><span class="p">:</span> <span class="nb">float</span></div>
+
+<div class="viewcode-block" id="WavecarFile.cell">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.cell">[docs]</a>
+    <span class="n">cell</span><span class="p">:</span> <span class="n">Any</span></div>
+
+<div class="viewcode-block" id="WavecarFile.kpoints">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.kpoints">[docs]</a>
+    <span class="n">kpoints</span><span class="p">:</span> <span class="n">Any</span></div>
+
+<div class="viewcode-block" id="WavecarFile.eigenvalues">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.eigenvalues">[docs]</a>
+    <span class="n">eigenvalues</span><span class="p">:</span> <span class="n">Any</span></div>
+
+<div class="viewcode-block" id="WavecarFile.occupations">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.occupations">[docs]</a>
+    <span class="n">occupations</span><span class="p">:</span> <span class="n">Any</span></div>
+
+<div class="viewcode-block" id="WavecarFile.nplanewaves">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.nplanewaves">[docs]</a>
+    <span class="n">nplanewaves</span><span class="p">:</span> <span class="n">Any</span></div>
+
+<div class="viewcode-block" id="WavecarFile.double_precision">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.double_precision">[docs]</a>
+    <span class="n">double_precision</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+<div class="viewcode-block" id="WavecarFile.record_length">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.record_length">[docs]</a>
+    <span class="n">record_length</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">double_precision</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">double_precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">double_precision</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR double_precision must be True, False, or None.&quot;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fspath</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fsdecode</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="n">_inner</span><span class="p">,</span> <span class="n">compression</span> <span class="o">=</span> <span class="n">split_compression_suffix</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;WAVECAR files must be decompressed on disk first; random access cannot stream decompression.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>  <span class="c1"># noqa: SIM115 - the handle is owned until close() or context exit.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">:</span> <span class="n">BinaryIO</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">file</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_read_metadata</span><span class="p">(</span><span class="n">double_precision</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">raise</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">precision_override</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+        <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot read metadata from a closed WAVECAR file.&quot;</span><span class="p">)</span>
+        <span class="n">record_zero</span> <span class="o">=</span> <span class="n">_read_floats</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;record 0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">record_zero</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;record length&quot;</span><span class="p">)</span>
+        <span class="c1"># Record 1 has 12 float64 values and defines the minimum record length.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span> <span class="o">&lt;</span> <span class="n">_HEADER_BYTES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WAVECAR record length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_length</span><span class="si">}</span><span class="s2"> is smaller than the </span><span class="si">{</span><span class="n">_HEADER_BYTES</span><span class="si">}</span><span class="s2">-byte record 1 header.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">rtag</span> <span class="o">=</span> <span class="n">record_zero</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">precision_override</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rtag</span> <span class="o">==</span> <span class="mi">45200</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">double_precision</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">rtag</span> <span class="o">==</span> <span class="mi">45210</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">double_precision</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown WAVECAR RTAG value </span><span class="si">{</span><span class="n">rtag</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">double_precision</span> <span class="o">=</span> <span class="n">precision_override</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_coefficient_dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">double_precision</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span>
+
+        <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">record_length</span><span class="p">)</span>
+        <span class="n">record_one</span> <span class="o">=</span> <span class="n">_read_floats</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">_HEADER_FLOATS</span><span class="p">,</span> <span class="s2">&quot;record 1&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">record_one</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;number of k-points&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">record_one</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;number of bands&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encut</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">record_one</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">record_one</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">12</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nspins</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">record_zero</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;number of spins&quot;</span><span class="p">)</span>
+
+        <span class="n">header_bytes</span> <span class="o">=</span> <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbands</span><span class="p">)</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span> <span class="o">&lt;</span> <span class="n">header_bytes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WAVECAR record length </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">record_length</span><span class="si">}</span><span class="s2"> is too small for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span><span class="si">}</span><span class="s2"> band header entries.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">record_count</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspins</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">file_size</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">fstat</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span><span class="o">.</span><span class="n">st_size</span>
+        <span class="n">expected_size</span> <span class="o">=</span> <span class="n">record_count</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span>
+        <span class="k">if</span> <span class="n">file_size</span> <span class="o">&lt;</span> <span class="n">expected_size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR is truncated: expected at least </span><span class="si">{</span><span class="n">expected_size</span><span class="si">}</span><span class="s2"> bytes, found </span><span class="si">{</span><span class="n">file_size</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">kpoints</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nspins</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbands</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">occupations</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">spin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nspins</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">kpt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span><span class="p">):</span>
+                <span class="n">header_record</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">spin</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">kpt</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">header_record</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span><span class="p">)</span>
+                <span class="n">header</span> <span class="o">=</span> <span class="n">_read_floats</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbands</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;spin </span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s2">, k-point </span><span class="si">{</span><span class="n">kpt</span><span class="si">}</span><span class="s2"> header&quot;</span><span class="p">)</span>
+                <span class="n">nplanewaves</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;spin </span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s2">, k-point </span><span class="si">{</span><span class="n">kpt</span><span class="si">}</span><span class="s2"> plane-wave count&quot;</span><span class="p">)</span>
+                <span class="n">kpoint</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">spin</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span> <span class="o">=</span> <span class="n">nplanewaves</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">kpoints</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span> <span class="o">=</span> <span class="n">kpoint</span>
+                <span class="k">elif</span> <span class="n">nplanewaves</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">kpoint</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kpoints</span><span class="p">[</span><span class="n">kpt</span><span class="p">]):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR k-point </span><span class="si">{</span><span class="n">kpt</span><span class="si">}</span><span class="s2"> metadata differs between spin channels.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="mi">4</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">occupations</span><span class="p">[</span><span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="mi">6</span><span class="p">::</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="WavecarFile.closed">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.closed">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">closed</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether the underlying WAVECAR file is closed.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">closed</span></div>
+
+
+<div class="viewcode-block" id="WavecarFile.close">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.close">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Close the WAVECAR file.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot enter a closed WAVECAR file.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">exc_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">exc_value</span><span class="p">:</span> <span class="ne">BaseException</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">traceback</span><span class="p">:</span> <span class="n">TracebackType</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="WavecarFile.coefficients">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.WavecarFile.coefficients">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">coefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spin</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kpt</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">band</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read one zero-based spin/k-point/band coefficient vector.</span>
+
+<span class="sd">        :param spin: Zero-based spin-channel index.</span>
+<span class="sd">        :param kpt: Zero-based k-point index.</span>
+<span class="sd">        :param band: Zero-based band index.</span>
+<span class="sd">        :return: The coefficient vector for the selected band record.</span>
+<span class="sd">        :raises ValueError: If the file is closed, an index is invalid, or the record is truncated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">closed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot read coefficients from a closed WAVECAR file.&quot;</span><span class="p">)</span>
+        <span class="n">spin</span> <span class="o">=</span> <span class="n">_index</span><span class="p">(</span><span class="n">spin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nspins</span><span class="p">,</span> <span class="s2">&quot;spin&quot;</span><span class="p">)</span>
+        <span class="n">kpt</span> <span class="o">=</span> <span class="n">_index</span><span class="p">(</span><span class="n">kpt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span><span class="p">,</span> <span class="s2">&quot;k-point&quot;</span><span class="p">)</span>
+        <span class="n">band</span> <span class="o">=</span> <span class="n">_index</span><span class="p">(</span><span class="n">band</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbands</span><span class="p">,</span> <span class="s2">&quot;band&quot;</span><span class="p">)</span>
+        <span class="n">header_record</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">spin</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nkpts</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">kpt</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nbands</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">coefficient_record</span> <span class="o">=</span> <span class="n">header_record</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">band</span>
+        <span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+        <span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot read coefficients from a closed WAVECAR file.&quot;</span><span class="p">)</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">coefficient_record</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">fromfile</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_coefficient_dtype</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;WAVECAR coefficient record is short: expected </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span><span class="si">}</span><span class="s2"> values, found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="read_wavecar">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.read_wavecar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_wavecar</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">double_precision</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">gamma_half</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a WAVECAR path into a neutral ``vasp-wavecar`` payload.</span>
+
+<span class="sd">    :param source: Filesystem path to an uncompressed WAVECAR.</span>
+<span class="sd">    :param double_precision: Override the precision indicated by the WAVECAR header.</span>
+<span class="sd">    :param gamma_half: Consumer hint for the gamma-half orientation, or ``None`` when unspecified.</span>
+<span class="sd">    :return: A payload containing the lazy WAVECAR source and the gamma-half hint.</span>
+<span class="sd">    :raises ValueError: If an option is invalid, compression is present, or the file is malformed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">gamma_half</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;gamma_half must be None, &#39;x&#39;, or &#39;z&#39;.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;vasp-wavecar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;wavecar&quot;</span><span class="p">:</span> <span class="n">WavecarFile</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">double_precision</span><span class="o">=</span><span class="n">double_precision</span><span class="p">),</span>
+        <span class="s2">&quot;gamma_half&quot;</span><span class="p">:</span> <span class="n">gamma_half</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_write_wavecar_payload</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">data</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a neutral WAVECAR payload through the core writer registry.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">unexpected</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unexpected WAVECAR writer keyword argument(s): </span><span class="si">{</span><span class="n">unexpected</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">io</span><span class="o">.</span><span class="n">TextIOBase</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR is binary and cannot be written through compression.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR destination must be a filesystem path; WAVECAR is binary.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;WAVECAR data must be a neutral payload mapping.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="s2">&quot;vasp-wavecar&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;vasp-wavecar&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR payload format must be &#39;vasp-wavecar&#39;.&quot;</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;wavecar&quot;</span><span class="p">]</span>
+    <span class="n">nspins</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">nspins</span><span class="p">,</span> <span class="s2">&quot;number of spins&quot;</span><span class="p">)</span>
+    <span class="n">nkpts</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">nkpts</span><span class="p">,</span> <span class="s2">&quot;number of k-points&quot;</span><span class="p">)</span>
+    <span class="n">nbands</span> <span class="o">=</span> <span class="n">_positive_integer</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">nbands</span><span class="p">,</span> <span class="s2">&quot;number of bands&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">double_precision</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR source double_precision must be a boolean.&quot;</span><span class="p">)</span>
+    <span class="n">nplanewaves</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">nplanewaves</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nplanewaves</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">nkpts</span><span class="p">,):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR source nplanewaves must have shape (</span><span class="si">{</span><span class="n">nkpts</span><span class="si">}</span><span class="s2">,).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">nplanewaves</span><span class="p">))</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">numpy</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">nplanewaves</span> <span class="o">==</span> <span class="n">nplanewaves</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR source nplanewaves must contain integers.&quot;</span><span class="p">)</span>
+    <span class="n">nplanewaves</span> <span class="o">=</span> <span class="n">nplanewaves</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">nplanewaves</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR source nplanewaves must be positive.&quot;</span><span class="p">)</span>
+    <span class="n">kpoints</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">kpoints</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">cell</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">occupations</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">occupations</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">kpoints</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">nkpts</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">or</span> <span class="n">cell</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;WAVECAR source kpoints and cell must have shapes (nkpts, 3) and (3, 3).&quot;</span><span class="p">)</span>
+    <span class="n">expected_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">nspins</span><span class="p">,</span> <span class="n">nkpts</span><span class="p">,</span> <span class="n">nbands</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">expected_shape</span> <span class="ow">or</span> <span class="n">occupations</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">expected_shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;WAVECAR source eigenvalues and occupations must have shape </span><span class="si">{</span><span class="n">expected_shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">coefficient_dtype</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span> <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">double_precision</span> <span class="k">else</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span>
+    <span class="n">coefficient_itemsize</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">coefficient_dtype</span><span class="p">)</span><span class="o">.</span><span class="n">itemsize</span>
+    <span class="n">record_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">nplanewaves</span><span class="p">))</span> <span class="o">*</span> <span class="n">coefficient_itemsize</span><span class="p">,</span>
+        <span class="p">(</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">nbands</span><span class="p">)</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="mi">12</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">record_length</span> <span class="o">=</span> <span class="p">((</span><span class="n">record_length</span> <span class="o">+</span> <span class="n">coefficient_itemsize</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">coefficient_itemsize</span><span class="p">)</span> <span class="o">*</span> <span class="n">coefficient_itemsize</span>
+    <span class="n">record</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">record_length</span> <span class="o">//</span> <span class="mi">8</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">record</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">record_length</span><span class="p">,</span> <span class="n">nspins</span><span class="p">,</span> <span class="mi">45210</span> <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">double_precision</span> <span class="k">else</span> <span class="mi">45200</span><span class="p">)</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">record</span><span class="p">[:</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(([</span><span class="n">nkpts</span><span class="p">,</span> <span class="n">nbands</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">encut</span><span class="p">)],</span> <span class="n">cell</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">spin</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nspins</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">kpt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nkpts</span><span class="p">):</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">record</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span>
+                <span class="n">record</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">kpoints</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbands</span><span class="p">):</span>
+                    <span class="n">record</span><span class="p">[</span><span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">band</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">band</span><span class="p">]</span>
+                    <span class="n">record</span><span class="p">[</span><span class="mi">6</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">band</span><span class="p">]</span> <span class="o">=</span> <span class="n">occupations</span><span class="p">[</span><span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">band</span><span class="p">]</span>
+                <span class="n">record</span><span class="o">.</span><span class="n">tofile</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">band</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbands</span><span class="p">):</span>
+                    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">coefficients</span><span class="p">(</span><span class="n">spin</span><span class="p">,</span> <span class="n">kpt</span><span class="p">,</span> <span class="n">band</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span> <span class="o">!=</span> <span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;WAVECAR source coefficients(</span><span class="si">{</span><span class="n">spin</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">kpt</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">band</span><span class="si">}</span><span class="s2">) must contain &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;exactly </span><span class="si">{</span><span class="n">nplanewaves</span><span class="p">[</span><span class="n">kpt</span><span class="p">]</span><span class="si">}</span><span class="s2"> values.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">coefficients</span> <span class="o">=</span> <span class="n">coefficients</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">coefficient_dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">coefficients</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">))</span>
+                    <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;</span><span class="se">\0</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">record_length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span> <span class="o">*</span> <span class="n">coefficient_itemsize</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="write_wavecar">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html#httk.io.vasp.wavecar.write_wavecar">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_wavecar</span><span class="p">(</span><span class="n">destination</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write a neutral ``vasp-wavecar`` payload to a binary path.</span>
+
+<span class="sd">    :param destination: Filesystem path for the uncompressed binary output.</span>
+<span class="sd">    :param payload: Neutral payload containing a WAVECAR source.</span>
+<span class="sd">    :raises ValueError: If the destination or payload cannot represent a WAVECAR.</span>
+<span class="sd">    :raises TypeError: If the payload is not a mapping.</span>
+<span class="sd">    :raises KeyError: If the payload mapping does not contain ``&quot;wavecar&quot;``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_write_wavecar_payload</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">payload</span><span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, The httk-io AUTHORS
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=fe42cd0d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../../_static/selector.js?v=875006ce"></script>
+    <script>window.HTTK_DOCS_VERSIONING = {"channel":"dev","version":"dev:main","versionPathDepth":2};</script>
+    </body>
+</html>

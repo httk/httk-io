@@ -1,0 +1,1096 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html"><link rel="search" title="Search" href="../../../../search.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>httk.io.cif.cif_parser - httk-io dev:main documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/selector.css?v=626bada3" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Development documentation (dev:main) — content may differ from any release. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../../index.html"><div class="brand">httk-io dev:main documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../../index.html">
+  
+  <span class="sidebar-brand-text">httk-io dev:main documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../poscar.html">Reading VASP POSCAR / CONTCAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../vasp_outputs.html">Reading VASP output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../wavecar.html">Reading and writing VASP WAVECAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../trajectory_jsonl.html">OPTIMADE trajectory JSON Lines</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../examples/index.html">Examples</a><input aria-label="Toggle navigation of Examples" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_cif.html">Reading, inspecting and writing CIF files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_poscar.html">Reading VASP POSCAR and CONTCAR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../examples/parse_vasp_outputs.html">Read a small synthetic VASP output directory.</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/index.html">Reference</a><input aria-label="Toggle navigation of Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../../reference/autoapi/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <h1>Source code for httk.io.cif.cif_parser</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1">#    The high-throughput toolkit (httk)</span>
+<span class="c1">#    Copyright (C) 2012-2025 The httk AUTHORS</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#    it under the terms of the GNU Affero General Public License as</span>
+<span class="c1">#    published by the Free Software Foundation, either version 3 of the</span>
+<span class="c1">#    License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#    GNU Affero General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#    You should have received a copy of the GNU Affero General Public License</span>
+<span class="c1">#    along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">decimal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Decimal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fractions</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fraction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypedDict</span><span class="p">,</span> <span class="n">cast</span><span class="p">,</span> <span class="n">overload</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">httk.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">combined_precision</span><span class="p">,</span> <span class="n">decimal_precision</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cif_reader</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_cif</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.cif_tags</span><span class="w"> </span><span class="kn">import</span> <span class="n">CIF_TAGS</span>
+
+
+<div class="viewcode-block" id="CifMeta">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.CifMeta">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CifMeta</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;What a CIF number claims about its own precision, beyond its value.</span>
+
+<span class="sd">    Both are exact rationals, or ``None`` when the token makes no such claim. ``None`` is</span>
+<span class="sd">    not the same as claiming exactness: a value written ``1/3`` states an exact number and</span>
+<span class="sd">    reports ``None`` for both, while ``?`` states nothing at all and also reports ``None``.</span>
+
+<span class="sd">    ``precision`` is implied by the digits written (``0.3333`` is good to ``1/10000``);</span>
+<span class="sd">    ``esd`` is the standard uncertainty a file states explicitly, so ``0.3333(7)`` reports</span>
+<span class="sd">    a precision of ``1/10000`` *and* an esd of ``7/10000``. They measure different things</span>
+<span class="sd">    and the coarser of the two is the honest claim.</span>
+
+<span class="sd">    :param esd: Standard uncertainty explicitly stated by the CIF token.</span>
+<span class="sd">    :param precision: Precision implied by the digits written in the CIF token.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CifMeta.esd">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.CifMeta.esd">[docs]</a>
+    <span class="n">esd</span><span class="p">:</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="CifMeta.precision">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.CifMeta.precision">[docs]</a>
+    <span class="n">precision</span><span class="p">:</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span></div>
+</div>
+
+
+
+<span class="c1"># Regexp close to https://www.iucr.org/__data/iucr/cifdic_html/2/cif_mm.dic/Dtypecodes.html</span>
+<span class="c1"># matches:  1.234(5), -12.3(12), 3(1)E2, 1.0e-3, +4.2, etc.</span>
+<span class="n">_CIF_NUM_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="sa">r</span><span class="s1">&#39;^(?P&lt;sign&gt;[+-])?&#39;</span>  <span class="c1"># optional leading sign</span>
+    <span class="sa">r</span><span class="s1">&#39;(?P&lt;mant&gt;(?:\d+\.?|\d*\.\d+))(\((?P&lt;esd&gt;\d+)\))?&#39;</span>  <span class="c1"># mantissa + optional (uncertainty)</span>
+    <span class="sa">r</span><span class="s1">&#39;(?:[eE](?P&lt;exp&gt;[+-]?\d+))?$&#39;</span>  <span class="c1"># optional exponent</span>
+<span class="p">)</span>
+
+
+<span class="nd">@overload</span>
+<div class="viewcode-block" id="parse_cif_float">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.parse_cif_float">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cif_float</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">False</span><span class="p">]</span> <span class="o">=</span> <span class="o">...</span><span class="p">,</span> <span class="n">pragmatic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span></div>
+
+
+
+<span class="nd">@overload</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cif_float</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="kc">True</span><span class="p">],</span> <span class="n">pragmatic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="o">...</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">CifMeta</span><span class="p">]:</span> <span class="o">...</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cif_float</span><span class="p">(</span>
+    <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">meta</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">pragmatic</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">|</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">CifMeta</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a CIF numeric field.</span>
+
+<span class="sd">    If meta=False:</span>
+<span class="sd">        return float_value or None.</span>
+
+<span class="sd">    If meta=True:</span>
+<span class="sd">        return ``(float_value_or_None, CifMeta)`` — the value plus what the token claims</span>
+<span class="sd">        about its own precision. See :class:`CifMeta`; both of its fields are exact</span>
+<span class="sd">        rationals or ``None``.</span>
+
+<span class="sd">    :param token: Numeric text to parse, including CIF uncertainty notation when present.</span>
+<span class="sd">    :param meta: Include the value&#39;s claimed precision and standard uncertainty.</span>
+<span class="sd">    :param pragmatic: Salvage selected non-standard numeric spellings instead of rejecting them.</span>
+<span class="sd">    :return: The parsed value, optionally paired with its precision metadata.</span>
+<span class="sd">    :raises ValueError: If the token is missing or cannot be interpreted as a CIF number.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot parse None as a CIF float&quot;</span><span class="p">)</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">meta</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;esd&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing CIF value cannot be converted to float&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Replace unicode minus</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">ch</span> <span class="ow">in</span> <span class="n">t</span> <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;</span><span class="se">\u2212</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\u2013</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\u2014</span><span class="s2">&quot;</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">pragmatic</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u2212</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u2013</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\u2014</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CIF contains a non-ASCII minus sign: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_CIF_NUM_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="c1"># fractions are allowed here too</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;/&quot;</span> <span class="ow">in</span> <span class="n">t</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">Fraction</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ZeroDivisionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">pragmatic</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid CIF numeric token: </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Salvaging malformed CIF numeric token: </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;([0-9]*(\.[0-9]+)?)&#39;</span><span class="p">,</span> <span class="n">t</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">salvage_error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid CIF numeric token: </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">salvage_error</span>
+
+        <span class="k">if</span> <span class="n">meta</span><span class="p">:</span>
+            <span class="c1"># Anything the CIF number pattern did not match: a fraction, or salvage. A</span>
+            <span class="c1"># fraction states an exact value, and salvaged junk states nothing reliable,</span>
+            <span class="c1"># so decimal_precision returns None for both and that is the honest answer.</span>
+            <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;esd&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="n">decimal_precision</span><span class="p">(</span><span class="n">t</span><span class="p">)}</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="c1"># ---- Normal CIF number ----</span>
+    <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;sign&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="n">mant_str</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;mant&#39;</span><span class="p">)</span>
+    <span class="n">mant</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">mant_str</span><span class="p">)</span>
+    <span class="n">exp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+    <span class="n">val</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">sign</span> <span class="o">*</span> <span class="n">mant</span> <span class="o">*</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="n">exp</span><span class="p">))</span>
+
+    <span class="c1"># Precision implied by the digits written, scaled by any exponent.</span>
+    <span class="n">precision</span> <span class="o">=</span> <span class="n">decimal_precision</span><span class="p">(</span><span class="n">mant_str</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">exp</span><span class="p">:</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="n">precision</span> <span class="o">*</span> <span class="n">Fraction</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="n">exp</span>
+
+    <span class="n">esd_str</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;esd&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">meta</span><span class="p">:</span>
+        <span class="c1"># Ignore esd; user didn&#39;t ask for meta info</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">if</span> <span class="n">esd_str</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Classic CIF esd logic: the parenthesised integer applies to the last written</span>
+        <span class="c1"># digit, so 1.234(5) is 1.234 +/- 0.005. Kept exact rather than rounded to a float.</span>
+        <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">mant_str</span><span class="p">:</span>
+            <span class="n">dec_places</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mant_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dec_places</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">esd_val</span><span class="p">:</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Fraction</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">esd_str</span><span class="p">))</span> <span class="o">*</span> <span class="n">Fraction</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="n">exp</span> <span class="o">-</span> <span class="n">dec_places</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">esd_val</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">val</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;esd&#39;</span><span class="p">:</span> <span class="n">esd_val</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">:</span> <span class="n">precision</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="parse_cif_fraction">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.parse_cif_fraction">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cif_fraction</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a CIF numeric token exactly, preserving finite decimals and fractions.</span>
+
+<span class="sd">    :param token: Numeric text whose exact central value should be preserved.</span>
+<span class="sd">    :return: The exact value, or ``None`` for an unknown CIF value.</span>
+<span class="sd">    :raises ValueError: If the token does not contain a valid exact numeric value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">exact</span> <span class="o">=</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Fraction</span><span class="p">(</span><span class="n">exact</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ZeroDivisionError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid exact CIF numeric token: </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span></div>
+
+
+
+<div class="viewcode-block" id="parse_cif_int">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.parse_cif_int">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_cif_int</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">strict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">allow_round</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a CIF numeric token to an integer using its central value.</span>
+
+<span class="sd">    The accepted forms include ``&#39;123(4)&#39;``, ``&#39;3E2&#39;``, and ``&#39;1.0E3&#39;``.</span>
+<span class="sd">    - strict=True: require the value to be exactly integral; otherwise raise ValueError.</span>
+<span class="sd">    - allow_round=True (only if strict=False): round half-even to the nearest int.</span>
+
+<span class="sd">    :param token: Numeric text to convert.</span>
+<span class="sd">    :param strict: Require the central value to be integral.</span>
+<span class="sd">    :param allow_round: Permit half-even rounding when ``strict`` is false.</span>
+<span class="sd">    :return: The converted integer.</span>
+<span class="sd">    :raises ValueError: If the token is missing or its central value cannot be converted under the selected rules.</span>
+<span class="sd">    :raises decimal.InvalidOperation: If an unmatched token has malformed decimal syntax.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">t</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Missing CIF value cannot be converted to int&quot;</span><span class="p">)</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="n">_CIF_NUM_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">m</span><span class="p">:</span>
+        <span class="c1"># Fall back for plain integers without (esd)/exponent; will raise if not int-like</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;sign&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;-&#39;</span> <span class="k">else</span> <span class="mi">1</span>
+        <span class="n">mant</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;mant&#39;</span><span class="p">))</span>
+        <span class="n">exp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s1">&#39;exp&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">mant</span> <span class="o">*</span> <span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span> <span class="o">**</span> <span class="n">exp</span><span class="p">)</span>
+
+    <span class="c1"># Decide how to coerce</span>
+    <span class="k">if</span> <span class="n">strict</span><span class="p">:</span>
+        <span class="c1"># exactly integral?</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="n">val</span><span class="o">.</span><span class="n">to_integral_value</span><span class="p">():</span>  <span class="c1"># no fractional part</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non-integer numeric cannot be coerced strictly: </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Non-strict: either require integral or allow rounding</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="o">==</span> <span class="n">val</span><span class="o">.</span><span class="n">to_integral_value</span><span class="p">():</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">allow_round</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">to_integral_value</span><span class="p">())</span>  <span class="c1"># banker&#39;s rounding (half-even)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non-integer numeric (set allow_round=True to round): </span><span class="si">{</span><span class="n">token</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cif_exact_token">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.cif_exact_token">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cif_exact_token</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The numeric part of a CIF value, as text, with any uncertainty estimate removed.</span>
+
+<span class="sd">    ``&quot;0.3333(5)&quot;`` becomes ``&quot;0.3333&quot;`` and ``&quot;3(1)e-1&quot;`` becomes ``&quot;3e-1&quot;``;</span>
+<span class="sd">    ``&quot;?&quot;`` and ``&quot;.&quot;`` become ``None``. The point of keeping the text rather than a</span>
+<span class="sd">    float is fidelity: a consumer that wants an exact value can read ``0.3333`` as the</span>
+<span class="sd">    rational 3333/10000, which is what the file says, whereas ``float(&quot;0.3333&quot;)`` is a</span>
+<span class="sd">    binary approximation whose exact rational value is 6004199023210345/18014398509481984</span>
+<span class="sd">    and says something the file did not.</span>
+
+<span class="sd">    :param token: CIF value text whose uncertainty estimate should be removed.</span>
+<span class="sd">    :return: The central numeric text, or ``None`` for an unknown value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;&#39;</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">text</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;?&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="c1"># The exponent belongs to the central value and follows the parenthesized ESD in CIF</span>
+    <span class="c1"># syntax, so remove only the ESD instead of truncating everything after its opening</span>
+    <span class="c1"># parenthesis.</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\(\d+\)(?=(?:[eE][+-]?\d+)?$)&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="ow">or</span> <span class="kc">None</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_atoms</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse atom data without coordinate-precision reporting.&quot;&quot;&quot;</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_type_symbol&#39;</span><span class="p">)</span>
+    <span class="n">lbs</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_label&#39;</span><span class="p">)</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_fract_x&#39;</span><span class="p">)</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_fract_y&#39;</span><span class="p">)</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_fract_z&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="p">(</span><span class="n">syms</span><span class="p">,</span> <span class="n">lbs</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CIF block is missing one or more required atom-site columns&quot;</span><span class="p">)</span>
+    <span class="n">syms</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">syms</span><span class="p">)</span>
+    <span class="n">lbs</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">lbs</span><span class="p">)</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">xs</span><span class="p">)</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ys</span><span class="p">)</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">zs</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;atom_site_type_symbol&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">syms</span><span class="p">),</span>
+        <span class="s1">&#39;atom_site_label&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">lbs</span><span class="p">),</span>
+        <span class="s1">&#39;atom_site_fract_x&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span>
+        <span class="s1">&#39;atom_site_fract_y&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">ys</span><span class="p">),</span>
+        <span class="s1">&#39;atom_site_fract_z&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">zs</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">counts</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;CIF atom-site columns have mismatched lengths: &quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">counts</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Optional occupancy column</span>
+    <span class="n">occ_col</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;atom_site_occupancy&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">occ_col</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">occs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">occs_exact</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">occupancy_precisions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">occ_col</span><span class="p">):</span>
+            <span class="n">v</span><span class="p">,</span> <span class="n">meta</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">occs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">occs_exact</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_prefer_exact_token</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="s1">&#39;httk_atom_site_occupancy_exact&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">))</span>
+            <span class="n">occupancy_precisions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">combined_precision</span><span class="p">((</span><span class="n">meta</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">],</span> <span class="n">meta</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">])))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">occs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">occs_exact</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">occupancy_precisions</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">syms</span><span class="p">]</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">lab</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">lbs</span><span class="p">]</span>
+
+    <span class="n">exact_positions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span>
+            <span class="n">_prefer_exact_token</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="s1">&#39;httk_atom_site_fract_x_exact&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">),</span>
+            <span class="n">_prefer_exact_token</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="s1">&#39;httk_atom_site_fract_y_exact&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">),</span>
+            <span class="n">_prefer_exact_token</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">zi</span><span class="p">,</span> <span class="s1">&#39;httk_atom_site_fract_z_exact&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">))</span>
+    <span class="p">]</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="p">[(</span><span class="n">parse_cif_float</span><span class="p">(</span><span class="n">xi</span><span class="p">),</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">yi</span><span class="p">),</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">zi</span><span class="p">))</span> <span class="k">for</span> <span class="n">xi</span><span class="p">,</span> <span class="n">yi</span><span class="p">,</span> <span class="n">zi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">symbols</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">positions</span><span class="p">,</span> <span class="n">exact_positions</span><span class="p">,</span> <span class="n">occs</span><span class="p">,</span> <span class="n">occs_exact</span><span class="p">,</span> <span class="n">occupancy_precisions</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_prefer_exact_token</span><span class="p">(</span>
+    <span class="n">block</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">standard</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">companion</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use an httk exact companion when present, otherwise the standard token.&quot;&quot;&quot;</span>
+    <span class="n">companion_value</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">companion</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">companion_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">companion_value</span> <span class="o">=</span> <span class="n">companion_value</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">companion_value</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">companion_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">companion_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parse_cif_fraction</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">token</span>
+    <span class="k">return</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">standard</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_atoms_with_precision</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse atom data and report the coarsest coordinate precision.&quot;&quot;&quot;</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_atoms</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="n">block</span><span class="p">[</span><span class="s1">&#39;atom_site_fract_x&#39;</span><span class="p">]</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">block</span><span class="p">[</span><span class="s1">&#39;atom_site_fract_y&#39;</span><span class="p">]</span>
+    <span class="n">zs</span> <span class="o">=</span> <span class="n">block</span><span class="p">[</span><span class="s1">&#39;atom_site_fract_z&#39;</span><span class="p">]</span>
+    <span class="n">companions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;httk_atom_site_fract_</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s1">_exact&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="s1">&#39;xyz&#39;</span><span class="p">)</span>
+    <span class="n">has_companion</span> <span class="o">=</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">companions</span><span class="p">)</span>
+    <span class="n">claims</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">zs</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="n">companion</span> <span class="o">=</span> <span class="n">companions</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+            <span class="n">companion_value</span> <span class="o">=</span> <span class="n">companion</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">companion</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">companion</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">companion_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">companion_value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">has_companion</span> <span class="ow">and</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">}:</span>
+                <span class="k">continue</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">])</span>
+            <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">*</span><span class="n">parsed</span><span class="p">,</span> <span class="n">combined_precision</span><span class="p">(</span><span class="n">claims</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_parse_uc_with_precision</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The six cell parameters, and how precisely the cell was stated.</span>
+
+<span class="sd">    The precision is an absolute length, or ``None``, and is taken from the three</span>
+<span class="sd">    **lengths** only. The angles are deliberately left out: their precision would be in</span>
+<span class="sd">    degrees rather than the length units everything else here is in, and a right angle in a</span>
+<span class="sd">    CIF is almost always exact by symmetry rather than a measurement whose last digit means</span>
+<span class="sd">    anything — folding a &quot;1 degree&quot; precision from a bare ``90`` into a length would be</span>
+<span class="sd">    nonsense.</span>
+
+<span class="sd">    A separate function rather than a flag on :func:`_parse_uc`, because a boolean that</span>
+<span class="sd">    changes the shape of the return value cannot be narrowed by a type checker.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="n">_CELL_TAGS</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">tag</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tags</span> <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;CIF block has no unit cell: missing </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">claims</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">tag</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tags</span><span class="p">):</span>
+        <span class="n">value</span><span class="p">,</span> <span class="n">entry</span> <span class="o">=</span> <span class="n">parse_cif_float</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="n">tag</span><span class="p">],</span> <span class="n">meta</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># lengths only</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">cif_exact_token</span><span class="p">(</span><span class="n">block</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">exact_integer</span> <span class="o">=</span> <span class="n">token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">Fraction</span><span class="p">(</span><span class="n">token</span><span class="p">)</span><span class="o">.</span><span class="n">denominator</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">ZeroDivisionError</span><span class="p">):</span>
+                <span class="n">exact_integer</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exact_integer</span><span class="p">:</span>
+                <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;precision&#39;</span><span class="p">])</span>
+                <span class="n">claims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s1">&#39;esd&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">combined_precision</span><span class="p">(</span><span class="n">claims</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_basis_from_lengths_angles</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Conventional 3x3 lattice (rows are a,b,c in Cartesian Å) from a,b,c (Å) and angles (deg).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deg2rad</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">d</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">180.0</span>
+
+    <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">_deg2rad</span><span class="p">,</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">))</span>
+    <span class="n">ca</span><span class="p">,</span> <span class="n">cb</span><span class="p">,</span> <span class="n">cg</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">alpha</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">beta</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+    <span class="n">sg</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+
+    <span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">az</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="n">bx</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">bz</span> <span class="o">=</span> <span class="n">b</span> <span class="o">*</span> <span class="n">cg</span><span class="p">,</span> <span class="n">b</span> <span class="o">*</span> <span class="n">sg</span><span class="p">,</span> <span class="mf">0.0</span>
+    <span class="c1"># cz via the standard formula for triclinic cells</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">cb</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="p">(</span><span class="n">ca</span> <span class="o">-</span> <span class="n">cb</span> <span class="o">*</span> <span class="n">cg</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">sg</span> <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">sg</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-12</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">cz_sq</span> <span class="o">=</span> <span class="n">c</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">cx</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">cy</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">cz</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">cz_sq</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[[</span><span class="n">ax</span><span class="p">,</span> <span class="n">ay</span><span class="p">,</span> <span class="n">az</span><span class="p">],</span> <span class="p">[</span><span class="n">bx</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">bz</span><span class="p">],</span> <span class="p">[</span><span class="n">cx</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="n">cz</span><span class="p">]]</span>
+
+
+<div class="viewcode-block" id="AsuCell">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AsuCell</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hold the parsed cell, atom sites, exact tokens, and precision claims.</span>
+
+<span class="sd">    :param basis: Conventional Cartesian basis vectors for the unit cell.</span>
+<span class="sd">    :param positions: Fractional atom positions.</span>
+<span class="sd">    :param positions_exact: Original central coordinate tokens for each atom.</span>
+<span class="sd">    :param occupancies: Parsed atom occupancies, when supplied.</span>
+<span class="sd">    :param occupancies_exact: Original central occupancy tokens, when supplied.</span>
+<span class="sd">    :param occupancy_precisions: Coarsest claimed precision for each occupancy, when supplied.</span>
+<span class="sd">    :param coordinate_precision: Coarsest claimed precision across the coordinates.</span>
+<span class="sd">    :param basis_precision: Coarsest claimed precision across the cell lengths.</span>
+<span class="sd">    :param symbols: Atom-site symbols in input order.</span>
+<span class="sd">    :param labels: Atom-site labels in input order.</span>
+<span class="sd">    :param equivalent_atoms: One-based identifiers grouping equal atom-site labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AsuCell.basis">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.basis">[docs]</a>
+    <span class="n">basis</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="AsuCell.positions">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.positions">[docs]</a>
+    <span class="n">positions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="AsuCell.positions_exact">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.positions_exact">[docs]</a>
+    <span class="n">positions_exact</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]]</span></div>
+
+<div class="viewcode-block" id="AsuCell.occupancies">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.occupancies">[docs]</a>
+    <span class="n">occupancies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AsuCell.occupancies_exact">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.occupancies_exact">[docs]</a>
+    <span class="n">occupancies_exact</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AsuCell.occupancy_precisions">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.occupancy_precisions">[docs]</a>
+    <span class="n">occupancy_precisions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AsuCell.coordinate_precision">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.coordinate_precision">[docs]</a>
+    <span class="n">coordinate_precision</span><span class="p">:</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AsuCell.basis_precision">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.basis_precision">[docs]</a>
+    <span class="n">basis_precision</span><span class="p">:</span> <span class="n">Fraction</span> <span class="o">|</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="AsuCell.symbols">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.symbols">[docs]</a>
+    <span class="n">symbols</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AsuCell.labels">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.labels">[docs]</a>
+    <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="AsuCell.equivalent_atoms">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.AsuCell.equivalent_atoms">[docs]</a>
+    <span class="n">equivalent_atoms</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="parse_asu_cell">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.parse_asu_cell">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_asu_cell</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">AsuCell</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parse a CIF block into its asymmetric-unit cell data.</span>
+
+<span class="sd">    :param cifblock: Normalized CIF data for one data block.</span>
+<span class="sd">    :return: The parsed unit cell and atom-site data.</span>
+<span class="sd">    :raises ValueError: If required cell or atom-site data is missing or invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parameters</span><span class="p">,</span> <span class="n">basis_precision</span> <span class="o">=</span> <span class="n">_parse_uc_with_precision</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">parameters</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CIF unit-cell parameters cannot be unknown&quot;</span><span class="p">)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">parameters</span><span class="p">)</span>
+    <span class="n">basis</span> <span class="o">=</span> <span class="n">_basis_from_lengths_angles</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+    <span class="p">(</span>
+        <span class="n">symbols</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">,</span>
+        <span class="n">exact_positions</span><span class="p">,</span>
+        <span class="n">occs</span><span class="p">,</span>
+        <span class="n">occs_exact</span><span class="p">,</span>
+        <span class="n">occupancy_precisions</span><span class="p">,</span>
+        <span class="n">coordinate_precision</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">=</span> <span class="n">_parse_atoms_with_precision</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="c1"># figure out equivalent atoms based on labels</span>
+    <span class="n">labels_map</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">equivalent_atoms</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">next_id</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">lab</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labels_map</span><span class="p">:</span>
+            <span class="n">labels_map</span><span class="p">[</span><span class="n">lab</span><span class="p">]</span> <span class="o">=</span> <span class="n">next_id</span>
+            <span class="n">next_id</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">equivalent_atoms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels_map</span><span class="p">[</span><span class="n">lab</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">AsuCell</span><span class="p">(</span>
+        <span class="n">basis</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">,</span>
+        <span class="n">exact_positions</span><span class="p">,</span>
+        <span class="n">occs</span><span class="p">,</span>
+        <span class="n">occs_exact</span><span class="p">,</span>
+        <span class="n">occupancy_precisions</span><span class="p">,</span>
+        <span class="n">coordinate_precision</span><span class="p">,</span>
+        <span class="n">basis_precision</span><span class="p">,</span>
+        <span class="n">symbols</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">,</span>
+        <span class="n">equivalent_atoms</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_structural_modulation">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.parse_structural_modulation">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">parse_structural_modulation</span><span class="p">(</span>
+    <span class="n">cifblock</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">Fraction</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extract structural superspace modulation information from a standard CIF.</span>
+
+<span class="sd">    Returns a tuple ``(structural_q, mod_dim, has_struct_mod, struct_mod_atoms)`` where</span>
+<span class="sd">        ``structural_q`` is a list of q-vectors or ``None``, ``mod_dim`` is the modulation</span>
+<span class="sd">        dimension (0 if absent), ``has_struct_mod`` is a bool, and ``struct_mod_atoms`` is a</span>
+<span class="sd">        sorted list of atom-site labels.</span>
+
+<span class="sd">    :param cifblock: Normalized CIF data for one data block.</span>
+<span class="sd">    :return: Structural q-vectors, modulation dimension, presence flag, and affected labels.</span>
+<span class="sd">    :raises ValueError: If a structural wave vector contains an unknown component.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># modulation dimension (0 if absent)</span>
+    <span class="n">mod_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cell_modulation_dimension&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="c1"># structural_q from cell_wave_vector (only if mod_dim &gt; 0)</span>
+    <span class="n">structural_q</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span> <span class="o">=</span> <span class="p">(</span><span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;structural_q&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">qx</span> <span class="ow">and</span> <span class="n">qy</span> <span class="ow">and</span> <span class="n">qz</span><span class="p">:</span>
+        <span class="n">structural_q</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">qx</span><span class="p">,</span> <span class="n">qy</span><span class="p">,</span> <span class="n">qz</span><span class="p">):</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">parse_cif_fraction</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">q</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CIF structural wave vector has an unknown component&quot;</span><span class="p">)</span>
+            <span class="n">structural_q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="n">Fraction</span><span class="p">],</span> <span class="n">q</span><span class="p">))</span>
+
+    <span class="c1"># detect structural Fourier modulations</span>
+    <span class="n">has_struct_mod</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">struct_mod_atoms</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;structural_displacement_label&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="n">has_struct_mod</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">struct_mod_atoms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">CIF_TAGS</span><span class="p">[</span><span class="s1">&#39;structural_occupancy_label&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+        <span class="n">has_struct_mod</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">struct_mod_atoms</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">structural_q</span><span class="p">,</span> <span class="n">mod_dim</span><span class="p">,</span> <span class="n">has_struct_mod</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">struct_mod_atoms</span><span class="p">)</span></div>
+
+
+
+<span class="c1">#: The six unit-cell tags, in the order everything here reports them.</span>
+<span class="n">_CELL_TAGS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;cell_length_a&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cell_length_b&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cell_length_c&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cell_angle_alpha&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cell_angle_beta&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cell_angle_gamma&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cell_parameter_tokens</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The six cell parameters as the text the file wrote, uncertainties stripped.</span>
+
+<span class="sd">    The same fidelity argument as ``positions_exact``: ``5.6402`` should be able to become</span>
+<span class="sd">    the rational 56402/10000, not the binary value of ``float(&quot;5.6402&quot;)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span>
+        <span class="n">_prefer_exact_token</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="n">tag_value</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;httk_</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1">_exact&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tag</span><span class="p">,</span> <span class="n">tag_value</span> <span class="ow">in</span> <span class="p">((</span><span class="n">tag</span><span class="p">,</span> <span class="n">cifblock</span><span class="p">[</span><span class="n">tag</span><span class="p">])</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">_CELL_TAGS</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">names</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The first normalized CIF data name present, or ``None``.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="cifblock_to_asu">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/cif_parser/index.html#httk.io.cif.cif_parser.cifblock_to_asu">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cifblock_to_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert one normalized CIF block to a neutral asymmetric-unit payload.</span>
+
+<span class="sd">    The payload keeps ``cell_parameters_exact`` and ``positions_exact`` as the central</span>
+<span class="sd">    numeric text written by the file, and keeps ``symops_xyz`` as the raw operation strings.</span>
+<span class="sd">    The dual numeric channel gives ``_httk_*_exact`` companion tags precedence over standard</span>
+<span class="sd">    numeric tags on read, preserving central text after a lossy display write.</span>
+
+<span class="sd">    :param cifblock: Normalized CIF data for one data block.</span>
+<span class="sd">    :return: A neutral mapping containing cell, atom, symmetry, and metadata channels.</span>
+<span class="sd">    :raises ValueError: If the block lacks required cell, atom-site, or symmetry data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">asu</span> <span class="o">=</span> <span class="n">parse_asu_cell</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="c1"># standard space group symmetry</span>
+    <span class="n">symops_xyz</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop.operation_xyz&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">symops_xyz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Some readers normalize loop tags without dots, so accept that too.</span>
+        <span class="n">symops_xyz</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;space_group_symop_operation_xyz&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">symops_xyz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># some CIFs use older spelling</span>
+        <span class="n">symops_xyz</span> <span class="o">=</span> <span class="n">cifblock</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;symmetry_equiv_pos_as_xyz&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">symops_xyz</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;CIF block has no symmetry operations&quot;</span><span class="p">)</span>
+
+    <span class="c1"># structural modulation</span>
+    <span class="n">structural_q</span><span class="p">,</span> <span class="n">mod_dim</span><span class="p">,</span> <span class="n">has_struct_mod</span><span class="p">,</span> <span class="n">struct_atoms</span> <span class="o">=</span> <span class="n">parse_structural_modulation</span><span class="p">(</span><span class="n">cifblock</span><span class="p">)</span>
+
+    <span class="c1"># Build the incommensurate structure descriptor, or None</span>
+    <span class="n">incomm</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">mod_dim</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">structural_q</span> <span class="ow">or</span> <span class="n">has_struct_mod</span><span class="p">:</span>
+        <span class="n">incomm</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;structural_q&#39;</span><span class="p">:</span> <span class="n">structural_q</span><span class="p">,</span>
+            <span class="s1">&#39;mod_dim&#39;</span><span class="p">:</span> <span class="n">mod_dim</span><span class="p">,</span>
+            <span class="s1">&#39;has_structural_modulation&#39;</span><span class="p">:</span> <span class="n">has_struct_mod</span><span class="p">,</span>
+            <span class="s1">&#39;structural_modulated_atoms&#39;</span><span class="p">:</span> <span class="n">struct_atoms</span><span class="p">,</span>
+        <span class="p">}</span>
+
+    <span class="c1"># The reader normalizes tags to lower case with the leading underscore stripped, so</span>
+    <span class="c1"># these lookups must be spelled that way; written with the underscore and the original</span>
+    <span class="c1"># capitalization they silently matched nothing and every CIF came back with no space</span>
+    <span class="c1"># group at all.</span>
+    <span class="n">space_group_name_hm</span> <span class="o">=</span> <span class="n">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="s1">&#39;space_group_name_h-m_alt&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetry_space_group_name_h-m&#39;</span><span class="p">)</span>
+    <span class="n">space_group_name_hall</span> <span class="o">=</span> <span class="n">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="s1">&#39;space_group_name_hall&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetry_space_group_name_hall&#39;</span><span class="p">)</span>
+    <span class="n">space_group_nbr</span> <span class="o">=</span> <span class="n">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="s1">&#39;space_group_it_number&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetry_space_group_it_number&#39;</span><span class="p">)</span>
+    <span class="n">icsd</span> <span class="o">=</span> <span class="n">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="s1">&#39;database_code_icsd&#39;</span><span class="p">)</span>
+    <span class="n">doi</span> <span class="o">=</span> <span class="n">_first_tag</span><span class="p">(</span><span class="n">cifblock</span><span class="p">,</span> <span class="s1">&#39;citation_doi&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;cif&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;cell_parameters_exact&#39;</span><span class="p">:</span> <span class="n">_cell_parameter_tokens</span><span class="p">(</span><span class="n">cifblock</span><span class="p">),</span>
+        <span class="s1">&#39;positions_exact&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">positions_exact</span><span class="p">,</span>
+        <span class="s1">&#39;occupancies&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancies</span><span class="p">,</span>
+        <span class="s1">&#39;occupancies_exact&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancies_exact</span><span class="p">,</span>
+        <span class="s1">&#39;occupancy_precisions&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">occupancy_precisions</span><span class="p">,</span>
+        <span class="s1">&#39;symbols&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">symbols</span><span class="p">,</span>
+        <span class="s1">&#39;symops_xyz&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">symops_xyz</span><span class="p">),</span>
+        <span class="s1">&#39;incomm&#39;</span><span class="p">:</span> <span class="n">incomm</span><span class="p">,</span>
+        <span class="s1">&#39;space_group_nbr&#39;</span><span class="p">:</span> <span class="n">space_group_nbr</span><span class="p">,</span>
+        <span class="s1">&#39;space_group_name_hm&#39;</span><span class="p">:</span> <span class="n">space_group_name_hm</span><span class="p">,</span>
+        <span class="s1">&#39;space_group_name_hall&#39;</span><span class="p">:</span> <span class="n">space_group_name_hall</span><span class="p">,</span>
+        <span class="s1">&#39;icsd&#39;</span><span class="p">:</span> <span class="n">icsd</span><span class="p">,</span>
+        <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="n">doi</span><span class="p">,</span>
+        <span class="s1">&#39;coordinate_precision&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">coordinate_precision</span><span class="p">,</span>
+        <span class="s1">&#39;basis_precision&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">basis_precision</span><span class="p">,</span>
+        <span class="s1">&#39;equivalent_atoms&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">equivalent_atoms</span><span class="p">,</span>
+        <span class="s1">&#39;labels&#39;</span><span class="p">:</span> <span class="n">asu</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="read_cif_asus">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/index.html#httk.io.cif.cif_parser.read_cif_asus">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_cif_asus</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a CIF and return its asymmetric units as a neutral, tagged payload.</span>
+
+<span class="sd">    This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with</span>
+<span class="sd">    ``format`` set to ``&quot;cif&quot;``, ``blocks`` holding one asymmetric-unit mapping per data</span>
+<span class="sd">    block that describes a structure, and ``header`` the file&#39;s leading comment. The tag</span>
+<span class="sd">    lets a consumer dispatch on the file type without knowing which reader</span>
+<span class="sd">    produced the payload.</span>
+
+<span class="sd">    Loading never fails on account of a block that is not a structure. CIF is a</span>
+<span class="sd">    general-purpose format and a file may hold bibliographic entries, powder patterns, or</span>
+<span class="sd">    an incomplete draft alongside — or instead of — anything crystallographic. Blocks</span>
+<span class="sd">    without atom sites are simply not structures and are passed over; blocks that have</span>
+<span class="sd">    atom sites but cannot be interpreted are collected in ``unparsed``, each with the</span>
+<span class="sd">    reason, so that nothing is dropped silently and the failure surfaces when a structure</span>
+<span class="sd">    is actually asked for.</span>
+
+<span class="sd">    The mapping stays neutral — plain lists, strings, exact numeric text channels, and raw</span>
+<span class="sd">    symmetry-operation strings, with no domain objects — so *httk-io* need not know about</span>
+<span class="sd">    *httk-atomistic*. Turning it into a structure is</span>
+<span class="sd">    ``httk.core.load`` (which returns an ``ASUStructure`` when atomistic support</span>
+<span class="sd">    is installed).</span>
+
+<span class="sd">    :param source: A filename, open text stream, or iterable of CIF lines.</span>
+<span class="sd">    :return: A neutral CIF payload containing structural blocks, unparsed block reasons, and the header.</span>
+<span class="sd">    :raises ValueError: If the CIF stream contains malformed data that prevents parsing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cifblocks</span><span class="p">,</span> <span class="n">header</span> <span class="o">=</span> <span class="n">read_cif</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">allow_cif2</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">unparsed</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">cifblock</span> <span class="ow">in</span> <span class="n">cifblocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;atom_site_label&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cifblock</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cifblock_to_asu</span><span class="p">(</span><span class="n">cifblock</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+            <span class="n">unparsed</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;block&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;format&#39;</span><span class="p">:</span> <span class="s1">&#39;cif&#39;</span><span class="p">,</span> <span class="s1">&#39;blocks&#39;</span><span class="p">:</span> <span class="n">blocks</span><span class="p">,</span> <span class="s1">&#39;unparsed&#39;</span><span class="p">:</span> <span class="n">unparsed</span><span class="p">,</span> <span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="n">header</span><span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="single_asu_from_cif_file">
+<a class="viewcode-back" href="../../../../reference/autoapi/httk/io/cif/index.html#httk.io.cif.cif_parser.single_asu_from_cif_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">single_asu_from_cif_file</span><span class="p">(</span><span class="n">source</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the first structural CIF block from :func:`read_cif_asus`.</span>
+
+<span class="sd">    :param source: A filename, open text stream, or iterable of CIF lines.</span>
+<span class="sd">    :return: The first parsed asymmetric-unit mapping.</span>
+<span class="sd">    :raises ValueError: If no structural block is available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="n">read_cif_asus</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">payload</span><span class="p">[</span><span class="s1">&#39;blocks&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">payload</span><span class="p">[</span><span class="s1">&#39;blocks&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">payload</span><span class="p">[</span><span class="s1">&#39;unparsed&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">payload</span><span class="p">[</span><span class="s1">&#39;unparsed&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;reason&#39;</span><span class="p">])</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;No structural block found in CIF&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, The httk-io AUTHORS
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../../_static/documentation_options.js?v=fe42cd0d"></script>
+    <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../../../../_static/selector.js?v=875006ce"></script>
+    <script>window.HTTK_DOCS_VERSIONING = {"channel":"dev","version":"dev:main","versionPathDepth":2};</script>
+    </body>
+</html>

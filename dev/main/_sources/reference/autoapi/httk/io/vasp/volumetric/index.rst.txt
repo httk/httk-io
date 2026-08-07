@@ -1,0 +1,33 @@
+httk.io.vasp.volumetric
+=======================
+
+.. py:module:: httk.io.vasp.volumetric
+
+.. autoapi-nested-parse::
+
+   Writer for VASP/VESTA volumetric grids.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.volumetric.write_vasp_volumetric
+
+
+Module Contents
+---------------
+
+.. py:function:: write_vasp_volumetric(destination, poscar_payload, grid, *, cols = 10)
+
+   Write POSCAR content followed by a Fortran-order real-valued grid.
+
+   :param destination: Filesystem path or open text stream for the output.
+   :param poscar_payload: Neutral POSCAR payload supplying the structure header.
+   :param grid: Three-dimensional real-valued grid to write in Fortran order.
+   :param cols: Maximum number of values written on each grid line.
+   :raises ValueError: If ``cols`` or ``grid`` cannot be represented in the format.
+
+

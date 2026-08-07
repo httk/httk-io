@@ -1,0 +1,39 @@
+httk.io.vasp.oszicar
+====================
+
+.. py:module:: httk.io.vasp.oszicar
+
+.. autoapi-nested-parse::
+
+   String-preserving reader for VASP OSZICAR files.
+
+   Electronic iterations are attached to the following ionic summary, as VASP
+   writes them. If the file ends before that summary, a final entry with
+   ``n``, ``F``, ``E0``, ``dE``, and ``mag`` all set to ``None`` preserves the
+   trailing electronic block.
+
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.oszicar.read_oszicar
+
+
+Module Contents
+---------------
+
+.. py:function:: read_oszicar(source)
+
+   Read OSZICAR text without converting numeric lexemes.
+
+   Electronic iterations are attached to the following ionic summary. A
+   trailing electronic block is retained as an incomplete final entry when no
+   summary follows it.
+
+   :param source: OSZICAR filename, text stream, or iterable of source lines.
+   :return: A neutral payload containing ionic steps and parsing issues.
+
+

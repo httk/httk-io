@@ -1,0 +1,125 @@
+httk.io.cif
+===========
+
+.. py:module:: httk.io.cif
+
+.. autoapi-nested-parse::
+
+   Read CIF and magnetic CIF files into neutral asymmetric-unit payloads.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /reference/autoapi/httk/io/cif/cif_parser/index
+   /reference/autoapi/httk/io/cif/cif_reader/index
+   /reference/autoapi/httk/io/cif/cif_tags/index
+   /reference/autoapi/httk/io/cif/cif_writer/index
+   /reference/autoapi/httk/io/cif/mcif_parser/index
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.cif.read_cif_asus
+   httk.io.cif.single_asu_from_cif_file
+   httk.io.cif.read_cif
+   httk.io.cif.mag_asus_from_mcif_file
+   httk.io.cif.read_mcif_asus
+   httk.io.cif.single_mag_asu_from_mcif_file
+
+
+Package Contents
+----------------
+
+.. py:function:: read_cif_asus(source)
+
+   Read a CIF and return its asymmetric units as a neutral, tagged payload.
+
+   This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with
+   ``format`` set to ``"cif"``, ``blocks`` holding one asymmetric-unit mapping per data
+   block that describes a structure, and ``header`` the file's leading comment. The tag
+   lets a consumer dispatch on the file type without knowing which reader
+   produced the payload.
+
+   Loading never fails on account of a block that is not a structure. CIF is a
+   general-purpose format and a file may hold bibliographic entries, powder patterns, or
+   an incomplete draft alongside — or instead of — anything crystallographic. Blocks
+   without atom sites are simply not structures and are passed over; blocks that have
+   atom sites but cannot be interpreted are collected in ``unparsed``, each with the
+   reason, so that nothing is dropped silently and the failure surfaces when a structure
+   is actually asked for.
+
+   The mapping stays neutral — plain lists, strings, exact numeric text channels, and raw
+   symmetry-operation strings, with no domain objects — so *httk-io* need not know about
+   *httk-atomistic*. Turning it into a structure is
+   ``httk.core.load`` (which returns an ``ASUStructure`` when atomistic support
+   is installed).
+
+   :param source: A filename, open text stream, or iterable of CIF lines.
+   :return: A neutral CIF payload containing structural blocks, unparsed block reasons, and the header.
+   :raises ValueError: If the CIF stream contains malformed data that prevents parsing.
+
+
+.. py:function:: single_asu_from_cif_file(source)
+
+   Return the first structural CIF block from :func:`read_cif_asus`.
+
+   :param source: A filename, open text stream, or iterable of CIF lines.
+   :return: The first parsed asymmetric-unit mapping.
+   :raises ValueError: If no structural block is available.
+
+
+.. py:function:: read_cif(source, pragmatic = True, allow_cif2 = False)
+
+   Read CIF text as ``(data_blocks, header)``.
+
+   Paths are opened through :class:`httk.core.TextstreamFileView`, including compressed
+   CIF files. Open streams and iterables are consumed but left open.
+
+   :param source: A filename, open text stream, or iterable of CIF lines.
+   :param pragmatic: Accept selected common deviations from strict CIF tokenization.
+   :param allow_cif2: Parse CIF2 list values in addition to CIF1 data.
+   :return: The data blocks and the leading comment header.
+   :raises ValueError: If a loop contains mismatched column value counts.
+
+
+.. py:function:: mag_asus_from_mcif_file(source, *, error_on_nonmag = False)
+
+   Read every mcif data block as a neutral magnetic asymmetric-unit payload.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :param error_on_nonmag: Reject blocks without usable magnetic moment columns.
+   :return: Magnetic payloads for the data blocks in the source.
+   :raises ValueError: If the mcif stream or a selected block is invalid.
+
+
+.. py:function:: read_mcif_asus(source)
+
+   Read an mcif into the neutral payload used by the ``.mcif`` loader.
+
+   Magnetic positions and moments remain exact central tokens, symmetry operations remain
+   raw strings, and the result contains no magnetic-domain objects. Blocks without atom
+   sites are skipped; blocks that cannot be interpreted are reported in ``unparsed``.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :return: A neutral mcif payload containing magnetic blocks, unparsed reasons, and the header.
+   :raises ValueError: If the mcif stream contains malformed data that prevents parsing.
+
+
+.. py:function:: single_mag_asu_from_mcif_file(source, *, error_on_nonmag = False)
+
+   Return the first structural mcif block as a neutral magnetic payload.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :param error_on_nonmag: Reject the selected block without usable magnetic moments.
+   :return: The first magnetic asymmetric-unit payload.
+   :raises ValueError: If no structural block is available or the selected block is invalid.
+
+

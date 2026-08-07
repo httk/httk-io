@@ -1,0 +1,598 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Read a small synthetic VASP output directory." href="parse_vasp_outputs.html"><link rel="prev" title="Reading, inspecting and writing CIF files" href="parse_cif.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Reading VASP POSCAR and CONTCAR files - httk-io dev:main documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/selector.css?v=626bada3" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+<div class="announcement">
+  <aside class="announcement-content">
+     Development documentation (dev:main) — content may differ from any release. 
+  </aside>
+</div>
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">httk-io dev:main documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">httk-io dev:main documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../poscar.html">Reading VASP POSCAR / CONTCAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vasp_outputs.html">Reading VASP output files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../wavecar.html">Reading and writing VASP WAVECAR files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../trajectory_jsonl.html">OPTIMADE trajectory JSON Lines</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Examples</a><input aria-label="Toggle navigation of Examples" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="parse_cif.html">Reading, inspecting and writing CIF files</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Reading VASP POSCAR and CONTCAR files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parse_vasp_outputs.html">Read a small synthetic VASP output directory.</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/index.html">Reference</a><input aria-label="Toggle navigation of Reference" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../reference/autoapi/index.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/index.html">httk.io</a><input aria-label="Toggle navigation of httk.io" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/cif/index.html">httk.io.cif</a><input aria-label="Toggle navigation of httk.io.cif" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_parser/index.html">httk.io.cif.cif_parser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_reader/index.html">httk.io.cif.cif_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_tags/index.html">httk.io.cif.cif_tags</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/cif_writer/index.html">httk.io.cif.cif_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/cif/mcif_parser/index.html">httk.io.cif.mcif_parser</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../reference/autoapi/httk/io/optimade_jsonl/index.html">httk.io.optimade_jsonl</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/index.html">httk.io.vasp</a><input aria-label="Toggle navigation of httk.io.vasp" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/oszicar/index.html">httk.io.vasp.oszicar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/outcar/index.html">httk.io.vasp.outcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/outputs/index.html">httk.io.vasp.outputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/poscar_reader/index.html">httk.io.vasp.poscar_reader</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/poscar_writer/index.html">httk.io.vasp.poscar_writer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/potcar/index.html">httk.io.vasp.potcar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/volumetric/index.html">httk.io.vasp.volumetric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/wavecar/index.html">httk.io.vasp.wavecar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../reference/autoapi/httk/io/vasp/xdatcar/index.html">httk.io.vasp.xdatcar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../reference/autoapi/httk/registry/io/io/index.html">httk.registry.io.io</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/examples/parse_poscar.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="reading-vasp-poscar-and-contcar-files">
+<h1>Reading VASP POSCAR and CONTCAR files<a class="headerlink" href="#reading-vasp-poscar-and-contcar-files" title="Link to this heading">¶</a></h1>
+<p>A POSCAR (or its relaxed sibling CONTCAR) is VASP’s structure file: a comment
+line, a scaling factor, three lattice vectors, the species and how many atoms of
+each, a coordinate-mode line, and then the coordinates. It is a small format
+with a surprising number of variants, and <code class="docutils literal notranslate"><span class="pre">httk.io.read_poscar</span></code> handles them
+while making one strong promise: <strong>it never converts a number</strong>. Every numeric
+field comes back as the verbatim string found in the file, so no rounding
+happens at the I/O layer. Turning that mapping into an exact <code class="docutils literal notranslate"><span class="pre">UnitcellStructure</span></code>
+is the job of <code class="docutils literal notranslate"><span class="pre">httk.core.load</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">read_poscar(source)</span></code> accepts a filename (<code class="docutils literal notranslate"><span class="pre">str</span></code> or <code class="docutils literal notranslate"><span class="pre">os.PathLike</span></code>), an open text
+stream, or a plain iterable of lines, and returns a neutral, JSON-able mapping:</p>
+<p><code class="docutils literal notranslate"><span class="pre">format</span></code>
+Always <code class="docutils literal notranslate"><span class="pre">&quot;vasp-poscar&quot;</span></code> — a tag identifying which reader produced the mapping.
+<code class="docutils literal notranslate"><span class="pre">comment</span></code>
+Line 1, stripped. VASP itself attaches no meaning to it.
+<code class="docutils literal notranslate"><span class="pre">scale</span></code> / <code class="docutils literal notranslate"><span class="pre">volume</span></code>
+Line 2, and <strong>exactly one of the two is a string while the other is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</strong>
+A positive universal scaling factor is a multiplier on the lattice vectors
+and lands in <code class="docutils literal notranslate"><span class="pre">scale</span></code>. A <em>negative</em> one is VASP’s shorthand for “scale the
+cell so its volume equals |this|”, which is a completely different physical
+instruction — so it lands in <code class="docutils literal notranslate"><span class="pre">volume</span></code> instead, sign stripped. Collapsing the
+two into one signed number would force every consumer to re-derive the
+distinction, so the reader keeps them apart.
+<code class="docutils literal notranslate"><span class="pre">cell</span></code>
+Three rows of three coordinate strings.
+<code class="docutils literal notranslate"><span class="pre">symbols</span></code>
+The species line, as <code class="docutils literal notranslate"><span class="pre">list[str]</span></code> — or <code class="docutils literal notranslate"><span class="pre">None</span></code> for a VASP-4 file, where line 6
+holds the atom counts and no species names are recorded anywhere. <code class="docutils literal notranslate"><span class="pre">None</span></code>
+means “this file does not say”, not “no species”.
+<code class="docutils literal notranslate"><span class="pre">counts</span></code>
+Atoms per species, as <code class="docutils literal notranslate"><span class="pre">list[int]</span></code>. These <em>are</em> parsed as integers: they are
+counts, not measurements.
+<code class="docutils literal notranslate"><span class="pre">cartesian</span></code>
+<code class="docutils literal notranslate"><span class="pre">True</span></code> when the coordinate-mode line begins with C/c/K/k, <code class="docutils literal notranslate"><span class="pre">False</span></code> for
+Direct/fractional. VASP looks only at the first character, and so does this.
+<code class="docutils literal notranslate"><span class="pre">coords</span></code>
+One row of three coordinate strings per atom, in file order — <code class="docutils literal notranslate"><span class="pre">sum(counts)</span></code>
+rows.
+<code class="docutils literal notranslate"><span class="pre">selective_dynamics</span></code>
+The per-atom T/F flags as booleans when the file declares selective
+dynamics, otherwise <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Two kinds of trailing content are read past and dropped: per-line species labels
+after the three coordinates on a coordinate row (some tools write them, VASP
+ignores them), and the velocity or predictor-corrector blocks that follow the
+coordinates in a CONTCAR. Only <code class="docutils literal notranslate"><span class="pre">sum(counts)</span></code> coordinate rows are ever consumed.</p>
+<p>Malformed input raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> naming the offending line number, so a
+truncated file points at where it stopped making sense rather than failing
+somewhere far away.</p>
+<p>The last section shows the reader reached through <code class="docutils literal notranslate"><span class="pre">httk.core.load</span></code> instead of
+directly. Importing <code class="docutils literal notranslate"><span class="pre">httk.core</span></code> discovers the <code class="docutils literal notranslate"><span class="pre">httk.registry.io.io</span></code> registry
+package, which registers this loader under the extensions <code class="docutils literal notranslate"><span class="pre">.poscar</span></code> / <code class="docutils literal notranslate"><span class="pre">.vasp</span></code>
+<em>and</em> under the exact basenames <code class="docutils literal notranslate"><span class="pre">POSCAR</span></code> / <code class="docutils literal notranslate"><span class="pre">CONTCAR</span></code> — because the canonical
+VASP files have no extension at all. <code class="docutils literal notranslate"><span class="pre">load</span></code> therefore dispatches a plain
+<code class="docutils literal notranslate"><span class="pre">CONTCAR</span></code>, and also a <code class="docutils literal notranslate"><span class="pre">CONTCAR.bz2</span></code>: the compression suffix is stripped before
+the basename is matched, and the file is decompressed transparently on read.</p>
+<p>Run this file to see each variant parsed and printed.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">bz2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">httk.core</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">httk.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">read_poscar</span>
+
+<span class="c1"># VASP-5: a species line, selective dynamics, and a trailing velocity block.</span>
+<span class="n">VASP5_SELECTIVE</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;SiO2 slab, top layer relaxed</span>
+<span class="s2">1.0</span>
+<span class="s2">4.9134000000000000 0.0000000000000000 0.0000000000000000</span>
+<span class="s2">0.0000000000000000 4.9134000000000000 0.0000000000000000</span>
+<span class="s2">0.0000000000000000 0.0000000000000000 5.4052000000000000</span>
+<span class="s2">Si O</span>
+<span class="s2">1 2</span>
+<span class="s2">Selective dynamics</span>
+<span class="s2">Direct</span>
+<span class="s2">0.0000000000000000 0.0000000000000000 0.0000000000000000 T T F</span>
+<span class="s2">0.4130000000000000 0.4130000000000000 0.0000000000000000 F F F</span>
+<span class="s2">0.5870000000000000 0.5870000000000000 0.5000000000000000 T T T</span>
+
+<span class="s2">0.0000000000000000 0.0000000000000000 0.0000000000000000</span>
+<span class="s2">0.0100000000000000 0.0000000000000000 0.0000000000000000</span>
+<span class="s2">0.0000000000000000 0.0100000000000000 0.0000000000000000</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># VASP-4: no species line at all, cartesian coordinates, and trailing per-line</span>
+<span class="c1"># labels of the kind some conversion tools emit.</span>
+<span class="n">VASP4_CARTESIAN</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Ni3Al, written by a VASP-4 era tool</span>
+<span class="s2">2.0</span>
+<span class="s2">1.0000000000 0.0000000000 0.0000000000</span>
+<span class="s2">0.0000000000 1.0000000000 0.0000000000</span>
+<span class="s2">0.0000000000 0.0000000000 1.0000000000</span>
+<span class="s2">3 1</span>
+<span class="s2">Cartesian</span>
+<span class="s2">0.0000000000 0.8925000000 0.8925000000 Ni</span>
+<span class="s2">0.8925000000 0.0000000000 0.8925000000 Ni</span>
+<span class="s2">0.8925000000 0.8925000000 0.0000000000 Ni</span>
+<span class="s2">0.0000000000 0.0000000000 0.0000000000 Al</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="c1"># A negative scaling factor: the number is the target cell VOLUME, not a multiplier.</span>
+<span class="n">VOLUME_SCALED</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Cubic He, cell scaled to a fixed volume</span>
+<span class="s2">-16.0</span>
+<span class="s2">1.0 0.0 0.0</span>
+<span class="s2">0.0 1.0 0.0</span>
+<span class="s2">0.0 0.0 1.0</span>
+<span class="s2">He</span>
+<span class="s2">1</span>
+<span class="s2">Direct</span>
+<span class="s2">0.0 0.0 0.0</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_mapping</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">indent</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;   &quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Print the neutral mapping, one key per line.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;format&quot;</span><span class="p">,</span> <span class="s2">&quot;comment&quot;</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="s2">&quot;volume&quot;</span><span class="p">,</span> <span class="s2">&quot;symbols&quot;</span><span class="p">,</span> <span class="s2">&quot;counts&quot;</span><span class="p">,</span> <span class="s2">&quot;cartesian&quot;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="n">key</span><span class="si">:</span><span class="s2">&lt;20</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="s1">&#39;cell&#39;</span><span class="si">:</span><span class="s2">&lt;20</span><span class="si">}</span><span class="s2"> (3 lattice-vector rows)&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;cell&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}</span><span class="s2">    </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="s1">&#39;coords&#39;</span><span class="si">:</span><span class="s2">&lt;20</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">])</span><span class="si">}</span><span class="s2"> rows)&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;coords&quot;</span><span class="p">]:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}</span><span class="s2">    </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">indent</span><span class="si">}{</span><span class="s1">&#39;selective_dynamics&#39;</span><span class="si">:</span><span class="s2">&lt;20</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;selective_dynamics&#39;</span><span class="p">]</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_vasp5_selective</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VASP-5 with selective dynamics: flags read, velocity block ignored.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;== VASP-5: species line, selective dynamics, trailing velocities ==&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_poscar</span><span class="p">(</span><span class="n">VASP5_SELECTIVE</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">show_mapping</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The file has&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">VASP5_SELECTIVE</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()),</span> <span class="s2">&quot;lines: the coordinates are followed by a blank&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;line and a three-row velocity block. Only sum(counts) =&quot;</span><span class="p">,</span> <span class="nb">sum</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">]),</span> <span class="s2">&quot;coordinate rows are&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ever consumed, so everything after them is read past and dropped.&quot;</span><span class="p">)</span>
+    <span class="c1"># symbols/counts describe *species*; coords and the flags are *per atom*, in</span>
+    <span class="c1"># file order. Expanding symbols by counts is how the two line up.</span>
+    <span class="n">per_atom</span> <span class="o">=</span> <span class="p">[</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;symbols&quot;</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">])</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
+    <span class="n">flags</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;selective_dynamics&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">flags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">per_atom</span><span class="p">,</span> <span class="n">flags</span><span class="p">)):</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">axis</span> <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">allowed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="s2">&quot;xyz&quot;</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span> <span class="k">if</span> <span class="n">allowed</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;nothing (fully fixed)&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   atom </span><span class="si">{</span><span class="n">index</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">symbol</span><span class="si">}</span><span class="s2">): free to move along </span><span class="si">{</span><span class="n">free</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Coordinates are the verbatim strings from the file: no float() anywhere.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_vasp4_cartesian</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;VASP-4 with cartesian coordinates and trailing labels.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;== VASP-4: no species line, cartesian coordinates, trailing labels ==&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_poscar</span><span class="p">(</span><span class="n">VASP4_CARTESIAN</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="n">show_mapping</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;symbols is&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;symbols&quot;</span><span class="p">],</span> <span class="s2">&quot;-- a VASP-4 file records no species names.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;counts still says&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">],</span> <span class="s2">&quot;atoms, so the composition&#39;s *shape* is known.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cartesian is&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;cartesian&quot;</span><span class="p">],</span> <span class="s2">&quot;-- the mode line reads &#39;Cartesian&#39;.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Each coordinate row in the file ends with a species label (&#39;Ni&#39;, &#39;Al&#39;);&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;VASP ignores those and so does the reader: only the first three tokens are kept.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_negative_scale</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A negative scaling factor states a target volume, not a multiplier.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;== Negative scale: the number is a target VOLUME ==&quot;</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_poscar</span><span class="p">(</span><span class="n">VOLUME_SCALED</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   line 2 of the file:&quot;</span><span class="p">,</span> <span class="n">VOLUME_SCALED</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   scale  -&gt;&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">],</span> <span class="s2">&quot; (no multiplier was given)&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   volume -&gt;&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;volume&quot;</span><span class="p">]),</span> <span class="s2">&quot;(the sign is stripped; the cell is scaled to this volume)&quot;</span><span class="p">)</span>
+
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">read_poscar</span><span class="p">(</span><span class="n">VASP5_SELECTIVE</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   for comparison, the VASP-5 file above:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      scale  -&gt;&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">positive</span><span class="p">[</span><span class="s2">&quot;scale&quot;</span><span class="p">]),</span> <span class="s2">&quot; volume -&gt;&quot;</span><span class="p">,</span> <span class="n">positive</span><span class="p">[</span><span class="s2">&quot;volume&quot;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   Exactly one of the two is ever a string; the other is always None.&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_error_reporting</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A malformed file names the line where it stopped making sense.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;== Error reporting ==&quot;</span><span class="p">)</span>
+    <span class="n">truncated</span> <span class="o">=</span> <span class="s2">&quot;a comment</span><span class="se">\n</span><span class="s2">1.0</span><span class="se">\n</span><span class="s2">1 0 0</span><span class="se">\n</span><span class="s2">0 1 0</span><span class="se">\n</span><span class="s2">&quot;</span>  <span class="c1"># cut off before the third lattice row</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">read_poscar</span><span class="p">(</span><span class="n">truncated</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   truncated file -&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">bad_flag</span> <span class="o">=</span> <span class="n">VASP5_SELECTIVE</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;T T F&quot;</span><span class="p">,</span> <span class="s2">&quot;T T X&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">read_poscar</span><span class="p">(</span><span class="n">bad_flag</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(</span><span class="n">keepends</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   bad T/F flag   -&gt;&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">show_load_dispatch</span><span class="p">(</span><span class="n">directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;httk.core.load dispatches POSCAR/CONTCAR by basename, compressed or not.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;== httk.core.load: dispatch by extension and by basename ==&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   registered extensions:&quot;</span><span class="p">,</span> <span class="n">httk</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">register</span><span class="o">.</span><span class="n">known_extensions</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   registered filenames: &quot;</span><span class="p">,</span> <span class="n">httk</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">register</span><span class="o">.</span><span class="n">known_filenames</span><span class="p">())</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;   The canonical VASP files have no extension, hence the basename entries.&quot;</span><span class="p">)</span>
+
+    <span class="n">plain</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="s2">&quot;CONTCAR&quot;</span>
+    <span class="n">plain</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">VASP5_SELECTIVE</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="n">from_plain</span> <span class="o">=</span> <span class="n">httk</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">plain</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">   load(</span><span class="si">{</span><span class="n">plain</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">) -&gt; matched by basename, no extension involved&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      comment:&quot;</span><span class="p">,</span> <span class="n">from_plain</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">])</span>
+
+    <span class="n">compressed</span> <span class="o">=</span> <span class="n">directory</span> <span class="o">/</span> <span class="s2">&quot;CONTCAR.bz2&quot;</span>
+    <span class="n">compressed</span><span class="o">.</span><span class="n">write_bytes</span><span class="p">(</span><span class="n">bz2</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">VASP5_SELECTIVE</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)))</span>
+    <span class="n">from_compressed</span> <span class="o">=</span> <span class="n">httk</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">compressed</span><span class="p">),</span> <span class="n">raw</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   load(</span><span class="si">{</span><span class="n">compressed</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2">) -&gt; &#39;.bz2&#39; stripped, then matched by basename&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      symbols:&quot;</span><span class="p">,</span> <span class="n">from_compressed</span><span class="p">[</span><span class="s2">&quot;symbols&quot;</span><span class="p">],</span> <span class="s2">&quot; counts:&quot;</span><span class="p">,</span> <span class="n">from_compressed</span><span class="p">[</span><span class="s2">&quot;counts&quot;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;      decompressed transparently; identical mapping:&quot;</span><span class="p">,</span> <span class="n">from_compressed</span> <span class="o">==</span> <span class="n">from_plain</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">show_vasp5_selective</span><span class="p">()</span>
+    <span class="n">show_vasp4_cartesian</span><span class="p">()</span>
+    <span class="n">show_negative_scale</span><span class="p">()</span>
+    <span class="n">show_error_reporting</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmp</span><span class="p">:</span>
+        <span class="n">show_load_dispatch</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">tmp</span><span class="p">))</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="parse_vasp_outputs.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Read a small synthetic VASP output directory.</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="parse_cif.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Reading, inspecting and writing CIF files</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, The httk-io AUTHORS
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=fe42cd0d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=fd10adb8"></script>
+    <script src="../_static/selector.js?v=875006ce"></script>
+    <script>window.HTTK_DOCS_VERSIONING = {"channel":"dev","version":"dev:main","versionPathDepth":2};</script>
+    </body>
+</html>
