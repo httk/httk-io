@@ -50,9 +50,9 @@ CUBIC_CELL = (
         ("0.3333(7)", F(1, 10000), F(7, 10000)),
         ("5.6402(3)", F(1, 10000), F(3, 10000)),
         ("1.234(5)", F(1, 1000), F(1, 200)),
-        ("10", F(1), None),
+        ("10", None, None),
         ("1.2e-3", F(1, 10000), None),
-        ("3(1)e-1", F(1, 10), F(1, 10)),
+        ("3(1)e-1", None, F(1, 10)),
         ("+4.2(3)e-1", F(1, 100), F(3, 100)),
         ("1/3", None, None),
         ("?", None, None),
@@ -159,7 +159,7 @@ def test_cif_keeps_occupancy_value_spelling_and_precision(tmp_path: Path) -> Non
     data = single_asu_from_cif_file(str(path))
     assert data["occupancies"] == [1.0, 1.0 / 3.0, 0.3333, 0.3333, None]
     assert data["occupancies_exact"] == ["1", "1/3", "0.3333", "0.3333", None]
-    assert data["occupancy_precisions"] == [F(1), None, F(1, 10000), F(7, 10000), None]
+    assert data["occupancy_precisions"] == [None, None, F(1, 10000), F(7, 10000), None]
 
     _name, raw = read_cif(str(path))[0][0]
     assert raw["atom_site_occupancy"] == ["1", "1/3", "0.3333", "0.3333(7)", "?"]
