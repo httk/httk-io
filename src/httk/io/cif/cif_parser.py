@@ -625,14 +625,15 @@ def cifblock_to_asu(cifblock: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:
+def read_cif_asus(source: str | os.PathLike[str] | Iterable[str], *, autocorrect: bool = False) -> dict[str, Any]:
     """Read a CIF and return its asymmetric units as a neutral, tagged payload.
 
     This is what ``httk.core.load`` returns for a ``.cif`` file: a mapping with
     ``format`` set to ``"cif"``, ``blocks`` holding one asymmetric-unit mapping per data
     block that describes a structure, and ``header`` the file's leading comment. The tag
     lets a consumer dispatch on the file type without knowing which reader
-    produced the payload.
+    produced the payload. When ``autocorrect=True``, the top-level payload also contains
+    ``autocorrect=True`` so downstream adapters can apply compatible repairs.
 
     Loading never fails on account of a block that is not a structure. CIF is a
     general-purpose format and a file may hold bibliographic entries, powder patterns, or
@@ -649,10 +650,11 @@ def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, A
     is installed).
 
     :param source: A filename, open text stream, or iterable of CIF lines.
+    :param autocorrect: Drop malformed auxiliary loops and warn about each repair.
     :return: A neutral CIF payload containing structural blocks, unparsed block reasons, and the header.
     :raises ValueError: If the CIF stream contains malformed data that prevents parsing.
     """
-    cifblocks, header = read_cif(source, allow_cif2=False)
+    cifblocks, header = read_cif(source, allow_cif2=False, autocorrect=autocorrect)
 
     blocks = []
     unparsed = []
@@ -664,7 +666,10 @@ def read_cif_asus(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, A
         except Exception as error:
             unparsed.append({'block': name, 'reason': f'{type(error).__name__}: {error}'})
 
-    return {'format': 'cif', 'blocks': blocks, 'unparsed': unparsed, 'header': header}
+    payload: dict[str, Any] = {'format': 'cif', 'blocks': blocks, 'unparsed': unparsed, 'header': header}
+    if autocorrect:
+        payload['autocorrect'] = True
+    return payload
 
 
 def single_asu_from_cif_file(source: str | os.PathLike[str] | Iterable[str]) -> dict[str, Any]:

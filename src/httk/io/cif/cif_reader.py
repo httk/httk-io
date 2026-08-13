@@ -15,6 +15,7 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import os
 import re
 from collections.abc import Iterable, Iterator
@@ -22,6 +23,83 @@ from pathlib import Path
 from typing import Any, Self
 
 from httk.core import TextstreamFileView
+
+from .cif_tags import CIF_TAGS
+
+logger = logging.getLogger(__name__)
+
+
+# Normalized tags consumed by cif_parser.py and mcif_parser.py; a loop is droppable only
+# when none of its columns is in this set. The Fourier coefficient template is checked below.
+_PROTECTED_LOOP_TAGS = frozenset(
+    {
+        'cell_modulation_dimension',
+        'cell_length_a',
+        'cell_length_b',
+        'cell_length_c',
+        'cell_angle_alpha',
+        'cell_angle_beta',
+        'cell_angle_gamma',
+        'atom_site_type_symbol',
+        'atom_site_label',
+        'atom_site_fract_x',
+        'atom_site_fract_y',
+        'atom_site_fract_z',
+        'atom_site_occupancy',
+        'atom_site_wyckoff_label',
+        'atom_site_symmetry_multiplicity',
+        'httk_atom_site_fract_x_exact',
+        'httk_atom_site_fract_y_exact',
+        'httk_atom_site_fract_z_exact',
+        'httk_atom_site_occupancy_exact',
+        'space_group_symop.operation_xyz',
+        'space_group_symop_operation_xyz',
+        'symmetry_equiv_pos_as_xyz',
+        'space_group_name_h-m_alt',
+        'symmetry_space_group_name_h-m',
+        'space_group_name_hall',
+        'symmetry_space_group_name_hall',
+        'space_group_it_number',
+        'symmetry_space_group_it_number',
+        'database_code_icsd',
+        'citation_doi',
+        'parent_propagation_vector.kxkykz',
+        'atom_site_moment.label',
+        'atom_site_moment.crystalaxis_x',
+        'atom_site_moment.crystalaxis_y',
+        'atom_site_moment.crystalaxis_z',
+        'space_group_symop_magn_operation.xyz',
+        'space_group_symop_magn_ssg_operation.algebraic',
+        'space_group_symop_magn_centering.xyz',
+        'space_group_symop_magn_ssg_centering.algebraic',
+        'space_group_magn.number_bns',
+        'space_group_magn.name_bns',
+        'parent_space_group.name_h-m_alt',
+        'parent_space_group.it_number',
+        *CIF_TAGS['structural_q'],
+        CIF_TAGS['structural_displacement_label'],
+        CIF_TAGS['structural_occupancy_label'],
+        *CIF_TAGS['magnetic_cartesian_moment'],
+        CIF_TAGS['magnetic_fourier_label'],
+        CIF_TAGS['magnetic_ssg_name'],
+    }
+)
+_MAGNETIC_FOURIER_COEFFICIENT_RE = re.compile(
+    '^' + re.escape(CIF_TAGS['magnetic_fourier_coeff']).replace(r'\{\}', r'\d+') + '$'
+)
+_STRUCTURAL_LOOP_PREFIXES = ('atom_site', 'space_group', 'symmetry')
+
+
+def _is_consumed_tag(name: str) -> bool:
+    return (
+        name in _PROTECTED_LOOP_TAGS
+        or name.startswith(_STRUCTURAL_LOOP_PREFIXES)
+        or _MAGNETIC_FOURIER_COEFFICIENT_RE.fullmatch(name) is not None
+    )
+
+
+def _is_repairable_loop(header: list[str]) -> bool:
+    return not any(_is_consumed_tag(name) for name in header)
 
 
 class _RewindableIterator:
@@ -63,7 +141,14 @@ def _read_cif_rewind_if_needed(f: _RewindableIterator, row: str, done_fields: in
         return False
 
 
-def _read_cif_loop(f: _RewindableIterator, pragmatic: bool = True, allow_cif2: bool = False) -> dict[str, list[Any]]:
+def _read_cif_loop(
+    f: _RewindableIterator,
+    pragmatic: bool = True,
+    allow_cif2: bool = False,
+    *,
+    block_name: str,
+    autocorrect: bool = False,
+) -> dict[str, list[Any]] | None:
     noteol = False
     loop_data: dict[str, list[Any]] = {}
     header = []
@@ -103,7 +188,18 @@ def _read_cif_loop(f: _RewindableIterator, pragmatic: bool = True, allow_cif2: b
     counts = {name: len(values) for name, values in loop_data.items()}
     if len(set(counts.values())) > 1:
         rendered_counts = ", ".join(f"{name}={count}" for name, count in counts.items())
-        raise ValueError(f"CIF loop with {len(header)} columns has mismatched value counts: {rendered_counts}")
+        message = f"CIF loop with {len(header)} columns has mismatched value counts: {rendered_counts}"
+        if _is_repairable_loop(header):
+            if autocorrect:
+                logger.warning(
+                    "CIF block %r: dropped malformed auxiliary loop starting with _%s",
+                    block_name,
+                    header[0],
+                    extra={'context': 'cif'},
+                )
+                return None
+            message += " (an auxiliary loop like this can be dropped by loading with autocorrect=True, which applies documented repairs with warnings)"
+        raise ValueError(message)
     return loop_data
 
 
@@ -233,7 +329,14 @@ def _read_cif_data_value(
     return data_value, noteol
 
 
-def _read_cif_data_block(f: _RewindableIterator, pragmatic: bool = True, allow_cif2: bool = False) -> dict[str, Any]:
+def _read_cif_data_block(
+    f: _RewindableIterator,
+    pragmatic: bool = True,
+    allow_cif2: bool = False,
+    *,
+    block_name: str,
+    autocorrect: bool = False,
+) -> dict[str, Any]:
     data_items: dict[str, Any] = {}
     loops = 0
     for row in f:
@@ -246,7 +349,9 @@ def _read_cif_data_block(f: _RewindableIterator, pragmatic: bool = True, allow_c
             return data_items
         elif lowrow.startswith("loop_"):
             _read_cif_rewind_if_needed(f, row, 1)
-            loopdata = _read_cif_loop(f, pragmatic, allow_cif2)
+            loopdata = _read_cif_loop(f, pragmatic, allow_cif2, block_name=block_name, autocorrect=autocorrect)
+            if loopdata is None:
+                continue
             data_items['loop_' + str(loops)] = list(loopdata.keys())
             loops += 1
             data_items.update(loopdata)
@@ -270,7 +375,7 @@ def _read_cif_data_block(f: _RewindableIterator, pragmatic: bool = True, allow_c
 
 
 def _read_cif(
-    f: _RewindableIterator, pragmatic: bool, allow_cif2: bool
+    f: _RewindableIterator, pragmatic: bool, allow_cif2: bool, autocorrect: bool
 ) -> tuple[list[tuple[str, dict[str, Any]]], str]:
     header = ""
     datalist = []
@@ -286,12 +391,21 @@ def _read_cif(
         if lowrow.startswith("data_"):
             data_block_name = lowrow.partition('_')[2].split()[0].strip()
             _read_cif_rewind_if_needed(f, row, 1)
-            datalist.append((data_block_name, _read_cif_data_block(f, pragmatic, allow_cif2)))
+            datalist.append(
+                (
+                    data_block_name,
+                    _read_cif_data_block(f, pragmatic, allow_cif2, block_name=data_block_name, autocorrect=autocorrect),
+                )
+            )
     return datalist, header
 
 
 def read_cif(
-    source: str | os.PathLike[str] | Iterable[str], pragmatic: bool = True, allow_cif2: bool = False
+    source: str | os.PathLike[str] | Iterable[str],
+    pragmatic: bool = True,
+    allow_cif2: bool = False,
+    *,
+    autocorrect: bool = False,
 ) -> tuple[list[tuple[str, dict[str, Any]]], str]:
     """Read CIF text as ``(data_blocks, header)``.
 
@@ -301,10 +415,11 @@ def read_cif(
     :param source: A filename, open text stream, or iterable of CIF lines.
     :param pragmatic: Accept selected common deviations from strict CIF tokenization.
     :param allow_cif2: Parse CIF2 list values in addition to CIF1 data.
+    :param autocorrect: Drop malformed auxiliary loops and warn about each repair.
     :return: The data blocks and the leading comment header.
     :raises ValueError: If a loop contains mismatched column value counts.
     """
     if isinstance(source, (str, os.PathLike)):
         with TextstreamFileView(Path(source)) as stream:
-            return _read_cif(_RewindableIterator(stream), pragmatic, allow_cif2)
-    return _read_cif(_RewindableIterator(source), pragmatic, allow_cif2)
+            return _read_cif(_RewindableIterator(stream), pragmatic, allow_cif2, autocorrect)
+    return _read_cif(_RewindableIterator(source), pragmatic, allow_cif2, autocorrect)
