@@ -61,6 +61,7 @@ _PROTECTED_LOOP_TAGS = frozenset(
         'symmetry_space_group_name_hall',
         'space_group_it_number',
         'symmetry_space_group_it_number',
+        'symmetry_int_tables_number',
         'database_code_icsd',
         'citation_doi',
         'parent_propagation_vector.kxkykz',

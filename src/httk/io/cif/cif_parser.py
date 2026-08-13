@@ -599,7 +599,12 @@ def cifblock_to_asu(cifblock: Mapping[str, Any]) -> dict[str, Any]:
     # group at all.
     space_group_name_hm = _first_tag(cifblock, 'space_group_name_h-m_alt', 'symmetry_space_group_name_h-m')
     space_group_name_hall = _first_tag(cifblock, 'space_group_name_hall', 'symmetry_space_group_name_hall')
-    space_group_nbr = _first_tag(cifblock, 'space_group_it_number', 'symmetry_space_group_it_number')
+    space_group_nbr = _first_tag(
+        cifblock,
+        'space_group_it_number',
+        'symmetry_space_group_it_number',
+        'symmetry_int_tables_number',
+    )
     icsd = _first_tag(cifblock, 'database_code_icsd')
     doi = _first_tag(cifblock, 'citation_doi')
 
