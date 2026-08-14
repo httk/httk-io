@@ -69,6 +69,7 @@ from pathlib import Path
 from typing import Any
 
 import httk.core
+from httk.core.register import known_extensions, known_filenames
 
 from httk.io import read_poscar
 
@@ -205,8 +206,8 @@ def show_error_reporting() -> None:
 def show_load_dispatch(directory: Path) -> None:
     """httk.core.load dispatches POSCAR/CONTCAR by basename, compressed or not."""
     print("== httk.core.load: dispatch by extension and by basename ==")
-    print("   registered extensions:", httk.core.register.known_extensions())
-    print("   registered filenames: ", httk.core.register.known_filenames())
+    print("   registered extensions:", known_extensions())
+    print("   registered filenames: ", known_filenames())
     print("   The canonical VASP files have no extension, hence the basename entries.")
 
     plain = directory / "CONTCAR"

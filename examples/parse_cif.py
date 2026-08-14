@@ -83,6 +83,7 @@ from pathlib import Path
 from typing import Any
 
 import httk.core
+from httk.core.register import known_extensions
 
 from httk.io.cif.cif_parser import parse_cif_float, parse_cif_int
 from httk.io.cif.cif_reader import read_cif
@@ -225,7 +226,7 @@ def show_roundtrip(directory: Path, data_blocks: list[Any], header: str) -> None
 def show_load_dispatch(directory: Path) -> None:
     """The interpreting reader, reached through httk.core.load — including compressed."""
     print("== httk.core.load: the registered '.cif' loader ==")
-    print("registered extensions:", httk.core.register.known_extensions())
+    print("registered extensions:", known_extensions())
     print("Importing httk.core discovers httk.registry.io.io, which registers these.")
 
     compressed = directory / "nacl.cif.bz2"
