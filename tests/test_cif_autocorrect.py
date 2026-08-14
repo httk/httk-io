@@ -109,7 +109,7 @@ def test_structural_only_preserves_malformed_auxiliary_loop_policy():
     assert block["atom_site_label"] == ["Na1"]
 
 
-def test_structural_only_preserves_comment_loop_boundary_policy():
+def test_comment_before_new_loop_preserves_the_control_token():
     source = [
         "data_test\n",
         "loop_\n",
@@ -120,11 +120,10 @@ def test_structural_only_preserves_comment_loop_boundary_policy():
         "loop_\n",
         "_atom_site_label\n",
         "C1\n",
+        "# quoted reserved words remain values\n",
+        "'loop_'\n",
     ]
 
-    messages = []
     for structural_only in (False, True):
-        with pytest.raises(ValueError) as error:
-            read_cif(source, pragmatic=False, structural_only=structural_only)
-        messages.append(str(error.value))
-    assert messages[0] == messages[1]
+        _, block = read_cif(source, pragmatic=False, structural_only=structural_only)[0][0]
+        assert block["atom_site_label"] == ["C1", "loop_"]

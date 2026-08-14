@@ -296,6 +296,9 @@ def _read_cif_data_value(
         if striprow.startswith("#") or striprow == "":
             noteol = False
             continue
+        elif inloop and not noteol and (row.startswith("_") or striprow.lower().startswith(("data_", "loop_"))):
+            f.rewind()
+            return None, False
         elif (not noteol) and row.startswith(';'):
             folded = False
             newline = False
