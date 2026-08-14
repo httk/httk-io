@@ -50,6 +50,28 @@ class CifMeta(TypedDict):
     precision: Fraction | None
 
 
+# IUPAC element symbols (H..Og); used to infer a site's element from its label when a CIF
+# omits the optional _atom_site_type_symbol column.
+_ELEMENT_SYMBOLS = frozenset(
+    (
+        'H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'Ne',
+        'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar', 'K', 'Ca',
+        'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
+        'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr', 'Rb', 'Sr', 'Y', 'Zr',
+        'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn',
+        'Sb', 'Te', 'I', 'Xe', 'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd',
+        'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb',
+        'Lu', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg',
+        'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn', 'Fr', 'Ra', 'Ac', 'Th',
+        'Pa', 'U', 'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm',
+        'Md', 'No', 'Lr', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds',
+        'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og',
+    )
+)  # fmt: skip
+
+# The leading alphabetic run of an atom-site label, e.g. "Mg" of "MgM1".
+_LABEL_PREFIX_RE = re.compile(r'[A-Za-z]+')
+
 # Regexp close to https://www.iucr.org/__data/iucr/cifdic_html/2/cif_mm.dic/Dtypecodes.html
 # matches:  1.234(5), -12.3(12), 3(1)E2, 1.0e-3, +4.2, etc.
 _CIF_NUM_RE = re.compile(
@@ -243,6 +265,29 @@ def cif_exact_token(token: str) -> str | None:
     return text.strip() or None
 
 
+def _symbol_from_label(label: str) -> str | None:
+    """Element symbol inferred from an ``_atom_site_label``, or ``None``.
+
+    :param label: An atom-site label such as ``"MgM1"`` or ``"O1"``.
+    :return: The inferred IUPAC element symbol, or ``None`` when no leading element is recognised.
+    """
+    match = _LABEL_PREFIX_RE.match(label.strip())
+    if match is None:
+        return None
+    prefix = match.group(0)
+    if len(prefix) >= 2:
+        # A two-letter symbol only when the case supports it: an "Xy" prefix reads as one,
+        # and an all-caps label ("MGM1") still resolves, but a mixed-case "OSi1" must stay
+        # "O" rather than becoming the greedy two-letter "Os".
+        two = prefix[:2].capitalize()
+        if two in _ELEMENT_SYMBOLS and (prefix[1].islower() or prefix.isupper()):
+            return two
+    one = prefix[:1].upper()
+    if one in _ELEMENT_SYMBOLS:
+        return one
+    return None
+
+
 def _parse_atoms(block: Mapping[str, Any]) -> tuple[Any, ...]:
     """Parse atom data without coordinate-precision reporting."""
     syms = block.get('atom_site_type_symbol')
@@ -250,6 +295,23 @@ def _parse_atoms(block: Mapping[str, Any]) -> tuple[Any, ...]:
     xs = block.get('atom_site_fract_x')
     ys = block.get('atom_site_fract_y')
     zs = block.get('atom_site_fract_z')
+
+    if not isinstance(syms, list) and isinstance(lbs, list):
+        # The CIF core dictionary makes _atom_site_type_symbol optional; when it is absent the
+        # element is derivable from the label, so infer it rather than refusing the file.
+        inferred = [_symbol_from_label(lab) for lab in lbs]
+        unresolved = [lab for lab, sym in zip(lbs, inferred) if sym is None]
+        if unresolved:
+            raise ValueError(
+                "CIF block has no _atom_site_type_symbol column and the element could not be "
+                f"inferred from _atom_site_label for: {', '.join(unresolved)}"
+            )
+        warnings.warn(
+            "CIF block has no _atom_site_type_symbol column; element symbols inferred from _atom_site_label",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+        syms = cast(list[str], inferred)
 
     missing = [
         f'_{name}'
