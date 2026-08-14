@@ -149,6 +149,7 @@ def _read_cif_loop(
     *,
     block_name: str,
     autocorrect: bool = False,
+    structural_only: bool = False,
 ) -> dict[str, list[Any]] | None:
     noteol = False
     loop_data: dict[str, list[Any]] = {}
@@ -163,6 +164,12 @@ def _read_cif_loop(
         else:
             f.rewind()
             break
+
+    if structural_only and header and _is_repairable_loop(header) and not allow_cif2:
+        count = _skip_cif_loop(f, pragmatic)
+        counts = {name: count // len(header) + (index < count % len(header)) for index, name in enumerate(header)}
+        _validate_loop_counts(header, counts, block_name, autocorrect)
+        return None
 
     while len(header) > 0:
         for i in range(len(header)):
@@ -187,6 +194,13 @@ def _read_cif_loop(
             continue
         break
     counts = {name: len(values) for name, values in loop_data.items()}
+    if not _validate_loop_counts(header, counts, block_name, autocorrect):
+        return None
+    return loop_data
+
+
+def _validate_loop_counts(header: list[str], counts: dict[str, int], block_name: str, autocorrect: bool) -> bool:
+    """Apply the common strict/autocorrect policy to CIF loop column counts."""
     if len(set(counts.values())) > 1:
         rendered_counts = ", ".join(f"{name}={count}" for name, count in counts.items())
         message = f"CIF loop with {len(header)} columns has mismatched value counts: {rendered_counts}"
@@ -198,10 +212,74 @@ def _read_cif_loop(
                     header[0],
                     extra={'context': 'cif'},
                 )
-                return None
+                return False
             message += " (an auxiliary loop like this can be dropped by loading with autocorrect=True, which applies documented repairs with warnings)"
         raise ValueError(message)
-    return loop_data
+    return True
+
+
+def _skip_cif_loop(f: _RewindableIterator, pragmatic: bool) -> int:
+    """Count an unneeded CIF1 loop without materializing its ordinary data rows."""
+    count = 0
+    for row in f:
+        striprow = row.strip()
+        lowrow = striprow.lower()
+        if not striprow:
+            continue
+        if striprow.startswith("#"):
+            # Preserve the ordinary parser's strict token-boundary behavior around
+            # comments until that CIF conformance question is settled explicitly.
+            f.rewind()
+            return _skip_cif_loop_tokens(f, pragmatic, count)
+        if row.startswith("_") or lowrow.startswith(("data_", "loop_")):
+            f.rewind()
+            return count
+        if "'" in row or '"' in row:
+            f.rewind()
+            return _skip_cif_loop_tokens(f, pragmatic, count)
+        if row.startswith(";"):
+            count += 1
+            for continuation in f:
+                if not continuation.startswith(";"):
+                    continue
+                tail = continuation[1:].strip()
+                if tail:
+                    f.rewind(tail)
+                    return _skip_cif_loop_tokens(f, pragmatic, count)
+                break
+            continue
+        tokens = striprow.split()
+        for index, token in enumerate(tokens):
+            lowtoken = token.lower()
+            if token.startswith("_") or lowtoken.startswith(("data_", "loop_")):
+                f.rewind(" ".join(tokens[index:]))
+                return count
+            value, marker, _ = token.partition("#")
+            if value:
+                count += 1
+            if marker:
+                break
+    return count
+
+
+def _skip_cif_loop_tokens(f: _RewindableIterator, pragmatic: bool, count: int) -> int:
+    """Finish skipping a CIF1 loop through the ordinary tokenizer."""
+    noteol = False
+    while True:
+        try:
+            row = next(f)
+            while row.isspace():
+                row = next(f)
+        except StopIteration:
+            return count
+        lowrow = row.strip().lower()
+        if not row or row.startswith("_") or lowrow.startswith(("data_", "loop_")):
+            f.rewind()
+            return count
+        f.rewind()
+        value, noteol = _read_cif_data_value(f, noteol, pragmatic, inloop=True)
+        if value is not None:
+            count += 1
 
 
 def _read_cif_data_value(
@@ -337,6 +415,7 @@ def _read_cif_data_block(
     *,
     block_name: str,
     autocorrect: bool = False,
+    structural_only: bool = False,
 ) -> dict[str, Any]:
     data_items: dict[str, Any] = {}
     loops = 0
@@ -350,7 +429,14 @@ def _read_cif_data_block(
             return data_items
         elif lowrow.startswith("loop_"):
             _read_cif_rewind_if_needed(f, row, 1)
-            loopdata = _read_cif_loop(f, pragmatic, allow_cif2, block_name=block_name, autocorrect=autocorrect)
+            loopdata = _read_cif_loop(
+                f,
+                pragmatic,
+                allow_cif2,
+                block_name=block_name,
+                autocorrect=autocorrect,
+                structural_only=structural_only,
+            )
             if loopdata is None:
                 continue
             data_items['loop_' + str(loops)] = list(loopdata.keys())
@@ -371,12 +457,17 @@ def _read_cif_data_block(
             else:
                 noteol = False
             data_value, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, inloop=False)
-            data_items[data_name] = data_value
+            if not structural_only or _is_consumed_tag(data_name):
+                data_items[data_name] = data_value
     return data_items
 
 
 def _read_cif(
-    f: _RewindableIterator, pragmatic: bool, allow_cif2: bool, autocorrect: bool
+    f: _RewindableIterator,
+    pragmatic: bool,
+    allow_cif2: bool,
+    autocorrect: bool,
+    structural_only: bool,
 ) -> tuple[list[tuple[str, dict[str, Any]]], str]:
     header = ""
     datalist = []
@@ -395,7 +486,14 @@ def _read_cif(
             datalist.append(
                 (
                     data_block_name,
-                    _read_cif_data_block(f, pragmatic, allow_cif2, block_name=data_block_name, autocorrect=autocorrect),
+                    _read_cif_data_block(
+                        f,
+                        pragmatic,
+                        allow_cif2,
+                        block_name=data_block_name,
+                        autocorrect=autocorrect,
+                        structural_only=structural_only,
+                    ),
                 )
             )
     return datalist, header
@@ -407,6 +505,7 @@ def read_cif(
     allow_cif2: bool = False,
     *,
     autocorrect: bool = False,
+    structural_only: bool = False,
 ) -> tuple[list[tuple[str, dict[str, Any]]], str]:
     """Read CIF text as ``(data_blocks, header)``.
 
@@ -417,10 +516,11 @@ def read_cif(
     :param pragmatic: Accept selected common deviations from strict CIF tokenization.
     :param allow_cif2: Parse CIF2 list values in addition to CIF1 data.
     :param autocorrect: Drop malformed auxiliary loops and warn about each repair.
+    :param structural_only: Retain only tags consumed by httk's structural adapters and skip auxiliary CIF1 loops.
     :return: The data blocks and the leading comment header.
     :raises ValueError: If a loop contains mismatched column value counts.
     """
     if isinstance(source, (str, os.PathLike)):
         with TextstreamFileView(Path(source)) as stream:
-            return _read_cif(_RewindableIterator(stream), pragmatic, allow_cif2, autocorrect)
-    return _read_cif(_RewindableIterator(source), pragmatic, allow_cif2, autocorrect)
+            return _read_cif(_RewindableIterator(stream), pragmatic, allow_cif2, autocorrect, structural_only)
+    return _read_cif(_RewindableIterator(source), pragmatic, allow_cif2, autocorrect, structural_only)

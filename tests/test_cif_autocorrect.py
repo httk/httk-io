@@ -66,3 +66,65 @@ def test_autocorrect_does_not_drop_malformed_wyckoff_declaration_loop(tmp_path):
         with pytest.raises(ValueError) as error:
             read_cif(wyckoff_fixture, autocorrect=autocorrect)
         assert HINT not in str(error.value)
+
+
+def test_structural_only_skips_auxiliary_loops_and_fields(tmp_path):
+    source = tmp_path / "structural-only.cif"
+    source.write_text(
+        """data_test
+_audit_scalar ignored
+loop_
+_audit_first
+_audit_second
+1 2
+3 4 _cell_length_a 5
+loop_
+_atom_site_label
+_atom_site_fract_x
+C1 0
+""",
+        encoding="utf-8",
+    )
+
+    _, complete = read_cif(source)[0][0]
+    _, structural = read_cif(source, structural_only=True)[0][0]
+
+    assert complete["audit_scalar"] == "ignored"
+    assert complete["audit_first"] == ["1", "3"]
+    assert structural == {
+        "cell_length_a": "5",
+        "loop_0": ["atom_site_label", "atom_site_fract_x"],
+        "atom_site_label": ["C1"],
+        "atom_site_fract_x": ["0"],
+    }
+
+
+def test_structural_only_preserves_malformed_auxiliary_loop_policy():
+    with pytest.raises(ValueError) as error:
+        read_cif(FIXTURE, structural_only=True)
+    assert HINT in str(error.value)
+
+    _, block = read_cif(FIXTURE, structural_only=True, autocorrect=True)[0][0]
+    assert "audit_tag" not in block
+    assert block["atom_site_label"] == ["Na1"]
+
+
+def test_structural_only_preserves_comment_loop_boundary_policy():
+    source = [
+        "data_test\n",
+        "loop_\n",
+        "_audit_first\n",
+        "_audit_second\n",
+        "1 2\n",
+        "# next loop\n",
+        "loop_\n",
+        "_atom_site_label\n",
+        "C1\n",
+    ]
+
+    messages = []
+    for structural_only in (False, True):
+        with pytest.raises(ValueError) as error:
+            read_cif(source, pragmatic=False, structural_only=structural_only)
+        messages.append(str(error.value))
+    assert messages[0] == messages[1]
