@@ -88,6 +88,7 @@ _PROTECTED_LOOP_TAGS = frozenset(
 _MAGNETIC_FOURIER_COEFFICIENT_RE = re.compile(
     '^' + re.escape(CIF_TAGS['magnetic_fourier_coeff']).replace(r'\{\}', r'\d+') + '$'
 )
+_PRAGMATIC_VALUE_SPLIT_RE = re.compile(r'\s+_|\s+data_|\s+loop_')
 _STRUCTURAL_LOOP_PREFIXES = ('atom_site', 'space_group', 'symmetry')
 
 
@@ -158,12 +159,14 @@ def _read_cif_loop(
         striprow = row.strip()
         lowrow = striprow.lower()
         if lowrow.startswith("_"):
-            loop_data[lowrow[1:]] = []
-            header += [lowrow[1:]]
+            name = lowrow[1:]
+            loop_data[name] = []
+            header.append(name)
             noteol = _read_cif_rewind_if_needed(f, row, 1)
         else:
             f.rewind()
             break
+    columns = [loop_data[name] for name in header]
 
     if structural_only and header and _is_repairable_loop(header) and not allow_cif2:
         count = _skip_cif_loop(f, pragmatic)
@@ -171,25 +174,14 @@ def _read_cif_loop(
         _validate_loop_counts(header, counts, block_name, autocorrect)
         return None
 
-    while len(header) > 0:
-        for i in range(len(header)):
-            try:
-                row = next(f)
-                while row.isspace():
-                    row = next(f)
-            except StopIteration:
-                break
-            striprow = row.strip()
-            lowrow = striprow.lower()
-            if not row or row.startswith("_") or lowrow.startswith(("data_", "loop_")):
-                f.rewind()
-                break
-            f.rewind()
+    # _read_cif_data_value recognizes and rewinds the next loop/data/tag token, so
+    # peeking here would strip, lowercase, and traverse every ordinary value twice.
+    while columns:
+        for column in columns:
             val, noteol = _read_cif_data_value(f, noteol, pragmatic, allow_cif2, inloop=True)
             if val is None:
-                # Could be a comment line, etc.
-                continue
-            loop_data[header[i]].append(val)
+                break
+            column.append(val)
         else:
             continue
         break
@@ -223,7 +215,6 @@ def _skip_cif_loop(f: _RewindableIterator, pragmatic: bool) -> int:
     count = 0
     for row in f:
         striprow = row.strip()
-        lowrow = striprow.lower()
         if not striprow:
             continue
         if striprow.startswith("#"):
@@ -231,7 +222,7 @@ def _skip_cif_loop(f: _RewindableIterator, pragmatic: bool) -> int:
             # comments until that CIF conformance question is settled explicitly.
             f.rewind()
             return _skip_cif_loop_tokens(f, pragmatic, count)
-        if row.startswith("_") or lowrow.startswith(("data_", "loop_")):
+        if row.startswith("_") or (striprow[0] in "dDlL" and striprow.lower().startswith(("data_", "loop_"))):
             f.rewind()
             return count
         if "'" in row or '"' in row:
@@ -250,8 +241,7 @@ def _skip_cif_loop(f: _RewindableIterator, pragmatic: bool) -> int:
             continue
         tokens = striprow.split()
         for index, token in enumerate(tokens):
-            lowtoken = token.lower()
-            if token.startswith("_") or lowtoken.startswith(("data_", "loop_")):
+            if token.startswith("_") or (token[0] in "dDlL" and token.lower().startswith(("data_", "loop_"))):
                 f.rewind(" ".join(tokens[index:]))
                 return count
             value, marker, _ = token.partition("#")
@@ -292,40 +282,57 @@ def _read_cif_data_value(
 ) -> tuple[Any, bool]:
     data_value: Any = None
     for row in f:
+        if inloop and not row:
+            f.rewind()
+            return None, False
         striprow = row.strip()
         if striprow.startswith("#") or striprow == "":
             noteol = False
             continue
-        elif inloop and not noteol and (row.startswith("_") or striprow.lower().startswith(("data_", "loop_"))):
+        elif inloop and (
+            row.startswith("_") or (striprow[0] in "dDlL" and striprow.lower().startswith(("data_", "loop_")))
+        ):
             f.rewind()
             return None, False
         elif (not noteol) and row.startswith(';'):
             folded = False
             newline = False
-            data_value = ""
+            data_parts = []
             if row[1] == "\\" and row[2:].rstrip("\r\n") == "":
                 folded = True
             elif row[1:].isspace():
                 if not pragmatic:
-                    data_value = row.lstrip().rstrip('\r\n')
+                    data_parts.append(row.lstrip().rstrip('\r\n'))
                     newline = True
             else:
-                data_value = row.lstrip()[1:].rstrip('\r\n')
+                data_parts.append(row.lstrip()[1:].rstrip('\r\n'))
                 newline = True
-            stripirow = ""
+            last_irow = ""
+            content_lines = []
             for irow in f:
-                stripirow = irow.strip()
+                last_irow = irow
                 if irow.startswith(';'):
                     break
-                if newline:
-                    data_value += '\n'
-                    newline = True
-                if folded and irow.rstrip('\r\n').endswith("\\"):
-                    data_value += irow.rstrip('\r\n').rstrip("\\")
-                    newline = False
+                content_lines.append(irow.rstrip('\r\n'))
+            # Join once: repeated string concatenation is quadratic for large text fields.
+            if folded:
+                for trimmed in content_lines:
+                    if newline:
+                        data_parts.append('\n')
+                    if trimmed.endswith("\\"):
+                        data_parts.append(trimmed.rstrip("\\"))
+                        newline = False
+                    else:
+                        data_parts.append(trimmed)
+                        newline = True
+                data_value = ''.join(data_parts)
+            else:
+                if data_parts:
+                    data_parts.extend(content_lines)
                 else:
-                    data_value += irow.rstrip('\r\n')
-                    newline = True
+                    data_parts = content_lines
+                data_value = '\n'.join(data_parts)
+            stripirow = last_irow.strip()
             if len(stripirow) > 1:
                 f.rewind(stripirow[1:])
                 noteol = True
@@ -393,7 +400,7 @@ def _read_cif_data_value(
                 # multiple data values in this situation would be an
                 # error in the file otherwise, but if there is whitespace + underscore/data_/loop_ we parse that
                 # as a new symbol, since otherwise we COULD misread valid files (with very weird formatting...).
-                splitstr = re.split(r'\s+_|\s+data_|\s+loop_', striprow, maxsplit=1)
+                splitstr = _PRAGMATIC_VALUE_SPLIT_RE.split(striprow, maxsplit=1)
             else:
                 splitstr = striprow.split(None, 1)
             # "Data on a line following a hash character `#' is considered to be a comment,
@@ -424,13 +431,12 @@ def _read_cif_data_block(
     loops = 0
     for row in f:
         striprow = row.strip()
-        lowrow = striprow.lower()
         if striprow.startswith("#"):
             continue
-        elif lowrow.startswith("data_"):
+        elif striprow and striprow[0] in "dD" and striprow[:5].lower() == "data_":
             f.rewind()
             return data_items
-        elif lowrow.startswith("loop_"):
+        elif striprow and striprow[0] in "lL" and striprow[:5].lower() == "loop_":
             _read_cif_rewind_if_needed(f, row, 1)
             loopdata = _read_cif_loop(
                 f,
@@ -451,6 +457,7 @@ def _read_cif_data_block(
                 if irow.rstrip() == ";":
                     break
         elif striprow.startswith("_"):
+            lowrow = striprow.lower()
             lowsplit = lowrow.split()
             data_name = lowsplit[0][1:]
             if len(lowsplit) > 1:
@@ -482,8 +489,9 @@ def _read_cif(
             break
 
     for row in f:
-        lowrow = row.strip().lower()
-        if lowrow.startswith("data_"):
+        striprow = row.strip()
+        if striprow and striprow[0] in "dD" and striprow[:5].lower() == "data_":
+            lowrow = striprow.lower()
             data_block_name = lowrow.partition('_')[2].split()[0].strip()
             _read_cif_rewind_if_needed(f, row, 1)
             datalist.append(

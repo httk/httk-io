@@ -70,6 +70,29 @@ def test_writer_handles_blank_lines_in_multiline_values(tmp_path):
     assert block["audit_creation_method"] == "first\n\nlast"
 
 
+def test_reader_preserves_buffered_multiline_values():
+    source = [
+        "data_example\n",
+        "_plain\n",
+        ";first\n",
+        "second\n",
+        "\n",
+        "last\n",
+        ";\n",
+        "_folded\n",
+        ";\\\n",
+        "first\\\n",
+        "second\n",
+        "third\n",
+        ";\n",
+    ]
+
+    _name, block = read_cif(source)[0][0]
+
+    assert block["plain"] == "first\nsecond\n\nlast"
+    assert block["folded"] == "firstsecond\nthird"
+
+
 def test_writer_rejects_overlong_data_names(tmp_path):
     with pytest.raises(ValueError, match="75"):
         write_cif(str(tmp_path / "long.cif"), [("example", {"a" * 76: "value"})])
