@@ -251,8 +251,20 @@ def _parse_atoms(block: Mapping[str, Any]) -> tuple[Any, ...]:
     ys = block.get('atom_site_fract_y')
     zs = block.get('atom_site_fract_z')
 
-    if not all(isinstance(column, list) for column in (syms, lbs, xs, ys, zs)):
-        raise ValueError("CIF block is missing one or more required atom-site columns")
+    missing = [
+        f'_{name}'
+        for name, column in (
+            ('atom_site_type_symbol', syms),
+            ('atom_site_label', lbs),
+            ('atom_site_fract_x', xs),
+            ('atom_site_fract_y', ys),
+            ('atom_site_fract_z', zs),
+        )
+        if not isinstance(column, list)
+    ]
+    if missing:
+        noun = 'column' if len(missing) == 1 else 'columns'
+        raise ValueError(f"CIF block is missing required atom-site {noun}: {', '.join(missing)}")
     syms = cast(list[str], syms)
     lbs = cast(list[str], lbs)
     xs = cast(list[str], xs)

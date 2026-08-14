@@ -107,3 +107,22 @@ def test_load_mcif_returns_a_tagged_neutral_payload(tmp_path):
     assert "basis" not in block
     assert "positions" not in block
     assert "symops" not in block
+
+
+def test_missing_atom_site_columns_are_named(tmp_path):
+    path = tmp_path / "missing-symbol.cif"
+    path.write_text(
+        "data_missing\n"
+        "_cell_length_a 1\n_cell_length_b 1\n_cell_length_c 1\n"
+        "_cell_angle_alpha 90\n_cell_angle_beta 90\n_cell_angle_gamma 90\n"
+        "loop_\n_space_group_symop_operation_xyz\n'x,y,z'\n"
+        "loop_\n_atom_site_label\n_atom_site_fract_x\n"
+        "_atom_site_fract_y\n_atom_site_fract_z\nSi1 0 0 0\n",
+        encoding="utf-8",
+    )
+
+    payload = httk.core.load(path, raw=True)
+
+    assert payload["unparsed"][0]["reason"] == (
+        "ValueError: CIF block is missing required atom-site column: _atom_site_type_symbol"
+    )
