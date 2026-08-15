@@ -186,6 +186,8 @@ class _FullPass:
     last_frame: OutcarFrame | None
     stresses: tuple[tuple[str, ...], ...]
     elastic_moduli: tuple[ElasticModuliBlock, ...]
+    magnetization: tuple[float, ...] | None
+    noncollinear_magnetization: bool
 
 
 def _issue(issues: list[str], line: int, message: str) -> None:
@@ -396,6 +398,97 @@ class _ElasticTracker:
         self._finish(blocks, issues, line)
 
 
+def _is_separator(stripped: str) -> bool:
+    return len(stripped) >= 4 and set(stripped) == {"-"}
+
+
+class _MagnetizationTracker:
+    """Track the final ``magnetization (x)`` block and its per-ion total moments.
+
+    Only the collinear ``magnetization (x)`` table is parsed. Each new header
+    resets the candidate so that the last block in the file always wins, and a
+    truncated or malformed final block (from a killed job) yields ``None``. A
+    ``magnetization (y)`` or ``(z)`` header seen after the final ``(x)`` header
+    sets :attr:`noncollinear`, signalling that the ``(x)`` totals are only one
+    projection of a noncollinear moment.
+    """
+
+    _IDLE = 0
+    _AWAIT_ION_HEADER = 1
+    _AWAIT_OPEN_SEP = 2
+    _ROWS = 3
+    _AWAIT_TOT = 4
+    _DONE = 5
+
+    def __init__(self) -> None:
+        self.seen = False
+        self.header_line = 0
+        self._phase = self._IDLE
+        self._rows: list[float] = []
+        self._failed = False
+        self.totals: tuple[float, ...] | None = None
+        self.noncollinear = False
+
+    def _reset(self, lineno: int) -> None:
+        self.seen = True
+        self.header_line = lineno
+        self._phase = self._AWAIT_ION_HEADER
+        self._rows = []
+        self._failed = False
+        self.totals = None
+        self.noncollinear = False
+
+    def feed(self, line: str, lineno: int) -> None:
+        lowered = line.lower()
+        if "magnetization (x)" in lowered:
+            self._reset(lineno)
+            return
+        if self.seen and ("magnetization (y)" in lowered or "magnetization (z)" in lowered):
+            self.noncollinear = True
+            return
+        if self._phase in (self._IDLE, self._DONE):
+            return
+        stripped = line.strip()
+        if self._phase == self._AWAIT_ION_HEADER:
+            if stripped.startswith("# of ion"):
+                self._phase = self._AWAIT_OPEN_SEP
+            return
+        if self._phase == self._AWAIT_OPEN_SEP:
+            if _is_separator(stripped):
+                self._phase = self._ROWS
+            elif stripped:
+                self._failed = True
+            return
+        if self._phase == self._ROWS:
+            if not stripped:
+                return
+            if _is_separator(stripped):
+                self._phase = self._AWAIT_TOT
+                return
+            self._feed_row(stripped)
+            return
+        if self._phase == self._AWAIT_TOT:
+            if not stripped:
+                return
+            if stripped.lower().startswith("tot") and not self._failed and self._rows:
+                self.totals = tuple(self._rows)
+            self._phase = self._DONE
+
+    def _feed_row(self, stripped: str) -> None:
+        tokens = stripped.split()
+        if len(tokens) < 3 or not tokens[0].isdigit() or int(tokens[0]) <= 0:
+            self._failed = True
+            return
+        if not all(_number(token) for token in tokens[1:]):
+            self._failed = True
+            return
+        self._rows.append(float(tokens[-1]))
+
+    def finish(self, issues: list[str]) -> None:
+        if self.seen and self.totals is None:
+            _issue(issues, self.header_line, "malformed magnetization (x) block")
+
+
 def _iter_parsed_frames(
     lines: Iterator[str],
     *,
@@ -405,6 +498,7 @@ def _iter_parsed_frames(
     completion_evidence: list[str] | None = None,
     elastic: _ElasticTracker | None = None,
     elastic_blocks: list[ElasticModuliBlock] | None = None,
+    magnetization: _MagnetizationTracker | None = None,
     line_counter: list[int] | None = None,
     nions: int | None = None,
 ) -> Iterator[OutcarFrame]:
@@ -433,6 +527,8 @@ def _iter_parsed_frames(
             line_counter[0] = lineno
         if energy is not None:
             energy.feed(line, lineno)
+        if magnetization is not None:
+            magnetization.feed(line, lineno)
         if completion_evidence is not None and _COMPLETION in line:
             completion_evidence.append(line.rstrip("\r\n"))
         stress = _stress_row(line)
@@ -608,6 +704,7 @@ class OutcarFile:
         stresses: list[tuple[str, ...]] = []
         elastic_blocks: list[ElasticModuliBlock] = []
         elastic = _ElasticTracker()
+        magnetization = _MagnetizationTracker()
         line_counter = [0]
         nframes = 0
         last_frame: OutcarFrame | None = None
@@ -621,6 +718,7 @@ class OutcarFile:
                 completion_evidence=completion_evidence,
                 elastic=elastic,
                 elastic_blocks=elastic_blocks,
+                magnetization=magnetization,
                 line_counter=line_counter,
                 nions=prologue.nions,
             ):
@@ -628,6 +726,7 @@ class OutcarFile:
                 last_frame = frame
 
         energy.finish(issues)
+        magnetization.finish(issues)
         if not completion_evidence:
             _issue(issues, line_counter[0] + 1, "missing completion footer")
         self._full = _FullPass(
@@ -644,6 +743,8 @@ class OutcarFile:
             last_frame,
             tuple(stresses),
             tuple(elastic_blocks),
+            magnetization.totals,
+            magnetization.noncollinear,
         )
         return self._full
 
@@ -740,6 +841,40 @@ class OutcarFile:
         """Return parsed elastic-moduli tables in source order."""
         self._require_open()
         return self._ensure_full().elastic_moduli
+
+    @property
+    def magnetization(self) -> tuple[float, ...] | None:
+        """Return per-ion total magnetic moments from the final ``magnetization (x)`` block.
+
+        The values are the last (``tot``) column of each ion row in the last
+        ``magnetization (x)`` block in the file, in Bohr magnetons. The
+        per-orbital columns and the ``magnetization (y)`` / ``(z)`` blocks
+        themselves are out of scope, so for a noncollinear run these values are
+        only the *x* projection of each moment. A caller treating them as a
+        collinear axis projection must check :attr:`noncollinear_magnetization`
+        first. A malformed or truncated final block never raises: it yields
+        ``None`` and records an entry in :attr:`issues`, so an OUTCAR from a
+        killed job is ordinary input.
+
+        :return: The per-ion total moments, or ``None`` for a non-spin-polarized
+            run or an unusable final block.
+        """
+        self._require_open()
+        return self._ensure_full().magnetization
+
+    @property
+    def noncollinear_magnetization(self) -> bool:
+        """Whether a ``magnetization (y)`` or ``(z)`` block follows the final ``(x)`` block.
+
+        When ``True`` the :attr:`magnetization` values are only the *x*
+        projection of a noncollinear moment and must not be treated as a
+        collinear axis magnitude.
+
+        :return: ``True`` for a noncollinear final block, ``False`` otherwise,
+            including when the file has no magnetization block.
+        """
+        self._require_open()
+        return self._ensure_full().noncollinear_magnetization
 
     @property
     def completed(self) -> bool:

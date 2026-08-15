@@ -24,12 +24,27 @@ file. It performs no numeric conversion and imports nothing from
 ``httk.core.load``.
 """
 
+import re
 from collections.abc import Iterator
 from typing import Any
 
 from httk.core import combined_precision
 
 from ._text import source_lines
+
+_POTCAR_SUFFIX = re.compile(r"^([A-Z][a-z]?)[_/.]")
+
+
+def _strip_potcar_suffix(token: str) -> str:
+    """Drop a POTCAR-flavor suffix, keeping the leading element symbol.
+
+    Only ``_``, ``/`` and ``.`` introduce a suffix, and only when the token
+    starts with an element-shaped ``[A-Z][a-z]?``; anything else (``vacancy``,
+    ``D`` and unrecognized tokens) is returned unchanged so downstream error
+    messages stay truthful.
+    """
+    match = _POTCAR_SUFFIX.match(token)
+    return match.group(1) if match is not None else token
 
 
 def _next_line(lines: Iterator[str], lineno: int, what: str) -> str:
@@ -59,7 +74,10 @@ def read_poscar(source: Any) -> dict[str, Any]:
     The returned mapping has the keys ``format`` (always ``"vasp-poscar"``),
     ``comment``, ``scale`` and ``volume`` (both keys are always present; exactly
     one is non-``None``), ``cell``, ``symbols`` (which may be ``None`` for
-    VASP-4), ``counts``, ``cartesian``, ``coords``, and
+    VASP-4; any species token shaped ``[A-Z][a-z]?`` followed by ``_``, ``/`` or
+    ``.`` is truncated to that leading symbol, so ``Li_sv``, ``O_h`` and ``Lu/``
+    read as ``Li``, ``O`` and ``Lu``; every other token, including ``vacancy``,
+    is left untouched), ``counts``, ``cartesian``, ``coords``, and
     ``selective_dynamics`` (which may be ``None`` when selective dynamics is not
     declared), and ``raw`` (the original decompressed text, or ``None`` when
     unavailable). For filenames and binary sources, ``raw`` preserves CRLF and
@@ -119,7 +137,7 @@ def _read_poscar(lines: Iterator[str]) -> dict[str, Any]:
         symbols: list[str] | None = None
         counts_lineno = 6
     except ValueError:
-        symbols = species_line
+        symbols = [_strip_potcar_suffix(token) for token in species_line]
         counts_line = _next_line(lines, 7, "atom counts").strip().split()
         try:
             counts = [int(token) for token in counts_line]

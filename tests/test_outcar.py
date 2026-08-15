@@ -348,6 +348,88 @@ def test_outcar_elastic_moduli_blocks(tmp_path: Path) -> None:
     )
 
 
+def magnetization_block(totals: tuple[str, ...], *, closed: bool = True, tot: bool = True) -> str:
+    header = (
+        " magnetization (x)\n\n# of ion       s       p       d       tot\n------------------------------------------\n"
+    )
+    rows = "".join(f"   {i:2d}        0.000   0.000   0.000   {value}\n" for i, value in enumerate(totals, 1))
+    closing = "--------------------------------------------------\n" if closed else ""
+    tot_line = f"tot          0.000   0.000   0.000   {totals[-1]}\n" if tot else ""
+    return header + rows + closing + tot_line
+
+
+def test_outcar_magnetization_last_block_totals(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(
+        FRAME_HEADER
+        + magnetization_block(("1.000", "-1.000"))
+        + magnetization_block(("2.734", "-2.734"))
+        + " General timing and accounting informations\n",
+        encoding="utf-8",
+    )
+    outcar = OutcarFile(path)
+    assert outcar.magnetization == (2.734, -2.734)
+    assert outcar.issues == ()
+
+
+def test_outcar_magnetization_absent_is_none(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(OUTCAR, encoding="utf-8")
+    assert OutcarFile(path).magnetization is None
+
+
+def test_outcar_magnetization_missing_closing_separator_is_none(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(FRAME_HEADER + magnetization_block(("2.734", "-2.734"), closed=False), encoding="utf-8")
+    outcar = OutcarFile(path)
+    assert outcar.magnetization is None
+    assert any("malformed magnetization (x) block" in issue for issue in outcar.issues)
+
+
+def test_outcar_magnetization_missing_tot_line_is_none(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(
+        FRAME_HEADER
+        + magnetization_block(("2.734", "-2.734"), tot=False)
+        + " General timing and accounting informations\n",
+        encoding="utf-8",
+    )
+    outcar = OutcarFile(path)
+    assert outcar.magnetization is None
+    assert any("malformed magnetization (x) block" in issue for issue in outcar.issues)
+
+
+def test_outcar_magnetization_noncollinear_keeps_x_totals(tmp_path: Path) -> None:
+    x_block = magnetization_block(("2.734", "-2.734"))
+    y_block = x_block.replace("magnetization (x)", "magnetization (y)")
+    z_block = x_block.replace("magnetization (x)", "magnetization (z)")
+    path = tmp_path / "OUTCAR"
+    path.write_text(
+        FRAME_HEADER + x_block + y_block + z_block + " General timing and accounting informations\n",
+        encoding="utf-8",
+    )
+    outcar = OutcarFile(path)
+    assert outcar.magnetization == (2.734, -2.734)
+    assert outcar.noncollinear_magnetization is True
+
+
+def test_outcar_magnetization_collinear_is_not_flagged(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(
+        FRAME_HEADER + magnetization_block(("2.734", "-2.734")) + " General timing\n",
+        encoding="utf-8",
+    )
+    assert OutcarFile(path).noncollinear_magnetization is False
+
+
+def test_outcar_noncollinear_false_without_any_block(tmp_path: Path) -> None:
+    path = tmp_path / "OUTCAR"
+    path.write_text(OUTCAR, encoding="utf-8")
+    outcar = OutcarFile(path)
+    assert outcar.noncollinear_magnetization is False
+    assert outcar.magnetization is None
+
+
 def test_outcar_frames_stream_without_full_cache(tmp_path: Path) -> None:
     path = tmp_path / "OUTCAR"
     text = FRAME_HEADER + "".join(frame_text(i, f"-{i}.000", ("1", "2", "3", "4", "5", "6")) for i in range(1, 501))

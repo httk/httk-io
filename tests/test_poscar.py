@@ -74,6 +74,43 @@ def test_vasp4_cartesian_trailing_labels() -> None:
     assert data["coords"] == [["0.0", "0.0", "0.0"], ["0.5", "0.5", "0.5"], ["0.25", "0.25", "0.25"]]
 
 
+POTCAR_SUFFIXED = """LuCrO3
+1.0
+5.0 0.0 0.0
+0.0 5.0 0.0
+0.0 0.0 5.0
+Lu/  Cr/  O/
+1 1 3
+Direct
+0.0 0.0 0.0
+0.5 0.5 0.5
+0.1 0.1 0.1
+0.2 0.2 0.2
+0.3 0.3 0.3
+"""
+
+
+def test_poscar_potcar_suffix_is_stripped(tmp_path: Path) -> None:
+    data = read_poscar(POTCAR_SUFFIXED.splitlines(keepends=True))
+    assert data["symbols"] == ["Lu", "Cr", "O"]
+    contcar = tmp_path / "CONTCAR"
+    contcar.write_text(POTCAR_SUFFIXED, encoding="utf-8")
+    structure = httk.core.load(str(contcar))
+    assert [species.name for species in structure.species] == ["Lu", "Cr", "O"]
+
+
+def test_poscar_potcar_underscore_flavor_is_stripped() -> None:
+    source = POTCAR_SUFFIXED.replace("Lu/  Cr/  O/", "Li_sv Fe O")
+    data = read_poscar(source.splitlines(keepends=True))
+    assert data["symbols"] == ["Li", "Fe", "O"]
+
+
+def test_poscar_non_element_tokens_pass_through() -> None:
+    source = POTCAR_SUFFIXED.replace("Lu/  Cr/  O/", "vacancy Cr O")
+    data = read_poscar(source.splitlines(keepends=True))
+    assert data["symbols"] == ["vacancy", "Cr", "O"]
+
+
 def test_negative_scale_is_volume() -> None:
     data = read_poscar(NEGATIVE_SCALE.splitlines(keepends=True))
     assert data["scale"] is None
