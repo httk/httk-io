@@ -52,7 +52,10 @@ results. The prologue also exposes `ions_per_type` when VASP prints it.
 `frames()` streams complete ionic frames. Each `OutcarFrame` retains cell,
 positions, forces, stress, energies, and MD temperature lexemes. `nframes` and
 `last_frame` are cached by the full pass; `frame(i)` re-streams the file and is
-O(file). `stresses()` returns every six-token `in kB` row. Elastic tables are
+O(file). The full pass also caches `magnetization`, the per-ion total moments
+from the final collinear `magnetization (x)` block (`None` when the run prints
+none), and the `noncollinear_magnetization` flag, set when a `(y)` or `(z)`
+block follows. `stresses()` returns every six-token `in kB` row. Elastic tables are
 available as `ElasticModuliBlock` values for the `TOTAL ELASTIC MODULI`,
 `SYMMETRIZED ELASTIC MODULI`, and ionic-relaxation headings.
 

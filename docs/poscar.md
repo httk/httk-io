@@ -44,7 +44,10 @@ assert data["selective_dynamics"] is None
 The `scale` and `volume` fields are mutually exclusive: a negative universal
 scaling factor on line 2 means its absolute value is the target cell **volume**,
 so `scale` is `None` and `volume` carries the (sign-stripped) string. A VASP-4
-file (atom counts with no species line) sets `symbols` to `None`. When the file
+file (atom counts with no species line) sets `symbols` to `None`. A POTCAR-flavor
+suffix on a species token — anything after a `_`, `/` or `.` following the leading
+element symbol, as in `Li_sv`, `O_h` or `Lu/` — is dropped, so `symbols` carries
+the bare element. When the file
 declares *selective dynamics*, the per-atom `T`/`F` flags are collected into
 `selective_dynamics` as booleans; otherwise that field is `None`. Trailing
 per-line species labels and velocity blocks are ignored.
