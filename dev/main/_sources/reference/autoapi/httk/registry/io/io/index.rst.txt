@@ -1,0 +1,11 @@
+httk.registry.io.io
+===================
+
+.. py:module:: httk.registry.io.io
+
+.. autoapi-nested-parse::
+
+   Register httk-io readers and writers with the httk-core registry.
+
+
+

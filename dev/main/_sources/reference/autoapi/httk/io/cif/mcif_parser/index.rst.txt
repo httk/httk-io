@@ -1,0 +1,102 @@
+httk.io.cif.mcif_parser
+=======================
+
+.. py:module:: httk.io.cif.mcif_parser
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.cif.mcif_parser.extract_parent_q_basis
+   httk.io.cif.mcif_parser.extract_fourier_coeffs
+   httk.io.cif.mcif_parser.extract_fourier
+   httk.io.cif.mcif_parser.cifblock_to_mag_asu
+   httk.io.cif.mcif_parser.mag_asus_from_mcif_file
+   httk.io.cif.mcif_parser.read_mcif_asus
+   httk.io.cif.mcif_parser.single_mag_asu_from_mcif_file
+
+
+Module Contents
+---------------
+
+.. py:function:: extract_parent_q_basis(cifblock)
+
+   Return the parent propagation basis as a list of ``(kx, ky, kz)`` tuples,
+   or ``None`` if it is not present.
+
+   :param cifblock: Normalized mcif data for one data block.
+   :return: Parent propagation vectors, or ``None`` when the block has none.
+   :raises ValueError: If a propagation vector is not a three-component exact vector.
+
+
+.. py:function:: extract_fourier_coeffs(cifblock)
+
+   Return ``(coeff_rows, m)`` where ``coeff_rows`` is a list of coefficient tuples
+   ``(c1, c2, ..., cm)`` and ``m`` is the number of q-vectors detected (``>= 0``).
+
+   All present ``q{i}_coeff`` columns are found, zipped row-wise with missing entries
+   filled by zeros, and duplicate coefficient tuples are removed.
+
+   :param cifblock: Normalized mcif data for one data block.
+   :return: Unique coefficient rows and the number of q-vector columns detected.
+
+
+.. py:function:: extract_fourier(cifblock)
+
+   Return the ``(basis, coeffs)`` descriptor, or ``None`` if there is insufficient data.
+
+   ``basis`` comes from ``parent_propagation_vector.kxkykz`` and ``coeffs`` are the
+   unique coefficient tuples from ``atom_site_Fourier_wave_vector.q*_coeff``.
+
+   :param cifblock: Normalized mcif data for one data block.
+   :return: The parent basis and unique coefficient rows, or ``None`` when either is absent.
+
+
+.. py:function:: cifblock_to_mag_asu(cifblock, *, error_on_nonmag = False)
+
+   Convert one normalized mcif block to a neutral magnetic payload.
+
+   The payload keeps exact numeric tokens for positions and magnetic moments, raw
+   symmetry-operation strings, and plain mappings and sequences rather than domain objects.
+
+   :param cifblock: Normalized mcif data for one data block.
+   :param error_on_nonmag: Reject blocks without usable magnetic moment columns.
+   :return: A neutral mapping containing structural and magnetic channels.
+   :raises ValueError: If required structural or magnetic data is missing or invalid.
+
+
+.. py:function:: mag_asus_from_mcif_file(source, *, error_on_nonmag = False)
+
+   Read every mcif data block as a neutral magnetic asymmetric-unit payload.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :param error_on_nonmag: Reject blocks without usable magnetic moment columns.
+   :return: Magnetic payloads for the data blocks in the source.
+   :raises ValueError: If the mcif stream or a selected block is invalid.
+
+
+.. py:function:: read_mcif_asus(source)
+
+   Read an mcif into the neutral payload used by the ``.mcif`` loader.
+
+   Magnetic positions and moments remain exact central tokens, symmetry operations remain
+   raw strings, and the result contains no magnetic-domain objects. Blocks without atom
+   sites are skipped; blocks that cannot be interpreted are reported in ``unparsed``.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :return: A neutral mcif payload containing magnetic blocks, unparsed reasons, and the header.
+   :raises ValueError: If the mcif stream contains malformed data that prevents parsing.
+
+
+.. py:function:: single_mag_asu_from_mcif_file(source, *, error_on_nonmag = False)
+
+   Return the first structural mcif block as a neutral magnetic payload.
+
+   :param source: A filename, open text stream, or iterable of mcif lines.
+   :param error_on_nonmag: Reject the selected block without usable magnetic moments.
+   :return: The first magnetic asymmetric-unit payload.
+   :raises ValueError: If no structural block is available or the selected block is invalid.
+
+

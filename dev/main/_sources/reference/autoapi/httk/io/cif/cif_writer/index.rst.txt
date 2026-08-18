@@ -1,0 +1,40 @@
+httk.io.cif.cif_writer
+======================
+
+.. py:module:: httk.io.cif.cif_writer
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.cif.cif_writer.is_sequence
+   httk.io.cif.cif_writer.write_cif
+
+
+Module Contents
+---------------
+
+.. py:function:: is_sequence(val)
+
+   Report whether a value should be written as a CIF loop or sequence.
+
+   :param val: Value to classify, treating strings as scalar values.
+   :return: ``True`` for iterable non-string values.
+
+
+.. py:function:: write_cif(destination, data, header = None, max_line_length = 80)
+
+   Write CIF ``data`` to a path or open text stream.
+
+   ``data`` is an iterable of ``(block_name, block)`` pairs. A block maps data names to
+   scalar values and uses ``loop_N`` keys to list its loop columns. ``header``, when
+   supplied, is written before the data blocks.
+
+   :param destination: Filename or open text stream receiving the CIF text.
+   :param data: Data-block pairs containing scalar data names and loop columns.
+   :param header: Optional text written before the data blocks.
+   :param max_line_length: Maximum preferred line length for emitted values.
+
+

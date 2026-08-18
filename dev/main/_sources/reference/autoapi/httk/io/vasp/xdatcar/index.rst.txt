@@ -1,0 +1,140 @@
+httk.io.vasp.xdatcar
+====================
+
+.. py:module:: httk.io.vasp.xdatcar
+
+.. autoapi-nested-parse::
+
+   Lazy, lexeme-preserving readers for VASP ``XDATCAR`` files.
+
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.vasp.xdatcar.XdatcarFile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.xdatcar.read_xdatcar
+
+
+Module Contents
+---------------
+
+.. py:class:: XdatcarFile(filename)
+
+   Re-openable, forward-streaming XDATCAR source.
+
+   Construction checks only that ``filename`` exists. Compressed paths are
+   accepted by deliberate forward-streaming divergence from
+   :class:`~httk.io.vasp.wavecar.WavecarFile`; repeated scans re-stream the file. Header properties scan the header;
+   ``frames`` opens a fresh stream and never caches frames. Variable-cell files
+   are identified by a repeated POSCAR-like header and expose that header's
+   cell on the following frame. An incomplete final coordinate block is dropped
+   and reported in :attr:`issues` during the full pass. The public :attr:`path`
+   property returns the source filename.
+
+   :param filename: Filesystem path to an XDATCAR, optionally compressed.
+
+
+   .. py:property:: path
+      :type: str
+
+
+      Return the source filename used to construct this lazy reader.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this lazy reader has been closed.
+
+
+   .. py:method:: close()
+
+      Close the object; scans use short-lived streams and own no handle.
+
+
+
+   .. py:property:: comment
+      :type: str
+
+
+      Return the source comment line.
+
+
+   .. py:property:: scale
+      :type: str
+
+
+      Return the source scaling-factor lexeme.
+
+
+   .. py:property:: cell
+      :type: tuple[tuple[str, str, str], Ellipsis]
+
+
+      Return the initial cell-vector lexemes.
+
+
+   .. py:property:: symbols
+      :type: tuple[str, Ellipsis] | None
+
+
+      Return initial species symbols, or ``None`` for the older header form.
+
+
+   .. py:property:: counts
+      :type: tuple[int, Ellipsis]
+
+
+      Return the number of sites for each initial species entry.
+
+
+   .. py:property:: cartesian
+      :type: bool
+
+
+      Whether the first configuration uses Cartesian coordinates.
+
+
+   .. py:property:: issues
+      :type: tuple[str, Ellipsis]
+
+
+      Return issues collected while scanning all frames.
+
+
+   .. py:method:: frames()
+
+      Yield complete frames in file order without retaining them.
+
+      :yield: One complete frame mapping at a time.
+
+
+
+   .. py:property:: nframes
+      :type: int
+
+
+      Return the number of complete frames after a full scan.
+
+
+.. py:function:: read_xdatcar(source)
+
+   Read an XDATCAR path into a lazy neutral ``vasp-xdatcar`` payload.
+
+   :param source: Filesystem path to an XDATCAR, optionally compressed.
+   :return: A neutral payload containing the lazy XDATCAR reader.
+   :raises TypeError: If ``source`` is not a filesystem path.
+   :raises FileNotFoundError: If the path does not exist.
+
+

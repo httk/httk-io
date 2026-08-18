@@ -1,0 +1,88 @@
+httk.io
+=======
+
+.. py:module:: httk.io
+
+.. autoapi-nested-parse::
+
+   Public file readers for httk-io.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /reference/autoapi/httk/io/cif/index
+   /reference/autoapi/httk/io/optimade_jsonl/index
+   /reference/autoapi/httk/io/vasp/index
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.read_cif
+   httk.io.read_poscar
+
+
+Package Contents
+----------------
+
+.. py:function:: read_cif(source, pragmatic = True, allow_cif2 = False, *, autocorrect = False, structural_only = False)
+
+   Read CIF text as ``(data_blocks, header)``.
+
+   Paths are opened through :class:`httk.core.TextstreamFileView`, including compressed
+   CIF files. Open streams and iterables are consumed but left open.
+
+   :param source: A filename, open text stream, or iterable of CIF lines.
+   :param pragmatic: Accept selected common deviations from strict CIF tokenization.
+   :param allow_cif2: Parse CIF2 list values in addition to CIF1 data.
+   :param autocorrect: Drop malformed auxiliary loops and warn about each repair.
+   :param structural_only: Retain only tags consumed by httk's structural adapters and skip auxiliary CIF1 loops.
+   :return: The data blocks and the leading comment header.
+   :raises ValueError: If a loop contains mismatched column value counts.
+
+
+.. py:function:: read_poscar(source)
+
+   Parse a VASP POSCAR/CONTCAR into a neutral, string-preserving mapping.
+
+   ``source`` may be a filename, opened through
+   :class:`httk.core.TextstreamFileView` so compressed files such as
+   ``CONTCAR.bz2`` are decompressed transparently, or an already-open text
+   stream / iterable of lines.
+
+   The returned mapping has the keys ``format`` (always ``"vasp-poscar"``),
+   ``comment``, ``scale`` and ``volume`` (both keys are always present; exactly
+   one is non-``None``), ``cell``, ``symbols`` (which may be ``None`` for
+   VASP-4; any species token shaped ``[A-Z][a-z]?`` followed by ``_``, ``/`` or
+   ``.`` is truncated to that leading symbol, so ``Li_sv``, ``O_h`` and ``Lu/``
+   read as ``Li``, ``O`` and ``Lu``; every other token, including ``vacancy``,
+   is left untouched), ``counts``, ``cartesian``, ``coords``, and
+   ``selective_dynamics`` (which may be ``None`` when selective dynamics is not
+   declared), and ``raw`` (the original decompressed text, or ``None`` when
+   unavailable). For filenames and binary sources, ``raw`` preserves CRLF and
+   provides the writer's byte-exact round-trip channel. For an open text
+   stream, it reflects the stream's already translated text and is not
+   byte-exact. Malformed input raises a clear
+   :class:`ValueError` naming the offending line.
+
+   Three further keys report how precisely the file wrote its numbers, each the coarsest
+   claim among the tokens it covers, or ``None`` when none of them claim anything:
+   ``cell_precision``, ``scale_precision``, and ``coordinate_precision``. They are the
+   precisions of the tokens **as written**, deliberately not converted: the cell vectors
+   are still to be multiplied by the scaling factor, and the coordinates may be Cartesian
+   or fractional depending on ``cartesian``. Doing that conversion needs the assembled
+   cell, so it belongs to whoever builds the structure —
+   :func:`httk.core.load` — not to the reader.
+
+   :param source: POSCAR/CONTCAR filename, text stream, or iterable of source lines.
+   :return: The neutral mapping, including the original text in ``raw`` when available.
+   :raises ValueError: If the input is malformed.
+
+

@@ -1,0 +1,185 @@
+httk.io.optimade_jsonl
+======================
+
+.. py:module:: httk.io.optimade_jsonl
+
+.. autoapi-nested-parse::
+
+   Streaming OPTIMADE partial-data JSON Lines trajectories.
+
+   The stable ``httk-trajectory-jsonl`` 0.1 format is one JSON object per line.
+   The first line is the header::
+
+       {
+         "optimade-partial-data": {"format": "1.2.0"},
+         "layout": "dense",
+         "x-httk-trajectory": {
+           "format": "httk-trajectory-jsonl", "version": "0.1",
+           "species": [{"name": "Si", "chemical_symbols": ["Si"],
+                        "concentration": [1.0]}],
+           "species_at_sites": ["Si"],
+           "constant_cell": [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0],
+                              [0.0, 0.0, 1.0]],
+           "nframes": 3,
+           "observable_names": ["energy"],
+           "reference_frames": [0],
+           "line_schema": {"...": "see below"}
+         }
+       }
+
+   Each following line is a frame object with exactly these semantic members::
+
+       {"index": 0,
+        "fractional_site_positions": [[0.0, 0.0, 0.0]],
+        "observables": {"energy": -1.25}}
+
+   ``index`` is the zero-based frame number.  ``fractional_site_positions`` is an
+   N-by-3 array of floating-point presentation values.  ``observables`` contains every
+   name declared by the header, with ``null`` allowed.  If ``constant_cell`` is
+   null, each frame additionally contains ``lattice_vectors`` as a 3-by-3 array
+   of floating-point presentation values.  If it is non-null, a frame may include that
+   member only when it is equal to the declared constant cell.  The writer emits
+   the compact form and the reader accepts either form.  No exact-token channel
+   exists: JSON numbers intentionally follow the floating-point presentation, like the
+   numeric layer.
+
+   This is a holding/container format, not a database representation.  It follows
+   the OPTIMADE partial-data JSON Lines framing (OPTIMADE 1.2, dense layout), but
+   uses the ``x-httk-trajectory`` member because one line carries a complete frame
+   and several properties.  A binary framing variant is deliberately deferred
+   pending a separate design decision.
+
+
+
+Attributes
+----------
+
+.. autoapisummary::
+
+   httk.io.optimade_jsonl.FORMAT
+   httk.io.optimade_jsonl.VERSION
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.optimade_jsonl.TrajectoryJsonlFile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.optimade_jsonl.write_trajectory_jsonl
+   httk.io.optimade_jsonl.read_trajectory_jsonl
+
+
+Package Contents
+----------------
+
+.. py:data:: FORMAT
+   :value: 'httk-trajectory-jsonl'
+
+
+.. py:data:: VERSION
+   :value: '0.1'
+
+
+.. py:class:: TrajectoryJsonlFile(filename)
+
+   A handle-free, re-scanning, lazy trajectory JSONL reader.
+
+   The reader opens short-lived streams for each access and retains no open
+   handle. Header access is lazy, frame iteration streams the file, and
+   full-pass properties cache the count and issue summary. :meth:`close` is
+   terminal; access after closing is rejected.
+
+   :param filename: Filesystem path to a trajectory JSONL file, optionally compressed.
+
+
+   .. py:property:: path
+      :type: str
+
+
+      Return the source filename used to construct this lazy reader.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this lazy reader has been closed.
+
+
+   .. py:method:: close()
+
+      Close this reader; future access raises an error.
+
+
+
+   .. py:property:: header
+      :type: collections.abc.Mapping[str, Any]
+
+
+      Return the validated header, loading it on first access.
+
+
+   .. py:property:: issues
+      :type: tuple[str, Ellipsis]
+
+
+      Return issues collected by the full frame scan.
+
+
+   .. py:method:: frames()
+
+      Stream validated frames without buffering the trajectory.
+
+      :yield: One validated frame mapping at a time.
+
+
+
+   .. py:property:: nframes
+      :type: int
+
+
+      Return the declared frame count or determine it by scanning lazily.
+
+
+   .. py:method:: frame(i)
+
+      Return one frame, rescanning from the start when necessary.
+
+      :param i: Zero-based frame index; negative values count backward from the end.
+      :return: The selected validated frame mapping.
+      :raises IndexError: If ``i`` is outside the available frames.
+
+
+
+.. py:function:: write_trajectory_jsonl(destination, header, frames)
+
+   Write a validated header and frame iterator without buffering frames.
+
+   JSON numbers are normalized to floating-point presentation values while
+   each frame is written, and compressed output is selected from the filename
+   suffix when applicable.
+
+   :param destination: Filesystem path or open text stream for the output.
+   :param header: Trajectory header describing sites, observables, and cell policy.
+   :param frames: Iterable of frame mappings to validate and write in order.
+   :raises ValueError: If the header, a frame, or the declared frame count is invalid.
+
+
+.. py:function:: read_trajectory_jsonl(source)
+
+   Read a trajectory JSONL path into a lazy neutral payload.
+
+   :param source: Filesystem path to a trajectory JSONL file, optionally compressed.
+   :return: A neutral payload containing the lazy trajectory reader.
+   :raises TypeError: If ``source`` is not a filesystem path.
+   :raises FileNotFoundError: If the path does not exist.
+
+

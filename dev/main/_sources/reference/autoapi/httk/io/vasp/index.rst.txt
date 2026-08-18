@@ -1,0 +1,630 @@
+httk.io.vasp
+============
+
+.. py:module:: httk.io.vasp
+
+.. autoapi-nested-parse::
+
+   VASP file-format readers for *httk-io*.
+
+
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 1
+
+   /reference/autoapi/httk/io/vasp/oszicar/index
+   /reference/autoapi/httk/io/vasp/outcar/index
+   /reference/autoapi/httk/io/vasp/outputs/index
+   /reference/autoapi/httk/io/vasp/poscar_reader/index
+   /reference/autoapi/httk/io/vasp/poscar_writer/index
+   /reference/autoapi/httk/io/vasp/potcar/index
+   /reference/autoapi/httk/io/vasp/volumetric/index
+   /reference/autoapi/httk/io/vasp/wavecar/index
+   /reference/autoapi/httk/io/vasp/xdatcar/index
+
+
+Classes
+-------
+
+.. autoapisummary::
+
+   httk.io.vasp.ElasticModuliBlock
+   httk.io.vasp.OutcarFile
+   httk.io.vasp.OutcarFrame
+   httk.io.vasp.VASPOutputs
+   httk.io.vasp.XdatcarFile
+
+
+Functions
+---------
+
+.. autoapisummary::
+
+   httk.io.vasp.read_oszicar
+   httk.io.vasp.read_outcar
+   httk.io.vasp.read_poscar
+   httk.io.vasp.read_potcar_summary
+   httk.io.vasp.read_xdatcar
+   httk.io.vasp.read_wavecar
+   httk.io.vasp.write_wavecar
+   httk.io.vasp.write_vasp_volumetric
+
+
+Package Contents
+----------------
+
+.. py:function:: read_oszicar(source)
+
+   Read OSZICAR text without converting numeric lexemes.
+
+   Electronic iterations are attached to the following ionic summary. A
+   trailing electronic block is retained as an incomplete final entry when no
+   summary follows it.
+
+   :param source: OSZICAR filename, text stream, or iterable of source lines.
+   :return: A neutral payload containing ionic steps and parsing issues.
+
+
+.. py:class:: ElasticModuliBlock
+
+   Store one six-by-six elastic-moduli table.
+
+   :param heading: Heading identifying the table in the source.
+   :param rows: Table rows with their source numeric lexemes.
+
+
+   .. py:attribute:: heading
+      :type:  str
+
+
+   .. py:attribute:: rows
+      :type:  tuple[tuple[str, Ellipsis], Ellipsis]
+
+
+.. py:class:: OutcarFile(filename)
+
+   Lazy OUTCAR metadata reader whose scans reopen the source each time.
+
+   OUTCAR paths, including compressed paths, are accepted by deliberate
+   forward-streaming divergence from :class:`~httk.io.vasp.wavecar.WavecarFile`;
+   random frame access re-streams the file. Construction validates only that
+   the path exists. Prologue and full scans are lazy: the first prologue access
+   scans to the ionic marker and can traverse the whole file when no marker
+   exists. The full pass streams the source once and caches summary fields,
+   all stress rows, and all elastic-moduli blocks. No source handle is
+   retained, so :meth:`close` only marks this lazy object closed. The public
+   :attr:`path` property returns the source filename.
+
+   :param filename: Filesystem path to an OUTCAR, optionally compressed.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this lazy reader has been closed.
+
+
+   .. py:method:: close()
+
+      Mark this lazy object closed; it owns no persistent stream.
+
+
+
+   .. py:property:: path
+      :type: str
+
+
+      Return the source filename used to construct this lazy reader.
+
+
+   .. py:property:: version_string
+      :type: str
+
+
+      Return the VASP version string found during the prologue scan.
+
+
+   .. py:property:: version_numbers
+      :type: tuple[int, Ellipsis]
+
+
+      Return the numeric components of the VASP version string.
+
+
+   .. py:property:: parameters
+      :type: collections.abc.Mapping[str, str]
+
+
+      Return the first recognized VASP parameter lexeme for each parameter.
+
+
+   .. py:property:: ions_per_type
+      :type: tuple[int, Ellipsis] | None
+
+
+      Return the number of ions for each potential type, when reported.
+
+
+   .. py:property:: xc
+      :type: str | None
+
+
+      Return the recognized exchange-correlation description, when available.
+
+
+   .. py:property:: potcar_titles
+      :type: tuple[str, Ellipsis]
+
+
+      Return distinct POTCAR titles in first-seen order.
+
+
+   .. py:method:: frames()
+
+      Stream complete ionic frames without retaining the sequence.
+
+      :return: An iterator yielding one :class:`OutcarFrame` at a time.
+
+
+
+   .. py:method:: frame(index)
+
+      Return one frame by rescanning from the start of the file.
+
+      :param index: Zero-based frame index.
+      :return: The requested frame, or ``None`` when it is beyond the file.
+      :raises ValueError: If ``index`` is negative or not an integer.
+
+
+
+   .. py:property:: final_energies
+      :type: FinalEnergies
+
+
+      Return energies from the last complete or partial energy block.
+
+
+   .. py:property:: nframes
+      :type: int
+
+
+      Return the number of complete ionic frames after the full pass.
+
+
+   .. py:property:: last_frame
+      :type: OutcarFrame | None
+
+
+      Return the last complete ionic frame, when one exists.
+
+
+   .. py:method:: stresses()
+
+      Return all six-token ``in kB`` rows in file order.
+
+      :return: Stress rows retaining their source numeric lexemes.
+
+
+
+   .. py:property:: elastic_moduli
+      :type: tuple[ElasticModuliBlock, Ellipsis]
+
+
+      Return parsed elastic-moduli tables in source order.
+
+
+   .. py:property:: magnetization
+      :type: tuple[float, Ellipsis] | None
+
+
+      Return per-ion total magnetic moments from the final ``magnetization (x)`` block.
+
+      The values are the last (``tot``) column of each ion row in the last
+      ``magnetization (x)`` block in the file, in Bohr magnetons. The
+      per-orbital columns and the ``magnetization (y)`` / ``(z)`` blocks
+      themselves are out of scope, so for a noncollinear run these values are
+      only the *x* projection of each moment. A caller treating them as a
+      collinear axis projection must check :attr:`noncollinear_magnetization`
+      first. A malformed or truncated final block never raises: it yields
+      ``None`` and records an entry in :attr:`issues`, so an OUTCAR from a
+      killed job is ordinary input.
+
+      :return: The per-ion total moments, or ``None`` for a non-spin-polarized
+          run or an unusable final block.
+
+
+   .. py:property:: noncollinear_magnetization
+      :type: bool
+
+
+      Whether a ``magnetization (y)`` or ``(z)`` block follows the final ``(x)`` block.
+
+      When ``True`` the :attr:`magnetization` values are only the *x*
+      projection of a noncollinear moment and must not be treated as a
+      collinear axis magnitude.
+
+      :return: ``True`` for a noncollinear final block, ``False`` otherwise,
+          including when the file has no magnetization block.
+
+
+   .. py:property:: completed
+      :type: bool
+
+
+      Whether the source contains completion-footer evidence.
+
+
+   .. py:property:: completion_evidence
+      :type: tuple[str, Ellipsis]
+
+
+      Return completion-footer lines found during the full pass.
+
+
+   .. py:property:: issues
+      :type: tuple[str, Ellipsis]
+
+
+      Return parsing issues collected during the available scans.
+
+
+.. py:class:: OutcarFrame
+
+   Store one complete ionic-step snapshot with VASP numeric lexemes unchanged.
+
+   :param index: Zero-based ionic-step index.
+   :param cell: Lattice-vector lexemes, when the step contains a cell.
+   :param positions: Position lexemes, when the step contains positions.
+   :param forces: Force lexemes, when the step contains forces.
+   :param stress_kbar: Six stress lexemes in VASP order, when present.
+   :param free_energy: Free-energy lexeme, when present.
+   :param energy_without_entropy: Energy-without-entropy lexeme, when present.
+   :param energy_sigma0: Sigma-zero energy lexeme, when present.
+   :param temperature: Temperature lexeme, when present.
+
+
+   .. py:attribute:: index
+      :type:  int
+
+
+   .. py:attribute:: cell
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: positions
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: forces
+      :type:  tuple[tuple[str, str, str], Ellipsis] | None
+
+
+   .. py:attribute:: stress_kbar
+      :type:  tuple[str, Ellipsis] | None
+
+
+   .. py:attribute:: free_energy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_without_entropy
+      :type:  str | None
+
+
+   .. py:attribute:: energy_sigma0
+      :type:  str | None
+
+
+   .. py:attribute:: temperature
+      :type:  str | None
+
+
+   .. py:method:: cell_floats()
+
+      Convert the cell lexemes to floating-point values when present.
+
+      :return: Converted cell values, or ``None`` when the frame has no cell.
+
+
+
+   .. py:method:: positions_floats()
+
+      Convert the position lexemes to floating-point values when present.
+
+      :return: Converted position values, or ``None`` when the frame has no positions.
+
+
+
+   .. py:method:: forces_floats()
+
+      Convert the force lexemes to floating-point values when present.
+
+      :return: Converted force values, or ``None`` when the frame has no forces.
+
+
+
+   .. py:method:: stress_gpa_voigt()
+
+      Convert stress to tensile-positive GPa Voigt order ``xx, yy, zz, yz, xz, xy``.
+
+      The conversion multiplies kbar by ``0.1``, reverses VASP's
+      compressive-positive sign, and reorders the shear components.
+
+      :return: Stress in tensile-positive GPa Voigt order, or ``None`` when absent.
+
+
+
+.. py:function:: read_outcar(source)
+
+   Return a lazy OUTCAR payload; only filesystem filenames are accepted.
+
+   :param source: Filesystem path to an OUTCAR, optionally compressed.
+   :return: A neutral payload containing the lazy OUTCAR reader.
+   :raises TypeError: If ``source`` is not a filesystem path.
+   :raises FileNotFoundError: If the path does not exist.
+
+
+.. py:class:: VASPOutputs(directory)
+
+   Lazily resolve standard VASP files in a calculation directory.
+
+   File lookup probes each registered compression suffix after the plain
+   filename. Payload readers are created only when their properties are first
+   accessed. The lazy OUTCAR and XDATCAR children are owned here and closed by
+   :meth:`close`; payload mappings do not retain open handles.
+
+   :param directory: Filesystem directory containing VASP output files.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this directory view has been closed.
+
+
+   .. py:method:: close()
+
+      Close owned lazy file objects; repeated calls are harmless.
+
+
+
+   .. py:property:: poscar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded POSCAR payload, or ``None`` when absent.
+
+
+   .. py:property:: contcar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded CONTCAR payload, or ``None`` when absent.
+
+
+   .. py:property:: outcar
+      :type: httk.io.vasp.outcar.OutcarFile | None
+
+
+      Return the owned lazy OUTCAR reader, or ``None`` when absent.
+
+
+   .. py:property:: xdatcar
+      :type: httk.io.vasp.xdatcar.XdatcarFile | None
+
+
+      Return the owned lazy XDATCAR reader, or ``None`` when absent.
+
+
+   .. py:property:: oszicar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded OSZICAR payload, or ``None`` when absent.
+
+
+   .. py:property:: potcar
+      :type: dict[str, Any] | None
+
+
+      Return the lazily loaded POTCAR summary, or ``None`` when absent.
+
+
+.. py:function:: read_poscar(source)
+
+   Parse a VASP POSCAR/CONTCAR into a neutral, string-preserving mapping.
+
+   ``source`` may be a filename, opened through
+   :class:`httk.core.TextstreamFileView` so compressed files such as
+   ``CONTCAR.bz2`` are decompressed transparently, or an already-open text
+   stream / iterable of lines.
+
+   The returned mapping has the keys ``format`` (always ``"vasp-poscar"``),
+   ``comment``, ``scale`` and ``volume`` (both keys are always present; exactly
+   one is non-``None``), ``cell``, ``symbols`` (which may be ``None`` for
+   VASP-4; any species token shaped ``[A-Z][a-z]?`` followed by ``_``, ``/`` or
+   ``.`` is truncated to that leading symbol, so ``Li_sv``, ``O_h`` and ``Lu/``
+   read as ``Li``, ``O`` and ``Lu``; every other token, including ``vacancy``,
+   is left untouched), ``counts``, ``cartesian``, ``coords``, and
+   ``selective_dynamics`` (which may be ``None`` when selective dynamics is not
+   declared), and ``raw`` (the original decompressed text, or ``None`` when
+   unavailable). For filenames and binary sources, ``raw`` preserves CRLF and
+   provides the writer's byte-exact round-trip channel. For an open text
+   stream, it reflects the stream's already translated text and is not
+   byte-exact. Malformed input raises a clear
+   :class:`ValueError` naming the offending line.
+
+   Three further keys report how precisely the file wrote its numbers, each the coarsest
+   claim among the tokens it covers, or ``None`` when none of them claim anything:
+   ``cell_precision``, ``scale_precision``, and ``coordinate_precision``. They are the
+   precisions of the tokens **as written**, deliberately not converted: the cell vectors
+   are still to be multiplied by the scaling factor, and the coordinates may be Cartesian
+   or fractional depending on ``cartesian``. Doing that conversion needs the assembled
+   cell, so it belongs to whoever builds the structure —
+   :func:`httk.core.load` — not to the reader.
+
+   :param source: POSCAR/CONTCAR filename, text stream, or iterable of source lines.
+   :return: The neutral mapping, including the original text in ``raw`` when available.
+   :raises ValueError: If the input is malformed.
+
+
+.. py:function:: read_potcar_summary(source)
+
+   Extract one metadata mapping per ``TITEL`` header without retaining POTCAR text.
+
+   Only header metadata is returned; the potential body is never retained or
+   exposed because it can contain licensed data. Concatenated
+   ``POTCAR.summary`` headers are accepted.
+
+   :param source: POTCAR or POTCAR.summary filename, text stream, or iterable of source lines.
+   :return: A neutral payload containing one metadata mapping per potential.
+
+
+.. py:class:: XdatcarFile(filename)
+
+   Re-openable, forward-streaming XDATCAR source.
+
+   Construction checks only that ``filename`` exists. Compressed paths are
+   accepted by deliberate forward-streaming divergence from
+   :class:`~httk.io.vasp.wavecar.WavecarFile`; repeated scans re-stream the file. Header properties scan the header;
+   ``frames`` opens a fresh stream and never caches frames. Variable-cell files
+   are identified by a repeated POSCAR-like header and expose that header's
+   cell on the following frame. An incomplete final coordinate block is dropped
+   and reported in :attr:`issues` during the full pass. The public :attr:`path`
+   property returns the source filename.
+
+   :param filename: Filesystem path to an XDATCAR, optionally compressed.
+
+
+   .. py:property:: path
+      :type: str
+
+
+      Return the source filename used to construct this lazy reader.
+
+
+   .. py:property:: closed
+      :type: bool
+
+
+      Whether this lazy reader has been closed.
+
+
+   .. py:method:: close()
+
+      Close the object; scans use short-lived streams and own no handle.
+
+
+
+   .. py:property:: comment
+      :type: str
+
+
+      Return the source comment line.
+
+
+   .. py:property:: scale
+      :type: str
+
+
+      Return the source scaling-factor lexeme.
+
+
+   .. py:property:: cell
+      :type: tuple[tuple[str, str, str], Ellipsis]
+
+
+      Return the initial cell-vector lexemes.
+
+
+   .. py:property:: symbols
+      :type: tuple[str, Ellipsis] | None
+
+
+      Return initial species symbols, or ``None`` for the older header form.
+
+
+   .. py:property:: counts
+      :type: tuple[int, Ellipsis]
+
+
+      Return the number of sites for each initial species entry.
+
+
+   .. py:property:: cartesian
+      :type: bool
+
+
+      Whether the first configuration uses Cartesian coordinates.
+
+
+   .. py:property:: issues
+      :type: tuple[str, Ellipsis]
+
+
+      Return issues collected while scanning all frames.
+
+
+   .. py:method:: frames()
+
+      Yield complete frames in file order without retaining them.
+
+      :yield: One complete frame mapping at a time.
+
+
+
+   .. py:property:: nframes
+      :type: int
+
+
+      Return the number of complete frames after a full scan.
+
+
+.. py:function:: read_xdatcar(source)
+
+   Read an XDATCAR path into a lazy neutral ``vasp-xdatcar`` payload.
+
+   :param source: Filesystem path to an XDATCAR, optionally compressed.
+   :return: A neutral payload containing the lazy XDATCAR reader.
+   :raises TypeError: If ``source`` is not a filesystem path.
+   :raises FileNotFoundError: If the path does not exist.
+
+
+.. py:function:: read_wavecar(source, *, double_precision = None, gamma_half = None)
+
+   Read a VASP WAVECAR path into a neutral payload.
+
+   :param source: Filesystem path to an uncompressed WAVECAR.
+   :param double_precision: Override the coefficient precision declared by the file.
+   :param gamma_half: Consumer hint for the gamma-half orientation, or ``None`` when unspecified.
+   :return: A payload containing the lazy WAVECAR source and the gamma-half hint.
+   :raises ValueError: If an option is invalid or the file is malformed.
+
+
+.. py:function:: write_wavecar(destination, payload)
+
+   Write a neutral WAVECAR payload to a binary path.
+
+   :param destination: Filesystem path for the uncompressed binary output.
+   :param payload: Neutral payload containing a WAVECAR source.
+   :raises ValueError: If the destination or payload cannot represent a WAVECAR.
+   :raises TypeError: If the payload is not a mapping.
+   :raises KeyError: If the payload mapping does not contain ``"wavecar"``.
+
+
+.. py:function:: write_vasp_volumetric(destination, poscar_payload, grid, *, cols = 10)
+
+   Write POSCAR content followed by a VASP/VESTA volumetric grid.
+
+   :param destination: Filesystem path or open text stream for the output.
+   :param poscar_payload: Neutral POSCAR payload supplying the structure header.
+   :param grid: Three-dimensional real-valued grid in the order written by the format.
+   :param cols: Maximum number of values written on each grid line.
+   :raises ValueError: If the grid or column count is not writable as volumetric data.
+
+
